@@ -1,4 +1,4 @@
-# metoo
+# MeToo
 
 ## Data description of EEOC Resolutions pdf
 - Total cases in data: 2288
