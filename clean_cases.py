@@ -33,19 +33,24 @@ print("Total cases brought under Title VII / Sex‐Female:", total_sex_cases)
 cases['Court Filing Date'] = pd.to_datetime(cases['Court Filing Date'])
 cases['Resolution Date'] = pd.to_datetime(cases['Resolution Date'])
 
+# Calculate the duration in days between filing and resolution
+cases['Duration'] = (cases['Resolution Date'] - cases['Court Filing Date']).dt.days
+
 # Remove the dollar sign and commas from the 'Relief' column
 cases['Relief'] = cases['Relief'].str.replace('[$,]', '', regex=True)
 
-# Convert to numeric, coercing errors to NaN, and immediately fill NaNs with 0
-cases['Relief'] = pd.to_numeric(cases['Relief'], errors='coerce').fillna(0).astype(int)
+# Create a new column to indicate missing relief
+cases['missing_relief'] = cases['Relief'].isnull().astype(int)
 
+# Convert to numeric, coercing errors to NaN, and fill NaNs with 0
+cases['Relief'] = pd.to_numeric(cases['Relief'], errors='coerce').fillna(0).astype(int)
 
 
 ###############################################################################
 # Identify SH cases straddling MeToo
 ###############################################################################
 
-def filter_cases(cases_df, filter_col, condition, filing_date=None, resolution_date=None, comparison='both'):
+def filter_fun(cases_df, filter_col, condition, filing_date=None, resolution_date=None, comparison='both'):
     """
     Filter cases based on various criteria.
 
@@ -81,65 +86,68 @@ def filter_cases(cases_df, filter_col, condition, filing_date=None, resolution_d
 def count_cases(filtered_cases):
     """
     Count the number of cases in the filtered DataFrame.
-
-    Parameters:
-    - filtered_cases: DataFrame of filtered cases.
-
-    Returns:
-    - Count of cases.
     """
     return len(filtered_cases)
 
 def calculate_average(filtered_cases, column_name):
     """
     Calculate the average of a specified column in the filtered DataFrame.
-
-    Returns:
-    - Average value of the specified column.
     """
     average_value = filtered_cases[column_name].mean()
     return round(average_value)
 
 # Count straddling SH cases
-filtered_cases = filter_cases(cases, 'sh', 1, ('before', '2017-10-01'), ('after', '2017-10-01'))
+filtered_cases = filter_fun(cases, 'sh', 1, ('before', '2017-10-01'), ('after', '2017-10-01'))
 print("Number of SH cases straddling Oct 2017:", count_cases(filtered_cases))
 
 # Count straddling Sex-based cases
-filtered_cases = filter_cases(cases, 'sex_cases', 1, ('before', '2017-10-01'), ('after', '2017-10-01'))
+filtered_cases = filter_fun(cases, 'sex_cases', 1, ('before', '2017-10-01'), ('after', '2017-10-01'))
 print("Number of Title VII / Sex‐Femalecases straddling Oct 2017:", count_cases(filtered_cases))
 
 # Count SH cases before
-filtered_cases = filter_cases(cases, 'sh', 1, ('before', '2017-10-01'), ('before', '2017-10-01'))
+filtered_cases = filter_fun(cases, 'sh', 1, ('before', '2017-10-01'), ('before', '2017-10-01'))
 print("Number of SH cases started and resolved before Oct 2017:", count_cases(filtered_cases))
 
 # Count SH cases after
-filtered_cases = filter_cases(cases, 'sh', 1, ('after', '2017-10-01'), ('after', '2017-10-01'))
+filtered_cases = filter_fun(cases, 'sh', 1, ('after', '2017-10-01'), ('after', '2017-10-01'))
 print("Number of SH cases started and resolved after Oct 2017:", count_cases(filtered_cases))
 
-# Calculate relief before a certain date
-filtered_cases_before = filter_cases(cases, 'sh', 1, ('before', '2017-10-01'), ('before', '2017-10-01'))
+
+# Calculate all SH relief before a certain date
+filtered_cases_before = filter_fun(cases, 'sh', 1, ('before', '2017-10-01'), ('before', '2017-10-01'))
 relief_before = calculate_average(filtered_cases_before, 'Relief')
-print("Mean relief $ for SH if case resolved before October 2017:", relief_before)
+print("Mean relief $ for SH if case resolved before October 2017, with zeroes:", relief_before)
 
-# Calculate relief after a certain date
-filtered_cases_after = filter_cases(cases, 'sh', 1, ('after', '2017-10-01'), ('after', '2017-10-01'))
+# Calculate all SH relief after 
+filtered_cases_after = filter_fun(cases, 'sh', 1, ('after', '2017-10-01'), ('after', '2017-10-01'))
 relief_after = calculate_average(filtered_cases_after, 'Relief')
-print("Mean relief $ for SH if case resolved after October 2017:", relief_after)
+print("Mean relief $ for SH if case resolved after October 2017, with zeroes:", relief_after)
 
+# Create new df for sh = 1
+sh_cases = cases[cases['sh'] == 1]
 
-# Calculate the duration in days between filing and resolution
-cases['Duration'] = (cases['Resolution Date'] - cases['Court Filing Date']).dt.days
+# Calculate how frequently relief is missing and sh == 1
+missing_relief = sh_cases['missing_relief'].sum()
+print(f"Relief is missing for SH cases {missing_relief} times")
 
-# Filter cases based on the condition (where 'ConditionColumn' equals 1)
-filtered_cases = cases[cases['sh'] == 1]
+# Calculate non-zero relief before 
+filtered_cases_before = filter_fun(sh_cases, 'missing_relief', 0, ('before', '2017-10-01'), ('before', '2017-10-01'))
+relief_before = calculate_average(filtered_cases_before, 'Relief')
+print("Mean relief $ for SH if case resolved before October 2017, no zeroes:", relief_before)
+
+# Calculate non-zero relief after
+filtered_cases_after = filter_fun(sh_cases, 'missing_relief', 0, ('after', '2017-10-01'), ('after', '2017-10-01'))
+relief_after = calculate_average(filtered_cases_after, 'Relief')
+print("Mean relief $ for SH if case resolved after October 2017, no zeroes:", relief_after)
 
 # Now apply the date filters for before and after October 1, 2017
-before_oct_1_2017 = filtered_cases[filtered_cases['Court Filing Date'] < pd.Timestamp('2017-10-01')]
-after_oct_1_2017 = filtered_cases[filtered_cases['Court Filing Date'] > pd.Timestamp('2017-10-01')]
+before_oct_1_2017 = sh_cases[sh_cases['Court Filing Date'] < pd.Timestamp('2017-10-01')]
+after_oct_1_2017 = sh_cases[sh_cases['Court Filing Date'] > pd.Timestamp('2017-10-01')]
 
 # Calculate the mean duration for each period
 mean_duration_before = before_oct_1_2017['Duration'].mean()
-mean_duration_after = after_oct_1_2017['Duration'].mean()
+mean_duration_after = after_oct_1_2017['Duration'].mean().round(1)
 
 print(f"Mean duration for SH cases, before October 1, 2017: {mean_duration_before} days")
 print(f"Mean duration for SH cases, after October 1, 2017: {mean_duration_after} days")
+
