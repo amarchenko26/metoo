@@ -7,6 +7,14 @@ Created on Tue Feb 20 18:18:46 2024
 """
 
 import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import numpy as np
+
+# Create figures directory if it doesn't exist
+figures_dir = 'figures/'
+if not os.path.exists(figures_dir):
+    os.makedirs(figures_dir)
 
 cases = pd.read_csv("data/raw/cases.csv")
 
@@ -15,8 +23,8 @@ cases = pd.read_csv("data/raw/cases.csv")
 ###############################################################################
 print("Total cases in data:", len(cases))
 
-cases['sh'] = cases['Allegations'].str.contains('Sexual Harassment', case=False, na=False).astype(int) #case=False parameter makes the search case-insensitive, and na=False treats NaN values as False.
-cases['sex_cases'] = cases['Allegations'].str.contains('Title VII / Sex‐Female', case=False, na=False).astype(int) #case=False parameter makes the search case-insensitive, and na=False treats NaN values as False.
+cases['sh'] = cases['Allegations'].str.contains('Sexual Harassment', case=False, na=False).astype(int) #case=False makes the search case-insensitive, and na=False treats NaN values as False.
+cases['sex_cases'] = cases['Allegations'].str.contains('Title VII / Sex‐Female', case=False, na=False).astype(int) #case=False makes the search case-insensitive, and na=False treats NaN values as False.
 
 total_sh_cases = cases['sh'].sum()
 print("Total cases of Sexual Harassment:", total_sh_cases)
@@ -33,6 +41,9 @@ print("Total cases brought under Title VII / Sex‐Female:", total_sex_cases)
 cases['Court Filing Date'] = pd.to_datetime(cases['Court Filing Date'])
 cases['Resolution Date'] = pd.to_datetime(cases['Resolution Date'])
 
+# Create a new column to indicate cases before or after a certain date
+cases['before'] = np.where(cases['Court Filing Date'] < '2017-10-01', 1, 0)
+
 # Calculate the duration in days between filing and resolution
 cases['Duration'] = (cases['Resolution Date'] - cases['Court Filing Date']).dt.days
 
@@ -44,6 +55,12 @@ cases['missing_relief'] = cases['Relief'].isnull().astype(int)
 
 # Convert to numeric, coercing errors to NaN, and fill NaNs with 0
 cases['Relief'] = pd.to_numeric(cases['Relief'], errors='coerce').fillna(0).astype(int)
+
+###############################################################################
+# Save clean cases df
+###############################################################################
+
+cases.to_csv('data/clean/clean_cases.csv')
 
 
 ###############################################################################
@@ -150,4 +167,45 @@ mean_duration_after = after_oct_1_2017['Duration'].mean().round(1)
 
 print(f"Mean duration for SH cases, before October 1, 2017: {mean_duration_before} days")
 print(f"Mean duration for SH cases, after October 1, 2017: {mean_duration_after} days")
+
+###############################################################################
+# Plots
+###############################################################################
+
+# Keep all cases with filing date later than 2000
+cases = cases[cases['Court Filing Date'] > '2004-01-01']
+
+def plot_column_over_time(dataframe1, dataframe2, date_column, plot_column, title, xlabel, filename):
+    """
+    Plots the specified column of a DataFrame over time, aggregated by month.
+    """   
+    # Set the date column as the index
+    dataframe1.set_index(date_column, inplace=True)
+    dataframe2.set_index(date_column, inplace=True)    
+
+    # Resample the data by month and calculate the mean for the plot column
+    monthly_data1 = dataframe1[plot_column].resample('M').mean()
+    monthly_data2 = dataframe2[plot_column].resample('M').mean()
+    
+    # Plotting
+    plt.figure(figsize=(10, 6)) # Adjust the size as needed
+    monthly_data1.plot(label="All cases")
+    monthly_data2.plot(label="SH cases")
+    plt.title(title, fontsize=14, pad=20)
+    plt.xlabel(xlabel)
+    plt.ylabel(plot_column)
+    plt.axvline('2017-10-01', color='red', linestyle='--', linewidth=2)
+    plt.ylim(0, 6000000) # Adjust the y-axis limits as needed
+    plt.legend()
+    plt.grid(True)
+    
+    # Save the plot after it's created
+    full_path = f'{figures_dir}{filename}'
+    plt.savefig(full_path, format='png')
+    plt.show()
+
+    
+plot_column_over_time(cases, sh_cases, 'Court Filing Date', 'Relief', "Mean Relief Over Time by Filing Date", "Time", "mean_relief.png")
+
+#plot_column_over_time(cases, 'Court Filing Date', 'Relief', "Number of Cases Over Time by Resolution Date", "Time", "cases_over_time.png")
 
