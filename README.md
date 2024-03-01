@@ -15,3 +15,5 @@
 - Mean relief $ for SH if case resolved after October 2017, no zeroes: 382291
 - Mean duration for SH cases, before October 1, 2017: 623.1 days
 - Mean duration for SH cases, after October 1, 2017: 403.1 days
+
+- if htere's a mechanical issue where all years cases are filed december 2016, and so are the cases filed dec 2017 picking up the metoo cases. so when is the right timing? is it 2018 actually? 
