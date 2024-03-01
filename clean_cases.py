@@ -18,6 +18,7 @@ if not os.path.exists(figures_dir):
 
 cases = pd.read_csv("data/raw/cases.csv")
 
+
 ###############################################################################
 # Identify SH cases
 ###############################################################################
@@ -139,6 +140,17 @@ print("Mean relief $ for SH if case resolved before October 2017, with zeroes:",
 filtered_cases_after = filter_fun(cases, 'sh', 1, ('after', '2017-10-01'), ('after', '2017-10-01'))
 relief_after = calculate_average(filtered_cases_after, 'Relief')
 print("Mean relief $ for SH if case resolved after October 2017, with zeroes:", relief_after)
+
+
+# Calculate all SH relief before a certain date
+filtered_cases_before = filter_fun(cases, 'sh', 0, ('before', '2017-10-01'), ('before', '2017-10-01'))
+relief_before = calculate_average(filtered_cases_before, 'Relief')
+print("Mean relief $ for all non-SH cases if resolved before October 2017:", relief_before)
+
+# Calculate all SH relief after 
+filtered_cases_after = filter_fun(cases, 'sh', 0, ('after', '2017-10-01'), ('after', '2017-10-01'))
+relief_after = calculate_average(filtered_cases_after, 'Relief')
+print("Mean relief $ for all non-SH cases if resolved after October 2017:", relief_after)
 
 # Create new df for sh = 1
 sh_cases = cases[cases['sh'] == 1]
