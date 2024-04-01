@@ -161,3 +161,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 data
+code/.DS_Store
+.DS_Store
+code/clean/~clean_ma_cases.do.stswp
+code/clean/~run_project.do.stswp
