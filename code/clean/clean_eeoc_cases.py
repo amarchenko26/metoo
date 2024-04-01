@@ -12,11 +12,11 @@ import os
 import numpy as np
 
 # Create figures directory if it doesn't exist
-figures_dir = 'figures/'
-if not os.path.exists(figures_dir):
-    os.makedirs(figures_dir)
+#figures_dir = 'figures/'
+#if not os.path.exists(figures_dir):
+#    os.makedirs(figures_dir)
 
-cases = pd.read_csv("data/raw/cases.csv")
+cases = pd.read_csv("data/raw/EEOC/cases.csv")
 
 
 ###############################################################################
@@ -57,12 +57,46 @@ cases['missing_relief'] = cases['Relief'].isnull().astype(int)
 # Convert to numeric, coercing errors to NaN, and fill NaNs with 0
 cases['Relief'] = pd.to_numeric(cases['Relief'], errors='coerce').fillna(0).astype(int)
 
+
+###############################################################################
+# Clean unicode characters
+###############################################################################
+
+def replace_problematic_characters(df):
+    """
+    Replace problematic Unicode characters in string columns of a DataFrame.
+    """
+    replacements = {
+        '\u2010': '-',  # Hyphen
+        '\u2013': '-',  # En-dash
+        '\u2014': '--', # Em-dash
+        '\u2018': "'",  # Left single quotation mark
+        '\u2019': "'",  # Right single quotation mark
+        '\u201C': '"',  # Left double quotation mark
+        '\u201D': '"',  # Right double quotation mark
+        # Add more replacements as needed
+    }
+    
+    for column in df.select_dtypes(include=['object']):
+        for src, target in replacements.items():
+            df[column] = df[column].str.replace(src, target, regex=False)
+    return df
+
+# Replace problematic characters
+cases_clean = replace_problematic_characters(cases)
+
+# Then save to .dta format
+cases_clean.to_stata('data/clean/clean_eeoc.dta', version = 117)
+
+
 ###############################################################################
 # Save clean cases df
 ###############################################################################
 
-cases.to_csv('data/clean/clean_cases.csv')
+cases.to_csv('data/clean/clean_eeoc.csv')
 
+
+cases.to_stata('data/clean/clean_eeoc.dta')
 
 ###############################################################################
 # Identify SH cases straddling MeToo

@@ -18,17 +18,18 @@ set scheme plotplainblind
 Define globals
 *******************************************************************************/
 
-// for colors
-global sh_color "133 2 249" //purple for women
-global no_sh_color "0 196 170" //green for men
+global sh_color "amber" 
+global no_sh_color "dark gray"
 
 
 /*******************************************************************************
 Define folders
 *******************************************************************************/
 
-gl droot "/Users/anyamarchenko/Documents/GitHub/metoo" // UPDATE THIS
+// UPDATE WITH YOUR PATH TO RUN PROJECT
+gl droot "/Users/anyamarchenko/Documents/GitHub/metoo" 
 
+// DON'T TOUCH
 gl raw_data "$droot/data/raw"
 gl clean_data "$droot/data/clean"
 gl figures "$droot/output/figures"
@@ -48,7 +49,10 @@ ssc install outreg (for frmttable)
 Run files
 *******************************************************************************/
 
+// cleaning files
 do "$drootbaby/code/clean/clean_ma_cases.do"
+do "$drootbaby/code/clean/merge_state_data.do"
 
 
-
+// analysis files
+do "$drootbaby/code/analysis/figures.do"
