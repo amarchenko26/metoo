@@ -13,6 +13,7 @@ version 18.0
 
 set graphics off 
 set scheme plotplainblind  
+pause on // type end of q to resume
 
 /*******************************************************************************
 Define globals
@@ -55,6 +56,8 @@ Run files
 do "$droot/code/clean/clean_ma_cases.do"
 do "$droot/code/clean/merge_state_data.do"
 
+pause 
 
 // analysis files
+do "$droot/code/analysis/tables.do"
 do "$droot/code/analysis/figures.do"
