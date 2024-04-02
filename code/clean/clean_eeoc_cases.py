@@ -43,7 +43,7 @@ cases['Court Filing Date'] = pd.to_datetime(cases['Court Filing Date'])
 cases['Resolution Date'] = pd.to_datetime(cases['Resolution Date'])
 
 # Create a new column to indicate cases before or after a certain date
-cases['before'] = np.where(cases['Court Filing Date'] < '2017-10-01', 1, 0)
+cases['treat'] = np.where(cases['Court Filing Date'] > '2017-10-01', 1, 0)
 
 # Calculate the duration in days between filing and resolution
 cases['Duration'] = (cases['Resolution Date'] - cases['Court Filing Date']).dt.days
@@ -93,10 +93,7 @@ cases_clean.to_stata('data/clean/clean_eeoc.dta', version = 117)
 # Save clean cases df
 ###############################################################################
 
-cases.to_csv('data/clean/clean_eeoc.csv')
-
-
-cases.to_stata('data/clean/clean_eeoc.dta')
+cases.to_stata('data/clean/clean_eeoc.dta', version = 117)
 
 ###############################################################################
 # Identify SH cases straddling MeToo

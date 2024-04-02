@@ -30,9 +30,10 @@ Define folders
 gl droot "/Users/anyamarchenko/Documents/GitHub/metoo" 
 
 // DON'T TOUCH
-gl raw_data "$droot/data/raw"
-gl clean_data "$droot/data/clean"
-gl figures "$droot/output/figures"
+gl raw_data 	"$droot/data/raw"
+gl clean_data 	"$droot/data/clean"
+gl figures 		"$droot/output/figures"
+gl tables 		"$droot/output/tables"
 
 
 /*******************************************************************************
@@ -40,8 +41,9 @@ Required packages - uncomment to install
 *******************************************************************************/
 
 /*
+ssc install balancetable
 ssc install binscatter 
-ssc install outreg (for frmttable) 
+ssc install outreg // for frmttable 
 */
 
 
@@ -50,9 +52,9 @@ Run files
 *******************************************************************************/
 
 // cleaning files
-do "$drootbaby/code/clean/clean_ma_cases.do"
-do "$drootbaby/code/clean/merge_state_data.do"
+do "$droot/code/clean/clean_ma_cases.do"
+do "$droot/code/clean/merge_state_data.do"
 
 
 // analysis files
-do "$drootbaby/code/analysis/figures.do"
+do "$droot/code/analysis/figures.do"
