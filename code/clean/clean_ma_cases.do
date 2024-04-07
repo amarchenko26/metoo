@@ -27,14 +27,15 @@ ren AllegationsBasisofdiscrimina basis
 Define new vars
 *******************************************************************************/
 
+// Drops 200 empty observations
+drop if charge_file_date == . & charge_res_date == .
+
 // Make SH vars
 gen sh = basis == "Sex discrimination / Sexual Harassment"
-la var sh "=1 if basis is sexual harassment"
 
 gen sex_cases = basis == "Female"
 replace sex_cases = 1 if basis == "Sex"
 replace sex_cases = 1 if basis == "Sex discrimination, unspecified or general"
-la var sex_cases "=1 if basis is sex-related"
 
 // Gen state var
 gen state = "MA"
@@ -44,11 +45,8 @@ gen went_to_court = outcome == "Closed - Chapter 478 (removed to court)" // 1 if
 
 gen probable_cause = 1 if outcome == "Probable Cause Found"
 replace probable_cause = 0 if outcome == "Closed - Lack of Probable Cause"
-la var probable_cause "=1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)"
 
 gen duration = charge_res_date - charge_file_date
-
-gen treat = (charge_file_date > date("01oct2017", "DMY"))
 
 /*******************************************************************************
 Export data

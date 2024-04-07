@@ -98,7 +98,7 @@ la var court_res_date "Court resolution date"
 la var court_file_year "Year court case filed"
 la var court_res_year "Year court case resolved"
 la var relief "Compensation to plaintiff"
-la var missing_relief "Plaintiff lost EEOC case"
+la var missing_relief "Plaintiff lost case"
 
 // MA
 la var id "State-given ID"

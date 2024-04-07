@@ -13,7 +13,7 @@ version 18.0
 
 set graphics off 
 set scheme plotplainblind  
-pause on // type end or q in command to resume code after pause
+pause on // type end or q in command to resume code after 
 
 /*******************************************************************************
 Define globals
