@@ -66,38 +66,42 @@ if `run_summary' == 1 {
 /*******************************************************************************
 Balance table
 *******************************************************************************/
+capture program drop balancetable_program
+program define balancetable_program
+    syntax [anything] [, using(string) sample(string) ctitles(string) wide(string) by(string)]
+
+    balancetable `by' `anything' ///
+        using "`using'", ///
+        varlabels vce(robust) replace ///
+        ctitles(`ctitles') ///
+        pvalues staraux pval(nopar) format(%9.2f) ///
+        wide(`wide')
+        if `"`sample'"' != "" {
+            balancetable `by' `anything' if `sample' ///
+                using "`using'", ///
+                varlabels vce(robust) replace ///
+                ctitles(`ctitles') ///
+                pvalues staraux pval(nopar) format(%9.2f) ///
+                wide(`wide')
+        }
+end
+
+/****************************************************************************
+Balance table
+****************************************************************************/
+
 if `run_balance' == 1 {
+    balancetable_program `balance', using("$tables/balance.tex") ctitles("Before MeToo" "After MeToo" "Diff" "p-value") wide(mean diff pval) by(treat)
 
-	balancetable treat `balance' ///
-		using "$tables/balance.tex", ///
-		varlabels vce(robust) replace ///
-		ctitles("Before MeToo" "After MeToo" "Diff" "p-value") ///
-		pvalues staraux pval(nopar) format(%9.2f) ///
-		wide(mean diff pval)
+    balancetable_program `balance', sample(sh == 1) using("$tables/balance_sex.tex") ctitles("Before MeToo" "After MeToo" "Diff" "p-value") wide(mean diff pval) by(treat)
 
-	balancetable treat `balance' ///
-		using "$tables/balance_sex.tex" if sh == 1, ///
-		varlabels vce(robust) replace ///
-		ctitles("Before MeToo" "After MeToo" "Diff" "p-value") ///
-		pvalues staraux pval(nopar) format(%9.2f) ///
-		wide(mean diff pval)
+    // Pre-covid
+    balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before MeToo" "After MeToo" "Diff" "p-value") wide(mean diff pval) by(treat)
 
-	// Pre-covid
-	balancetable treat `balance' ///
-		using "$tables/balance_covid.tex" if ym < 721, ///  // if after Feb 2020
-		varlabels vce(robust) replace ///
-		ctitles("Before MeToo" "After MeToo" "Diff" "p-value") ///
-		pvalues staraux pval(nopar) format(%9.2f) ///
-		wide(mean diff pval)
-
-	// overlap case characteristics
-	balancetable overlap `balance' ///
-		using "$tables/balance_overlap.tex", ///
-		varlabels vce(robust) replace ///
-		ctitles("Ends before MeToo" "Overlaps MeToo" "Diff" "p-value") ///
-		pvalues staraux pval(nopar) format(%9.2f) ///
-		wide(mean diff pval)
+    // overlap case characteristics
+    balancetable_program `balance', using("$tables/balance_overlap.tex") ctitles("Ends before MeToo" "Overlaps MeToo" "Diff" "p-value") wide(mean diff pval) by(overlap)
 }
+
 
 /*******************************************************************************
 Correlation b/w duration and outcomes
