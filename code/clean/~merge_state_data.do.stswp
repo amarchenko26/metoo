@@ -118,7 +118,7 @@ la var basis "Basis of discrimination alleged"
 la var sh "Sexual harassment charge"
 la var sex_cases "Sex-related charge" // Title VII / Sex‐Female or Title VII / Sex‐Female / Sexual-Harassment for EEOC
 la var post "Filing date after MeToo"
-la var treat "Post = 1 and case is SH or overlap"
+la var treat "Post = 1 and case "
 la var juris "Employment, public housing, or education"
 la var duration "Days between filing and resolution"
 la var overlap "Case overlaps with MeToo"

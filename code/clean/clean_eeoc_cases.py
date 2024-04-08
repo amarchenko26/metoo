@@ -42,9 +42,6 @@ print("Total cases brought under Title VII / Sex‐Female:", total_sex_cases)
 cases['Court Filing Date'] = pd.to_datetime(cases['Court Filing Date'])
 cases['Resolution Date'] = pd.to_datetime(cases['Resolution Date'])
 
-# Create a new column to indicate cases before or after a certain date
-cases['treat'] = np.where(cases['Court Filing Date'] > '2017-10-01', 1, 0)
-
 # Calculate the duration in days between filing and resolution
 cases['Duration'] = (cases['Resolution Date'] - cases['Court Filing Date']).dt.days
 
