@@ -2,22 +2,22 @@
 Tables for MeToo project
 *******************************************************************************/
 
-loc run_summary = 0
-loc run_balance = 0
-loc run_duration = 0
+loc run_summary = 1
+loc run_balance = 1
+loc run_duration = 1
 loc	run_did = 1
 
 use "$clean_data/clean_cases.dta", replace
 
 /*******************************************************************************
-Clean data for tables
+Prep vars for tables
 *******************************************************************************/
 
 tab state, gen(state_dummy)
 ren state_dummy1 federal
 ren state_dummy2 MA
 
-la var federal "\textbf{Case type} \\ \hspace{5mm} Federal"
+la var federal "\textbf{Jurisdiction} \\ \hspace{5mm} Federal"
 la var MA "\hspace{5mm} Massachusetts"
 
 tab juris, gen(juris_dummy)
@@ -25,13 +25,24 @@ la var juris_dummy1 "\hspace{5mm} Employment"
 la var juris_dummy2 "\hspace{5mm} Private housing"
 la var juris_dummy3 "\hspace{5mm} Public housing"
 
+tab basis_clean, gen(basis_dummy)
+la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
+la var basis_dummy2 "\hspace{5mm} Disability"
+la var basis_dummy3 "\hspace{5mm} LGBTQ"
+la var basis_dummy4 "\hspace{5mm} Nationality"
+la var basis_dummy5 "\hspace{5mm} Other"
+la var basis_dummy6 "\hspace{5mm} Race"
+la var basis_dummy7 "\hspace{5mm} Religion"
+la var basis_dummy8 "\hspace{5mm} Retaliation"
+la var basis_dummy9 "\hspace{5mm} Sex"
+
 g relief_scale = relief / 1000
 
 /*******************************************************************************
-Prep vars
+Define locals 
 *******************************************************************************/
 
-loc balance ///
+loc summary ///
     sh ///
     sex_cases ///
 		federal ///
@@ -39,6 +50,15 @@ loc balance ///
         juris_dummy1 ///
         juris_dummy2 ///
         juris_dummy3 ///
+		basis_dummy1 ///
+		basis_dummy2 ///
+		basis_dummy3 ///
+		basis_dummy4 ///
+		basis_dummy5 ///
+		basis_dummy6 ///
+		basis_dummy7 ///
+		basis_dummy8 ///
+		basis_dummy9 ///
     charge_file_year ///
     charge_res_year ///
     went_to_court ///
@@ -49,8 +69,30 @@ loc balance ///
     relief ///
     probable_cause
 
-format relief %10.0fc
-format sh sex_cases %4.3f
+
+loc balance ///
+    sh ///
+    sex_cases ///
+		federal ///
+        MA ///
+        juris_dummy1 ///
+        juris_dummy2 ///
+        juris_dummy3 ///
+				basis_dummy1 ///
+		basis_dummy2 ///
+		basis_dummy3 ///
+		basis_dummy4 ///
+		basis_dummy5 ///
+		basis_dummy6 ///
+		basis_dummy7 ///
+		basis_dummy8 ///
+		basis_dummy9 ///
+
+    went_to_court ///
+    duration ///
+    overlap ///
+    relief ///
+    probable_cause
 
 /*******************************************************************************
 Summary
@@ -58,7 +100,7 @@ Summary
 if `run_summary' == 1 {
 
 	est clear
-	estpost tabstat post `balance', c(stat) stat(mean sd min max n)
+	estpost tabstat post `summary', c(stat) stat(mean sd min max n)
 
 	esttab using "$tables/summary.tex", replace ///
 		nomtitle nonote noobs label booktabs f ///
@@ -129,7 +171,7 @@ if `run_duration' == 1 {
 	reg duration i.probable_cause if sex_cases == 1, r
 		eststo F
 
-	estout A B C D E F using "$tables/duration_corr.tex", style(tex) replace ///
+	estout D E F A B C using "$tables/duration_corr.tex", style(tex) replace ///
 		nobaselevels ///
 		eqlabels(none) collabels(none) mlabel(none) ///
 		label varlabels(relief_scale "Compensation (in \$1000s)" 1.probable_cause "Probable cause" _cons "Constant") ///
@@ -142,34 +184,60 @@ if `run_duration' == 1 {
 		prefoot("\\" "\midrule" "\multicolumn{1}{c}{}\\") ///
 		postfoot("\bottomrule" "\end{tabular}")
 
-eststo clear
 }
 
+eststo clear
 
 
 /*******************************************************************************
 DiD regression
 *******************************************************************************/
-loc outcome relief_scale 
+loc outcome1 relief_scale 
+loc outcome2 probable_cause 
 
 if `run_did' == 1 {
-	
-	reghdfe `outcome' treat, absorb(basis ym) vce(cluster basis)
-		eststo A
 
-	reghdfe `outcome' treat if juris == "Employment", absorb(basis ym) vce(cluster basis)
+	// outcome 1
+	reg `outcome1' treat, vce(robust)
+		eststo A
+	
+	reghdfe `outcome1' treat, 						  absorb(basis_clean ym) vce(cluster basis_clean)
 		eststo B
 
-	estout A B using "$tables/did.tex", style(tex) replace ///
+	reghdfe `outcome1' treat if juris == "Employment", absorb(basis_clean ym) vce(cluster basis_clean)
+		eststo C
+
+	reghdfe `outcome1' treat, 						  absorb(basis_clean ym state) vce(cluster basis_clean)
+		eststo D
+		
+	// Outcome 2
+	reg `outcome2' treat, vce(robust)
+		eststo E
+	
+	reghdfe `outcome2' treat, 						  absorb(basis_clean ym) vce(cluster basis_clean)
+		eststo F
+
+	reghdfe `outcome2' treat if juris == "Employment", absorb(basis_clean ym) vce(cluster basis_clean)
+		eststo G
+
+	reghdfe `outcome2' treat, 						  absorb(basis_clean ym state) vce(cluster basis_clean)
+		eststo H
+	
+	estout A B C D E F G H using "$tables/did.tex", style(tex) replace ///
 		nobaselevels ///
 		eqlabels(none) collabels(none) mlabel(none) ///
 		label varlabels(treat "SH $\times$ Post" _cons "Constant") ///
 		cells("b(fmt(3)star)" "se(fmt(3)par)") starlevels(* .1 ** .05 *** .01) ///
-		stats(N r2, labels(`"Observations"' `" \(R^{2}\)"') fmt(%9.0fc 3 3)) ///
+		stats(N r2, labels(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3 3)) ///
 		prehead("\begin{tabular}{l*{@E}{c}}" ///
 		"\toprule" ///
-		"\multicolumn{1}{l}{\texbf{Outcome: Compenstion}}  & \multicolumn{1}{c}{All} & \multicolumn{1}{c}{Employment} \\") ///
+		"\multicolumn{1}{l}{} & \multicolumn{4}{c}{|-----  \textbf{Outcome: Compensation}  -----|} & \multicolumn{4}{c}{|-----  \textbf{Outcome: Probability of Win} -----|}\\" ///
+		"\multicolumn{1}{l}{} & \multicolumn{1}{c}{All} & \multicolumn{1}{c}{All} & \multicolumn{1}{c}{Employment} & \multicolumn{1}{c}{All} & \multicolumn{1}{c}{All} & \multicolumn{1}{c}{All} & \multicolumn{1}{c}{Employment} & \multicolumn{1}{c}{All} \\") ///
 		posthead("\midrule") ///
-		prefoot("\\" "\midrule" "\multicolumn{1}{c}{}\\") ///
-		postfoot("\bottomrule" "\end{tabular}")
+		prefoot("\\" "\midrule" "\multicolumn{1}{l}{Time FE} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} \\" ///
+		"\multicolumn{1}{l}{Basis FE} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} \\" ///
+		"\multicolumn{1}{l}{State FE} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} \\" ///
+		"\midrule") ///
+		postfoot("\bottomrule" "\end{tabular}") ///
+		indicate(`r(indicate_fe)')
 }

@@ -21,7 +21,7 @@ Define globals
 
 global sh_color "amber" 
 global no_sh_color "dark gray"
-global metoo "01oct2017"
+global metoo "15oct2017"
 
 /*******************************************************************************
 Define folders

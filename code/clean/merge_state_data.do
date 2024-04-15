@@ -41,6 +41,18 @@ format court_file_date %td
 replace court_res_date = dofc(court_res_date)
 format court_res_date %td
 
+// Clean basis 
+g basis_clean = "Sex" if regexm(basis, "^Title VII / Sex")  | regexm(basis, "^EPA / Equal Pay-Female") 
+replace basis_clean = "Religion" if regexm(basis, "^Title VII / Religion") 
+replace basis_clean = "Race" if regexm(basis, "^Title VII / Race") | regexm(basis, "^Title VII / Color")
+replace basis_clean = "Nationality" if regexm(basis, "^Title VII / National Origin")
+replace basis_clean = "Disability" if regexm(basis, "^ADA") //Americans with Disabilities
+replace basis_clean = "Age" if regexm(basis, "^ADEA") //Age Discrimination in Employment
+replace basis_clean = "Retaliation" if regexm(basis, "^Title VII / Retaliation") | regexm(basis, "^EPA / Retaliation")
+replace basis_clean = "Other" if regexm(basis, "^Title VII / Other") | regexm(basis, "^GINA")
+
+g probable_cause = 1 if missing_relief == 0
+replace probable_cause = 0 if missing_relief == 1 // no probable cause if relief is missing
 
 /*******************************************************************************
 Append to MA
@@ -115,6 +127,7 @@ la var probable_cause "Probable cause" //1 if cause, 0 if no cause, missing does
 //Common
 la var state "State"
 la var basis "Basis of discrimination alleged"
+la var basis_clean "Basis of discrimination, standardized"
 la var sh "Sexual harassment charge"
 la var sex_cases "Sex-related charge" // Title VII / Sex‐Female or Title VII / Sex‐Female / Sexual-Harassment for EEOC
 la var post "Filing date after MeToo"

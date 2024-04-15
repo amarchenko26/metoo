@@ -118,7 +118,7 @@ forval i = 1/49 {
 drop hdummy24 
 
 // Run reg
-reghdfe probable_cause sh##(hdummy1-hdummy49), absorb(basis_clean ym state) vce(cluster basis_clean)
+reghdfe probable_cause sh##(hdummy1-hdummy), absorb(basis_clean ym state) vce(cluster basis_clean)
 estimates store TWFE
 
 * make graph
