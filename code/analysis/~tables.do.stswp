@@ -2,12 +2,12 @@
 Tables for MeToo project
 *******************************************************************************/
 
+use "$clean_data/clean_cases.dta", replace
+
 loc run_summary = 1
 loc run_balance = 1
 loc run_duration = 1
 loc	run_did = 1
-
-use "$clean_data/clean_cases.dta", replace
 
 /*******************************************************************************
 Prep vars for tables
@@ -78,7 +78,7 @@ loc balance ///
         juris_dummy1 ///
         juris_dummy2 ///
         juris_dummy3 ///
-				basis_dummy1 ///
+		basis_dummy1 ///
 		basis_dummy2 ///
 		basis_dummy3 ///
 		basis_dummy4 ///
@@ -87,7 +87,6 @@ loc balance ///
 		basis_dummy7 ///
 		basis_dummy8 ///
 		basis_dummy9 ///
-
     went_to_court ///
     duration ///
     overlap ///

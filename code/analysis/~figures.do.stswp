@@ -4,6 +4,9 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
+loc timeseries = 0 // Number of cases, relief, prob winning over time
+loc event 	   = 1 // Event study
+loc diff 	   = 0 // Difference between non-SH and SH cases filed over time
 
 /*******************************************************************************
 Prep data for plotting
@@ -19,63 +22,104 @@ di tm(2017m10) // di numeric value for October 2017, it's 693
 Plot
 *******************************************************************************/
 
-// Number of discrimination cases filed over time
-preserve
-	collapse (count) mean_y = y, by(ym sh)
+// Event study
+if `event' == 1 {
+	
+	g horizon = ym - tm(2017m10)
+	drop if horizon > 24 | horizon < -24 // two years
+	tab horizon, gen(hdummy)
 
-	twoway ///
-		scatter mean_y ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Number of Other Cases", axis(1)) /// 
+	// Loop to assign labels
+	forval i = 1/49 {
+		local label_value = -25 + (`i' )
+		local var_name hdummy`i'
+		label variable `var_name' "`label_value'"
+	}
+
+	drop hdummy24 
+
+	// Run reg
+
+	reghdfe probable_cause sh##(hdummy1-hdummy49), ///
+		absorb(basis_clean ym state) ///
+		vce(cluster basis_clean)
+
+	estimates store TWFE
+
+	* make graph
+	coefplot TWFE, drop(_cons 1.sh) vertical ///
+		yline(0, lcolor(blue*0.8)) ///
+		addplot(line @b @at, lcolor(blue*0.8)) ///
+		ciopts(recast(rcap) msize(medium)) ///
+		xline(24) ///
+		ytitle("Effect of MeToo on winning") ///
+		xtitle("Months relative to treatment") ///
+		xlabel(0 "-24" 1 "-23" 2 "-22" 3 "-21" 4 "-20" 5 "-19" 6 "-18" 7 "-17" 8 "-16" ///
+			   9 "-15" 10 "-14" 11 "-13" 12 "-12" 13 "-11" 14 "-10" 15 "-9" 16 "-8" ///
+			   17 "-7" 18 "-6" 19 "-5" 20 "-4" 21 "-3" 22 "-2" 23 "-1" 24 "0" ///
+			   25 "1" 26 "2" 27 "4" 28 "5" 29 "6" 30 "7" 31 "8" 32 "9" ///
+			   33 "10" 34 "11" 35 "12" 36 "13" 37 "14" 38 "15" 39 "16" 40 "17" ///
+			   41 "18" 42 "19" 43 "20" 44 "21" 45 "22" 46 "23" 47 "24", angle(90))
+		
+	graph export "$figures/eventstudy.png", replace 	
+}
+
+
+// Number of discrimination cases filed over time
+if `timeseries' == 1 {
+    preserve
+    collapse (count) mean_y = y, by(ym sh)
+		twoway ///
+		scatter mean_y ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Number of Other Cases", axis(1)) ///
 		|| scatter mean_y ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Number of Sexual Harassment Cases", axis(2)) ///
 		|| lowess mean_y ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
 		|| lowess mean_y ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
 		legend(order(1 "Other" 3 "Sexual harassment") ///
-             region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
+		region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
 		xtitle("Date filed") ///
 		xline(693, lpattern(solid))
-	graph export "$figures/timeseries.png", replace 	
-restore	
+    graph export "$figures/timeseries.png", replace
+    restore
+
 
 
 // Damages over time
-preserve 
-winsor relief, p(.05) gen(relief_wins)
-
+	preserve 
+	winsor relief, p(.05) gen(relief_wins)
 	collapse (mean) mean_relief = relief_wins, by(ym sh)
-
-	twoway ///
-		scatter mean_relief ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Other Cases", axis(1)) /// 
-		|| scatter mean_relief ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Sexual Harassment Cases", axis(2)) ///
-		|| lowess mean_relief ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
-		|| lowess mean_relief ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
-		legend(order(1 "Other" 3 "Sexual harassment") ///
-             region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
-		xtitle("Date filed") ///
-		xline(693, lpattern(solid))
-	graph export "$figures/timeseries_relief.png", replace 	
-restore	
+		twoway ///
+			scatter mean_relief ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Other Cases", axis(1)) /// 
+			|| scatter mean_relief ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Sexual Harassment Cases", axis(2)) ///
+			|| lowess mean_relief ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
+			|| lowess mean_relief ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
+			legend(order(1 "Other" 3 "Sexual harassment") ///
+				 region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
+			xtitle("Date filed") ///
+			xline(693, lpattern(solid))
+		graph export "$figures/timeseries_relief.png", replace 	
+	restore	
 
 
 // Probability of winning over time
-preserve 
-
+	preserve 
 	collapse (mean) mean_prob_cause = probable_cause, by(ym sh)
-
-	twoway ///
-		scatter mean_prob_cause ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Other Cases", axis(1)) /// 
-		|| scatter mean_prob_cause ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Sexual Harassment Cases", axis(2)) ///
-		|| lowess mean_prob_cause ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
-		|| lowess mean_prob_cause ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
-		legend(order(1 "Other" 3 "Sexual harassment") ///
-             region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
-		xtitle("Date filed") ///
-		xline(693, lpattern(solid))
+		twoway ///
+			scatter mean_prob_cause ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Other Cases", axis(1)) /// 
+			|| scatter mean_prob_cause ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Sexual Harassment Cases", axis(2)) ///
+			|| lowess mean_prob_cause ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
+			|| lowess mean_prob_cause ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
+			legend(order(1 "Other" 3 "Sexual harassment") ///
+				 region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
+			xtitle("Date filed") ///
+			xline(693, lpattern(solid))
 	graph export "$figures/timeseries_winprob.png", replace 	
-restore	
-
+	restore	
+}
 
 
 // Difference between non-SH and SH cases filed over time
-preserve
+if `diff' == 1 {
+	preserve
 	collapse (count) mean_y = y, by(ym sh)
 
 	reshape wide mean_y, j(sh) i(ym)
@@ -101,37 +145,13 @@ preserve
 	graph export "$figures/timeseries_nocovid.png", replace 	
 restore
 
-
-// Event study
-
-g horizon = ym - 693
-drop if horizon > 24 | horizon < -24 // two years
-tab horizon, gen(hdummy)
-
-// Loop to assign labels
-forval i = 1/49 {
-    local label_value = -25 + (`i' )
-    local var_name hdummy`i'
-    label variable `var_name' "`label_value'"
+	
 }
 
-drop hdummy24 
 
-// Run reg
-reghdfe probable_cause sh##(hdummy1-hdummy), absorb(basis_clean ym state) vce(cluster basis_clean)
-estimates store TWFE
 
-* make graph
-coefplot TWFE, vertical ///
-	yline(0, lcolor(blue*0.8)) ///
-	addplot(line @b @at, lcolor(blue*0.8)) ///
-	ciopts(recast(rcap) msize(medium)) ///
-	xline(25) ///
-	ytitle("Effect of MeToo") ///
-	xtitle("Months since treatment")
 
-	
-graph export "$figures/eventstudy.png", replace 	
+
 
 
 
