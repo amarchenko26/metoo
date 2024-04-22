@@ -17,48 +17,139 @@ gen y = 1 // index var
 
 di tm(2017m10) // di numeric value for October 2017, it's 693
 
+winsor relief, p(.05) gen(relief_wins)
+
+/*******************************************************************************
+Program to create time to treat
+*******************************************************************************/
+
+* Define a function to create the time_to_treat variable
+cap program drop create_time_to_treat
+program define create_time_to_treat
+    syntax, period(integer) [period_label(string)]
+
+    * Convert the event date to Stata date format
+    gen event_date = date("$metoo", "DMY")
+
+    * Generate the time_to_treat variable
+    gen months_to_treat_`period' = ceil((common_file_date - event_date) / (`period' * 30.4375))
+    replace months_to_treat_`period' = 0 if common_file_date < event_date & common_file_date >= event_date - `period' * 30.4375
+    replace months_to_treat_`period' = -1 if common_file_date < event_date - `period' * 30.4375 & common_file_date >= event_date - 2 * `period' * 30.4375
+    replace months_to_treat_`period' = -2 if common_file_date < event_date - 2 * `period' * 30.4375 & common_file_date >= event_date - 3 * `period' * 30.4375
+    replace months_to_treat_`period' = -3 if common_file_date < event_date - 3 * `period' * 30.4375 & common_file_date >= event_date - 4 * `period' * 30.4375
+    replace months_to_treat_`period' = -4 if common_file_date < event_date - 4 * `period' * 30.4375 & common_file_date >= event_date - 5 * `period' * 30.4375
+    replace months_to_treat_`period' = -5 if common_file_date < event_date - 5 * `period' * 30.4375 & common_file_date >= event_date - 6 * `period' * 30.4375
+    replace months_to_treat_`period' = -6 if common_file_date < event_date - 6 * `period' * 30.4375 & common_file_date >= event_date - 7 * `period' * 30.4375
+    replace months_to_treat_`period' = -7 if common_file_date < event_date - 7 * `period' * 30.4375 & common_file_date >= event_date - 8 * `period' * 30.4375
+    replace months_to_treat_`period' = -8 if common_file_date < event_date - 8 * `period' * 30.4375 & common_file_date >= event_date - 9 * `period' * 30.4375
+    replace months_to_treat_`period' = -9 if common_file_date < event_date - 9 * `period' * 30.4375 & common_file_date >= event_date - 10 * `period' * 30.4375
+
+    * Label the time_to_treat variable
+    if "`period_label'" != "" {
+        label var months_to_treat_`period' "`period_label'"
+    }
+    else {
+        label var months_to_treat_`period' "Periods relative to MeToo"
+    }
+	drop event_date
+end
+
+* Create time_to_treat for quarters
+create_time_to_treat, period(3) period_label("Quarters relative to MeToo")
+
+* Create time_to_treat for half-years
+create_time_to_treat, period(6) period_label("Half-years relative to MeToo")
+
+* Create time_to_treat for years
+create_time_to_treat, period(12) period_label("Years relative to MeToo")
+
 
 /*******************************************************************************
 Plot
 *******************************************************************************/
 
+loc y 		relief
+loc horizon months_to_treat_6
+
 // Event study
 if `event' == 1 {
 	
-	loc y probable_cause
-
 	g horizon = common_year - 2018	
 	g horizon_pos = horizon + 9
 
+	sum `horizon'
+	loc min_val = r(min)
+	loc max_val = r(max)
+	loc omit	= -1 * `min_val'
+	loc xline	= `omit' + 1
+
+	g `horizon'_pos = `horizon' + (-1*`min_val') + 1
+	
+	// Run dynamic DiD
+	reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
+		absorb(basis_clean `horizon'_pos) ///
+		vce(cluster basis_clean)
+		
+	estimates store TWFE
+	
+	* Prepare the dynamic labels for the x-axis
+	local num_points = `max_val' - `min_val' + 1  // Total points from min to max
+	local xlabel_str = ""
+	forval i = 1/`num_points' {
+		local label_val = `i' + `min_val' - 1
+		local xlabel_str `xlabel_str' `i' "`label_val'"
+	}
+	
+	
 // 	//* Loop to assign labels
-// 	forval i = 1/13 {
-// 		local label_value = -9 + (`i' )
+// 	forval i = 0/13 {
+// 		local label_value = `min_val' + (`i' )
 // 		local var_name hdummy`i'
 // 		label variable `var_name' "`label_value'"
 // 	}
-//
-// 	drop hdummy8 // drop -1
-
-	// Run reg
-	reghdfe `y' ib8.horizon_pos##sh, ///
-		absorb(basis_clean common_year) ///
-		vce(cluster basis_clean)
-
-	estimates store TWFE
 	   
-	* make graph
-	coefplot TWFE, keep(*.horizon_pos#1.sh) baselevel vertical ///
+	// Make graph
+	coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
 		addplot(line @b @at, lcolor(orange_red*0.8)) ///
 		ciopts(recast(rcap) msize(medium) color(orange_red)) ///
 		yline(0, lc(gs8) lp(dash)) ///
-		xline(9, lp(dash) lc(gs4)) ///
+		xline(`omit'+1, lp(dash) lc(gs4)) ///
 		ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
-		ytitle("Effect of MeToo on winning") ///
-		xtitle("Years relative to treatment") ///
-		xlabel( 1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4", labsize(medium)) 
+		ytitle("Effect of MeToo (SH minus non-SH cases)") ///
+		xtitle("Time relative to treatment") ///
+		xlabel(`xlabel_str', labsize(medium) angle(90))
 				
-	graph export "$figures/eventstudy_`y'.png", replace 	
+	graph export "$figures/eventstudy_`y'_`horizon'.png", replace 
+	
+	// Clean up
+	estimates clear
+	drop `horizon'_pos 
+	drop base
+	drop horizon horizon_pos
 }
+
+
+
+
+
+
+
+//
+// 	drop hdummy8 // drop -1
+
+		//xlabel( 1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4", labsize(medium)) 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // Number of discrimination cases filed over time
@@ -81,7 +172,6 @@ if `timeseries' == 1 {
 
 // Damages over time
 	preserve 
-	winsor relief, p(.05) gen(relief_wins)
 	collapse (mean) mean_relief = relief_wins, by(ym sh)
 		twoway ///
 			scatter mean_relief ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Other Cases", axis(1)) /// 
