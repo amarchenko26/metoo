@@ -68,88 +68,56 @@ create_time_to_treat, period(12) period_label("Years relative to MeToo")
 Plot
 *******************************************************************************/
 
-loc y 		relief
-loc horizon months_to_treat_6
+local horizons "months_to_treat_6 months_to_treat_12"
+local outcomes "relief_wins probable_cause"
 
 // Event study
 if `event' == 1 {
-	
-	g horizon = common_year - 2018	
-	g horizon_pos = horizon + 9
-
-	sum `horizon'
-	loc min_val = r(min)
-	loc max_val = r(max)
-	loc omit	= -1 * `min_val'
-	loc xline	= `omit' + 1
-
-	g `horizon'_pos = `horizon' + (-1*`min_val') + 1
-	
-	// Run dynamic DiD
-	reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
-		absorb(basis_clean `horizon'_pos) ///
-		vce(cluster basis_clean)
+	foreach y in `outcomes' {
+		foreach horizon in `horizons' {
 		
-	estimates store TWFE
-	
-	* Prepare the dynamic labels for the x-axis
-	local num_points = `max_val' - `min_val' + 1  // Total points from min to max
-	local xlabel_str = ""
-	forval i = 1/`num_points' {
-		local label_val = `i' + `min_val' - 1
-		local xlabel_str `xlabel_str' `i' "`label_val'"
+		sum `horizon'
+		loc min_val = r(min)
+		loc max_val = r(max)
+		loc omit	= -1 * `min_val'
+		loc xline	= `omit' + 1
+
+		g `horizon'_pos = `horizon' + (-1*`min_val') + 1
+		
+		// Run dynamic DiD
+		reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
+			absorb(basis_clean `horizon'_pos) ///
+			vce(cluster basis_clean)
+			
+		estimates store TWFE
+		
+		* Prepare the dynamic labels for the x-axis
+		local num_points = `max_val' - `min_val'  // Total points from min to max
+		local xlabel_str = ""
+		forval i = 1/`num_points' {
+			local label_val = `i' + `min_val' - 1
+			local xlabel_str `xlabel_str' `i' "`label_val'"
+		}
+		
+		// Make graph
+		coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
+			addplot(line @b @at, lcolor(orange_red*0.8)) ///
+			ciopts(recast(rcap) msize(medium) color(orange_red)) ///
+			yline(0, lc(gs8) lp(dash)) ///
+			xline(`xline', lp(dash) lc(gs4)) ///
+			ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
+			ytitle("Effect of MeToo (SH minus non-SH cases)") ///
+			xtitle("Time relative to treatment") ///
+			xlabel(`xlabel_str', labsize(medium) angle(90))
+					
+		graph export "$figures/eventstudy_`y'_`horizon'.png", replace 
+		
+		// Clean up
+		estimates clear
+		*drop `horizon'_pos 
+		}
 	}
-	
-	
-// 	//* Loop to assign labels
-// 	forval i = 0/13 {
-// 		local label_value = `min_val' + (`i' )
-// 		local var_name hdummy`i'
-// 		label variable `var_name' "`label_value'"
-// 	}
-	   
-	// Make graph
-	coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
-		addplot(line @b @at, lcolor(orange_red*0.8)) ///
-		ciopts(recast(rcap) msize(medium) color(orange_red)) ///
-		yline(0, lc(gs8) lp(dash)) ///
-		xline(`omit'+1, lp(dash) lc(gs4)) ///
-		ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
-		ytitle("Effect of MeToo (SH minus non-SH cases)") ///
-		xtitle("Time relative to treatment") ///
-		xlabel(`xlabel_str', labsize(medium) angle(90))
-				
-	graph export "$figures/eventstudy_`y'_`horizon'.png", replace 
-	
-	// Clean up
-	estimates clear
-	drop `horizon'_pos 
-	drop base
-	drop horizon horizon_pos
 }
-
-
-
-
-
-
-
-//
-// 	drop hdummy8 // drop -1
-
-		//xlabel( 1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4", labsize(medium)) 
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Number of discrimination cases filed over time
