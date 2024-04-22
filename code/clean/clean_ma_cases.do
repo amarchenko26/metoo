@@ -31,12 +31,12 @@ Define new vars
 drop if charge_file_date == . & charge_res_date == .
 
 // Clean basis 
-g basis_clean = "Sex" if regexm(basis, "Abnormal pregnancy|Sex|Female|Male")
+g basis_clean = "Sex" if regexm(basis, "Sex|Female|Male")
 replace basis_clean = "LGBTQ" if regexm(basis, "Sexual orientation|Gender")
 replace basis_clean = "Religion" if regexm(basis, "Atheist|Catholic|Creed|Orthodox|Islamic|Jehovah's|Jewish|Protestant|Sabbath|Adventist") | regexm(basis, "^Other Religion")| regexm(basis, "^Other religious")| regexm(basis, "^Other specified creed")
 replace basis_clean = "Race" if regexm(basis, "African|Asian|Black|Hispanic|White|hispanic|Race") | regexm(basis, "^Other Race")
 replace basis_clean = "Nationality" if regexm(basis, "American|Arab|Chinese|Caribbean|Indian|European|Filipino|Greek|Italian|Japanese|Korean|Mexican|Middle Eastern|National|Polish|national") | regexm(basis, "^Other European") | regexm(basis, "^Other National")
-replace basis_clean = "Disability" if regexm(basis, "AIDS|Acquired|Alcoholism|Back|Blindness|Cancer|Diabetes|Deafness|Disability|Epilepsy|Disease|Illness|Obesity|Retarded|Skin|Speech|Uses|motor|asthma") | regexm(basis, "^Other Visual") | regexm(basis, "^Other disability")| regexm(basis, "^Other hearing")| regexm(basis, "^Other hearing")| regexm(basis, "^Other mental")| regexm(basis, "^Other organic")
+replace basis_clean = "Disability" if regexm(basis, "Abnormal pregnancy|AIDS|Acquired|Alcoholism|Back|Blindness|Cancer|Diabetes|Deafness|Disability|Epilepsy|Disease|Illness|Obesity|Retarded|Skin|Speech|Uses|motor|asthma") | regexm(basis, "^Other Visual") | regexm(basis, "^Other disability")| regexm(basis, "^Other hearing")| regexm(basis, "^Other hearing")| regexm(basis, "^Other mental")| regexm(basis, "^Other organic")
 replace basis_clean = "Age" if regexm(basis, "Age") 
 replace basis_clean = "Retaliation" if regexm(basis, "Retaliation")
 replace basis_clean = "Other" if regexm(basis, "Arrest|Children|Conviction|Divorced|Drug|Familial|Genetic|Lead|Marital|Married|Military|Misdemeanor|Police|Public|Separated|Single|Unspecified|Veteran|Widowed")

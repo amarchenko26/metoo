@@ -79,6 +79,8 @@ gen ym = ym(year(common_file_date), month(common_file_date))
 format ym %tm 
 la var ym "Year-month var of file date"
 
+gen common_year = year(common_file_date)
+
 // Get year
 gen charge_file_year = year(charge_file_date)
 gen charge_res_year = year(charge_res_date)

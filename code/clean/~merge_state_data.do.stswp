@@ -52,7 +52,7 @@ replace basis_clean = "Retaliation" if regexm(basis, "^Title VII / Retaliation")
 replace basis_clean = "Other" if regexm(basis, "^Title VII / Other") | regexm(basis, "^GINA")
 
 g probable_cause = 1 if missing_relief == 0
-replace probable_cause = 0 if missing_relief == 1 // no probable cause if r
+replace probable_cause = 0 if missing_relief == 1 // no probable cause if relief is missing
 
 /*******************************************************************************
 Append to MA
@@ -78,6 +78,8 @@ replace duration = 0 if duration < 0
 gen ym = ym(year(common_file_date), month(common_file_date)) 
 format ym %tm 
 la var ym "Year-month var of file date"
+
+gen common_year = year(common_file_date)
 
 // Get year
 gen charge_file_year = year(charge_file_date)

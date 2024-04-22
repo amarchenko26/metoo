@@ -2,12 +2,12 @@
 Tables for MeToo project
 *******************************************************************************/
 
-loc run_summary = 1
-loc run_balance = 1
-loc run_duration = 1
-loc	run_did = 1
-
 use "$clean_data/clean_cases.dta", replace
+
+loc run_summary = 0
+loc run_balance = 1
+loc run_duration = 0
+loc	run_did = 0
 
 /*******************************************************************************
 Prep vars for tables
@@ -135,12 +135,12 @@ Balance table
 ****************************************************************************/
 
 if `run_balance' == 1 {
-    balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
+    balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
 
     balancetable_program `balance', sample(sh == 1) using("$tables/balance_sex.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(robust)
 
     // Pre-covid
-    balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
+    balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
 
     // overlap case characteristics
     balancetable_program `balance', using("$tables/balance_overlap.tex") ctitles("Before" "Overlap" "Diff" "p-value") wide(mean diff pval) by(overlap) errors(robust)

@@ -25,43 +25,39 @@ Plot
 // Event study
 if `event' == 1 {
 	
-	g horizon = ym - tm(2017m10)
-	drop if horizon > 24 | horizon < -24 // two years
-	tab horizon, gen(hdummy)
+	loc y probable_cause
 
-	// Loop to assign labels
-	forval i = 1/49 {
-		local label_value = -25 + (`i' )
-		local var_name hdummy`i'
-		label variable `var_name' "`label_value'"
-	}
+	g horizon = common_year - 2018	
+	g horizon_pos = horizon + 9
 
-	drop hdummy24 
+// 	//* Loop to assign labels
+// 	forval i = 1/13 {
+// 		local label_value = -9 + (`i' )
+// 		local var_name hdummy`i'
+// 		label variable `var_name' "`label_value'"
+// 	}
+//
+// 	drop hdummy8 // drop -1
 
 	// Run reg
-
-	reghdfe probable_cause sh##(hdummy1-hdummy49), ///
-		absorb(basis_clean ym state) ///
+	reghdfe `y' ib8.horizon_pos##sh, ///
+		absorb(basis_clean common_year) ///
 		vce(cluster basis_clean)
 
 	estimates store TWFE
-
+	   
 	* make graph
-	coefplot TWFE, drop(_cons 1.sh) vertical ///
-		yline(0, lcolor(blue*0.8)) ///
-		addplot(line @b @at, lcolor(blue*0.8)) ///
-		ciopts(recast(rcap) msize(medium)) ///
-		xline(24) ///
+	coefplot TWFE, keep(*.horizon_pos#1.sh) baselevel vertical ///
+		addplot(line @b @at, lcolor(orange_red*0.8)) ///
+		ciopts(recast(rcap) msize(medium) color(orange_red)) ///
+		yline(0, lc(gs8) lp(dash)) ///
+		xline(9, lp(dash) lc(gs4)) ///
+		ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
 		ytitle("Effect of MeToo on winning") ///
-		xtitle("Months relative to treatment") ///
-		xlabel(0 "-24" 1 "-23" 2 "-22" 3 "-21" 4 "-20" 5 "-19" 6 "-18" 7 "-17" 8 "-16" ///
-			   9 "-15" 10 "-14" 11 "-13" 12 "-12" 13 "-11" 14 "-10" 15 "-9" 16 "-8" ///
-			   17 "-7" 18 "-6" 19 "-5" 20 "-4" 21 "-3" 22 "-2" 23 "-1" 24 "0" ///
-			   25 "1" 26 "2" 27 "4" 28 "5" 29 "6" 30 "7" 31 "8" 32 "9" ///
-			   33 "10" 34 "11" 35 "12" 36 "13" 37 "14" 38 "15" 39 "16" 40 "17" ///
-			   41 "18" 42 "19" 43 "20" 44 "21" 45 "22" 46 "23" 47 "24", angle(90))
-		
-	graph export "$figures/eventstudy.png", replace 	
+		xtitle("Years relative to treatment") ///
+		xlabel( 1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4", labsize(medium)) 
+				
+	graph export "$figures/eventstudy_`y'.png", replace 	
 }
 
 
