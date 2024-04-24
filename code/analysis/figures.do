@@ -80,7 +80,7 @@ if `event' == 1 {
 		loc min_val = r(min)
 		loc max_val = r(max)
 		loc omit	= -1 * `min_val'
-		loc xline	= `omit' + 1
+		loc xline	= `omit' + .5
 
 		g `horizon'_pos = `horizon' + (-1*`min_val') + 1
 		
