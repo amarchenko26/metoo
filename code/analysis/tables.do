@@ -36,8 +36,6 @@ la var basis_dummy7 "\hspace{5mm} Religion"
 la var basis_dummy8 "\hspace{5mm} Retaliation"
 la var basis_dummy9 "\hspace{5mm} Sex"
 
-g relief_scale = relief / 1000
-la var relief_scale "Relief"
 
 /*******************************************************************************
 Define locals 
@@ -140,10 +138,17 @@ if `run_balance' == 1 {
 
     balancetable_program `balance', sample(sh == 1) using("$tables/balance_sex.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(robust)
 
-    // Pre-covid
+    // Filed pre-covid
     balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
 
-    // overlap case characteristics
+	g covid = date("11mar2020", "DMY")
+	
+    // Resolved pre-covid
+    balancetable_program `balance', sample(common_res_date < covid) using("$tables/balance_res_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
+
+	drop covid 
+	
+	// overlap case characteristics
     balancetable_program `balance', using("$tables/balance_overlap.tex") ctitles("Before" "Overlap" "Diff" "p-value") wide(mean diff pval) by(overlap) errors(robust)
 }
 
@@ -184,6 +189,7 @@ if `run_duration' == 1 {
 		prefoot("\\" "\midrule" "\multicolumn{1}{c}{}\\") ///
 		postfoot("\bottomrule" "\end{tabular}")
 
+	estimates clear
 }
 
 eststo clear
@@ -200,64 +206,88 @@ if `run_did' == 1 {
 	// outcome 1
 	reg `outcome1' treat, vce(robust)
 		eststo A
-// 		, title(All)
-	
+		qui estadd loc feunit "No", replace
+		qui estadd loc fetime "No", replace
+		qui estadd loc festate "No", replace
+		
 	reghdfe `outcome1' treat, 						  absorb(basis_clean ym) vce(cluster basis_clean)
 		eststo B
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		qui estadd loc festate "No", replace
+
 
 	reghdfe `outcome1' treat if juris == "Employment", absorb(basis_clean ym) vce(cluster basis_clean)
 		eststo C
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		qui estadd loc festate "No", replace
+
 
 	reghdfe `outcome1' treat, 						  absorb(basis_clean ym state) vce(cluster basis_clean)
 		eststo D
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		qui estadd loc festate "Yes", replace
+
 		
 	// Outcome 2
 	reg `outcome2' treat, vce(robust)
 		eststo E
+		qui estadd loc feunit "No", replace
+		qui estadd loc fetime "No", replace
+		qui estadd loc festate "No", replace
+
 	
 	reghdfe `outcome2' treat, 						  absorb(basis_clean ym) vce(cluster basis_clean)
 		eststo F
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		qui estadd loc festate "No", replace
 
 	reghdfe `outcome2' treat if juris == "Employment", absorb(basis_clean ym) vce(cluster basis_clean)
 		eststo G
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		qui estadd loc festate "No", replace
 
 	reghdfe `outcome2' treat, 						  absorb(basis_clean ym state) vce(cluster basis_clean)
 		eststo H
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		qui estadd loc festate "Yes", replace
 			
-	estout A B C D E F G H using "$tables/did.tex", style(tex) replace ///
-		mgroups("Compensation" "Probability of win", pattern(0 0 0 0 1 0 0 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) ///
-		mlabel("All" "All" "Employment" "All" "All" "All" "Employment" "All") ///
-		nobaselevels collabels(none) ///
-		label varlabels(treat "SH $\times$ Post" _cons "Constant") ///
-		cells("b(fmt(3)star)" "se(fmt(3)par)") starlevels(* .1 ** .05 *** .01) ///
-		stats(N r2, labels(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3 3)) ///
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") ///
-		posthead("\midrule") ///
-		prefoot("\\" "\midrule" "\multicolumn{1}{l}{Time FE} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} \\" ///
-		"\multicolumn{1}{l}{Basis FE} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{Yes} \\" ///
-		"\multicolumn{1}{l}{State FE} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} \\" ///
-		"\midrule") ///
-		postfoot("\bottomrule" "\end{tabular}")
+	#delimit ;
+	
+	estout A B C D E F G H using "$tables/did.tex", style(tex) replace
+		varlabels(treat "SH $\times$ Post" _cons "Constant")
+		mgroups("Compensation" "Probability of win", pattern(0 0 0 0 1 0 0 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel("All" "All" "Employment" "All" "All" "All" "Employment" "All")
+		stats(feunit fetime festate N r2, 
+			label("Case type FE" "Time FE" "State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule") 
+		postfoot("\bottomrule" "\end{tabular}") ;
 
+	#delimit cr
+		
 	estimates clear
+	
 }
 
 
-loc outcome1 relief_scale 
-loc outcome2 probable_cause 
+loc outcome1 probable_cause 
+loc outcome2 relief_scale 
 
 if `run_did' == 1 {
 
 	// outcome 1
 	reg `outcome1' treat, vce(robust)
 		eststo A
-	// 		ereturn list
-// 		if `e(absvars)' == .{
-// 			estadd local fixed "No" , replace
-// 		}
-// 		else{
-// 			estadd local fixed "Yes"
-// 		}
 
 	reghdfe `outcome1' treat, 						  absorb(basis_clean ym) vce(cluster basis_clean)
 		eststo B
@@ -283,13 +313,12 @@ if `run_did' == 1 {
 		stats(N r2, labels(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3 3)) ///
 		prehead("\begin{tabular}{l*{@E}{c}}" ///
 		"\toprule" ///
-		"\multicolumn{1}{l}{} & \multicolumn{3}{c}{|--- \textbf{Outcome: Compensation} ---|} & \multicolumn{3}{c}{|--  \textbf{Outcome: P(Win)} ---|}\\") ///
+		"\multicolumn{1}{l}{} & \multicolumn{3}{c}{|--- \textbf{Outcome: P(win)} ---|} & \multicolumn{3}{c}{|--  \textbf{Outcome: Compensation} ---|}\\") ///
 		posthead("\midrule") ///
 		prefoot("\\" "\midrule" "\multicolumn{1}{l}{Time FE} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} \\" ///
 		"\multicolumn{1}{l}{Basis FE} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{No} & \multicolumn{1}{c}{Yes} & \multicolumn{1}{c}{No}\\" ///
 		"\midrule") ///
-		postfoot("\bottomrule" "\end{tabular}") ///
-		indicate(`r(indicate_fe)')
+		postfoot("\bottomrule" "\end{tabular}") 
 
 		estimates clear
 }

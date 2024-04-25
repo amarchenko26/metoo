@@ -4,31 +4,27 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc timeseries = 0 // Number of cases, relief, prob winning over time
-loc event 	   = 1 // Event study
-loc diff 	   = 0 // Difference between non-SH and SH cases filed over time
+loc timeseries = 1 // Number of cases, relief, prob winning over time
+loc event 	   = 0 // Event study
+loc diff 	   = 1 // DiD
+loc duration   = 0 // Duration 
 
 /*******************************************************************************
 Prep data for plotting
 *******************************************************************************/
 
-drop if ym < 606 //drop cases before Jan 2010
-gen y = 1 // index var
-
+drop if ym < 606 // drop cases before Jan 2010
+g y = 1 		// index var
 di tm(2017m10) // di numeric value for October 2017, it's 693
-
-winsor relief, p(.05) gen(relief_wins)
 
 /*******************************************************************************
 Program to create time to treat
 *******************************************************************************/
 
-* Define a function to create the time_to_treat variable
 cap program drop create_time_to_treat
 program define create_time_to_treat
     syntax, period(integer) [period_label(string)]
 
-    * Convert the event date to Stata date format
     gen event_date = date("$metoo", "DMY")
 
     * Generate the time_to_treat variable
@@ -54,7 +50,7 @@ program define create_time_to_treat
 	drop event_date
 end
 
-* Create time_to_treat for quarters
+// Create quarters
 create_time_to_treat, period(3) period_label("Quarters relative to MeToo")
 
 * Create time_to_treat for half-years
@@ -69,7 +65,7 @@ Plot
 *******************************************************************************/
 
 local horizons "months_to_treat_6 months_to_treat_12"
-local outcomes "relief_wins probable_cause"
+local outcomes "relief_w probable_cause"
 
 // Event study
 if `event' == 1 {
@@ -80,7 +76,7 @@ if `event' == 1 {
 		loc min_val = r(min)
 		loc max_val = r(max)
 		loc omit	= -1 * `min_val'
-		loc xline	= `omit' + 1
+		loc xline	= `omit' + .5
 
 		g `horizon'_pos = `horizon' + (-1*`min_val') + 1
 		
@@ -92,7 +88,7 @@ if `event' == 1 {
 		estimates store TWFE
 		
 		* Prepare the dynamic labels for the x-axis
-		local num_points = `max_val' - `min_val'  // Total points from min to max
+		local num_points = `max_val' - `min_val' 
 		local xlabel_str = ""
 		forval i = 1/`num_points' {
 			local label_val = `i' + `min_val' - 1
@@ -114,7 +110,7 @@ if `event' == 1 {
 		
 		// Clean up
 		estimates clear
-		*drop `horizon'_pos 
+		drop `horizon'_pos 
 		}
 	}
 }
@@ -140,15 +136,16 @@ if `timeseries' == 1 {
 
 // Damages over time
 	preserve 
-	collapse (mean) mean_relief = relief_wins, by(ym sh)
+	collapse (mean) mean_relief = relief_w, by(ym sh)
 		twoway ///
-			scatter mean_relief ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Other Cases", axis(1)) /// 
-			|| scatter mean_relief ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Sexual Harassment Cases", axis(2)) ///
-			|| lowess mean_relief ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
-			|| lowess mean_relief ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
+			scatter mean_relief ym if sh == 0, mcolor("gs3") /// 
+			|| scatter mean_relief ym if sh == 1, mcolor("orange_red") ///
+			|| lowess mean_relief ym if sh == 0, color("gs3") lwidth(thick) ///
+			|| lowess mean_relief ym if sh == 1, color("orange_red") lwidth(thick) ///
 			legend(order(1 "Other" 3 "Sexual harassment") ///
 				 region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
 			xtitle("Date filed") ///
+			ytitle("Number of cases filed") ///
 			xline(693, lpattern(solid))
 		graph export "$figures/timeseries_relief.png", replace 	
 	restore	
@@ -200,6 +197,14 @@ if `diff' == 1 {
 restore	
 }
 
+if `duration' == 1{
+	
+	binscatter probable_cause duration_w , n(50) ///
+		xtitle("Duration (winsorized at 1%)") ytitle("Probable cause found")
+
+	graph export "$figures/duration_cause.png", replace 	
+
+}
 
 
 

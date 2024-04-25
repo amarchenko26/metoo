@@ -116,7 +116,7 @@ g settle = 1 if outcome == "Closed - Pre-Determination Settlement"
 replace settle = 1 if outcome == "Closed - Settled At Hearing"
 replace settle = 1 if outcome == "Closed - Withdrawn With Settlement"
 
-//replace settle = 0 if state == "MA" & (outcome != "Closed - Pre-Determination Settlement" | outcome != "Closed - Settled At Hearing" | outcome != "Closed - Withdrawn With Settlement")
+replace settle = 0 if state == "MA" & (outcome != "Closed - Pre-Determination Settlement" | outcome != "Closed - Settled At Hearing" | outcome == "Closed - Withdrawn With Settlement"
 
 //MAKE IT ZERO OTHERWISE
 
