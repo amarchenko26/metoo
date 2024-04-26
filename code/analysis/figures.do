@@ -4,9 +4,9 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc timeseries = 1 // Number of cases, relief, prob winning over time
+loc timeseries = 0 // Number of cases, relief, prob winning over time
 loc event 	   = 0 // Event study
-loc diff 	   = 1 // DiD
+loc diff 	   = 0 // DiD
 loc duration   = 0 // Duration 
 
 /*******************************************************************************
@@ -14,7 +14,6 @@ Prep data for plotting
 *******************************************************************************/
 
 drop if ym < 606 // drop cases before Jan 2010
-g y = 1 		// index var
 di tm(2017m10) // di numeric value for October 2017, it's 693
 
 /*******************************************************************************
@@ -207,11 +206,33 @@ if `duration' == 1{
 }
 
 
+preserve 
+keep if common_year == 2017
 
+#delimit ;
+twoway (kdensity duration if ym == 684, lcolor(gray) fcolor(gray%0) recast(area))
+       (kdensity duration if ym == 685, lcolor(yellow) fcolor(yellow%0) recast(area))
+       (kdensity duration if ym == 686, lcolor(green) fcolor(green%0) recast(area))
+       (kdensity duration if ym == 687, lcolor(orange) fcolor(orange%0) recast(area))
+       (kdensity duration if ym == 688, lcolor(red) fcolor(red%0) recast(area))
+       (kdensity duration if ym == 689, lcolor(navy) fcolor(navy%0) recast(area))
+       (kdensity duration if ym == 690, lcolor(yellow) fcolor(yellow%0) recast(area))
+       (kdensity duration if ym == 691, lcolor(lime) fcolor(lime%0) recast(area))
+       (kdensity duration if ym == 692, lcolor(teal) fcolor(teal%40) recast(area))
+       (kdensity duration if ym == 693, lcolor(maroon) fcolor(maroon%0) recast(area))
+       (kdensity duration if ym == 694, lcolor(red) fcolor(red%0) recast(area))
+       (kdensity duration if ym == 695, lcolor(pink) fcolor(pink%0) recast(area))
+       , legend(ring(0) pos(2) order(12 11 10 9 8 7 6 5 4 3 2 1)
+                label(1 "Jan") label(2 "Feb") label(3 "March")
+                label(4 "April") label(5 "May") label(6 "June")
+                label(7 "July") label(8 "Aug") label(9 "Sept")
+                label(10 "Oct") label(11 "Nov") label(12 "Dec"))
+         xtitle("Duration") ytitle("Density by month filed")
+		 note("Kruskal–Wallis test where Null is equality of distributions: p < 0.336");
+#delimit cr
 
-
-
-
+graph save "$figures/duration_by_file.png", replace
+restore
 
 
 

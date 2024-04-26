@@ -92,8 +92,8 @@ g court_file_year = year(court_file_date)
 g court_res_year = year(court_res_date)
 
 // overlap MeToo - 1 if case filed before MeToo & ended after, 0 o/w
-g overlap = 1 if 	   common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY")
-replace overlap = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY")
+g overlap = 1 if 	   common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1
+replace overlap = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1
 
 replace overlap = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
 replace overlap = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than a year before MeToo
@@ -102,7 +102,8 @@ replace overlap = . if sh == 0 // leave only sh cases
 
 // Gen post and treat
 g post = (common_file_date > date("$metoo", "DMY"))
-g treat = post*sh // treat ==1 if post 
+g treat = post*sh // treat=1 if post =1 and sh=1
+replace treat = . if sex_cases == 1 
 replace treat = 1 if overlap == 1
 
 // Clean relief
@@ -112,17 +113,22 @@ replace relief = . if missing_relief == 1 // if relief = 0, person lost, so ever
 g relief_scale = relief / 1000
 
 // Clean settle
-g settle = 1 if outcome == "Closed - Pre-Determination Settlement"
+g settle = 0 if state == "MA"
+replace settle = 1 if outcome == "Closed - Pre-Determination Settlement"
 replace settle = 1 if outcome == "Closed - Settled At Hearing"
 replace settle = 1 if outcome == "Closed - Withdrawn With Settlement"
-
-replace settle = 0 if state == "MA" & (outcome != "Closed - Pre-Determination Settlement" | outcome != "Closed - Settled At Hearing" | outcome == "Closed - Withdrawn With Settlement"
-
-//MAKE IT ZERO OTHERWISE
 
 // Clean court
 replace court = 1 if outcome == "Closed - Chapter 478 (removed to court)" 
 replace court = 0 if state == "MA" & outcome != "Closed - Chapter 478 (removed to court)" 
+
+// Gen index var for count
+g y = 1 		// index var
+
+// Gen cases_filed for regression
+bys sh common_year: gen filed_per_year = _N
+bys common_year: gen total_cases_per_year = _N
+replace filed_per_year = filed_per_year / total_cases_per_year
 
 /*******************************************************************************
 Label all variables
@@ -164,6 +170,8 @@ la var juris "Employment, public housing, or education"
 la var duration "Days between filing and resolution"
 la var overlap "Case overlaps with MeToo"
 la var court "Case went to court"
+la var filed "Number of cases filed by SH and Post"
+la var common_year "Year of filing"
 
 /*******************************************************************************
 Export all cases

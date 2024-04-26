@@ -45,9 +45,9 @@ replace basis_clean = "Other" if basis == "Other"
 
 // Make SH vars
 gen sh = basis == "Sex discrimination / Sexual Harassment"
-gen sex_cases = basis == "Female"
-replace sex_cases = 1 if basis == "Sex"
-replace sex_cases = 1 if basis == "Sex discrimination, unspecified or general"
+gen sex_cases = basis_clean == "Sex"
+replace sex_cases = 0 if basis == "Male" //don't count Male discrimination in Sex
+replace sex_cases = 0 if basis == "Male (Paternity-related)"
 
 // Gen state var
 gen state = "MA"
