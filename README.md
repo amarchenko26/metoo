@@ -1,8 +1,47 @@
 # MeToo
 
 ## Data description of EEOC Resolutions pdf
+
+$raw_data/EEOC/filed_11_17.txt
 - Total cases in data: 2288
 - Total cases of Sexual Harassment: 445
+
+$raw_data/EEOC/filed_11_17.txt
+- Total cases in data: 2288
+- Total cases of Sexual Harassment: 445
+
+
+- if htere's a mechanical issue where all years cases are filed december 2016, and so are the cases filed dec 2017 picking up the metoo cases. so when is the right timing? is it 2018 actually? 
+
+## Variable Definitions Guide 
+### Sexual harassment
+sh == 1 if the basis variable is Sexual Harassment or the issue variable (less common) is Sexual Harassment. 
+sh == 0 for all other cases. 
+
+### Sex-based cases
+sex_cases == 1 includes all cases where the basis has the word Sex. 
+sex_cases == 0 otherwise. 
+This is determined using regexm, which searches for string matches to "Sex". sex_cases == 1 can include discrimination against men as well. This variable can be used to understand trends in sex-based discrimination cases more generally. This variable should not be used to understand trends in broader discrimination against women, because it includes discrimination against men. 
+
+### Compensation/Relief
+Compensation is defined as $ received by the plaintiff conditional on winning. So we should not have relief = 0 if the plaintiff lost. If the plaintiff lost, relief == . and missing_relief == 1. 
+
+### Probable cause
+probable_cause == 1 if outcome explicitly says discrimination was found at hearing
+probable_cause == 0 if outcome explicitly says discrimination was not found
+probable_cause == . if case was settled, was dismissed, etc. 
+
+If case went to court and plaintiff won compensation, we do not always make this variable equal 1 because receiving $ may not be an admission of discrimination being found. 
+
+### Settle
+
+### Court 
+
+### Treat
+
+
+
+----
 - Total cases brought under Title VII / Sex‐Female: 594
 - Number of SH cases straddling Oct 2017: 31
 - Number of Title VII / Sex‐Femalecases straddling Oct 2017: 47
@@ -16,4 +55,5 @@
 - Mean duration for SH cases, before October 1, 2017: 623.1 days
 - Mean duration for SH cases, after October 1, 2017: 403.1 days
 
-- if htere's a mechanical issue where all years cases are filed december 2016, and so are the cases filed dec 2017 picking up the metoo cases. so when is the right timing? is it 2018 actually? 
+
+
