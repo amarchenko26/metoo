@@ -2,24 +2,47 @@
 
 ## Description of datasets
 
-$raw_data/EEOC/filed_11_17.txt
-- N:
-- SH:
+$raw_data/MA/ma_raw_cases.xlsx
+This data contains all cases filed in MA 2010 - 2022. 
+- N: 32739
+- SH: 1855
 - Overlap: 
 
 $clean_data/clean_eeoc.dta
+This contains all court cases the EEOC filed on behalf of plaintiffs 2010-2022.
 - N: 2288
 - SH: 445
 - Overlap: 
 
+$raw_data/EEOC/filed_11_17.txt
+This contains all cases filed with EEOC and their court information, if relevant, from 2010-2017.
+- N:
+- SH:
+- Overlap: 
+
+
 
 
 ## Variable Definitions Guide 
+
+The following variables are cleaned separately for each state. 
+
+### Basis 
+`basis_clean` takes the following categories
+- Sex
+- Religion
+- Race
+- Nationality
+- Disability
+- Age
+- Retaliation
+- Other
+Other includes missings. `basis_clean` is defined using the finer grained `basis` variable. 
+
 ### Sexual harassment
 `sh == 1` if `basis` is Sexual Harassment or `issue` (less common) is Sexual Harassment.  
 `sh == 0` otherwise  
 `sh == .` if `sex_cases == 0 & sh == 1`, so a sexual harassment case was filed not on the basis of sex but of race, age, etc. These are weird and we'd like to exclude these altogether. 
-
 
 ### Sex-based cases
 `sex_cases` == 1 includes all cases where `basis` has the word Sex.  
@@ -50,15 +73,20 @@ If case went to court and plaintiff won compensation, we do not always make this
 `court == 0` if otherwise  
 `court == .` never  
 
-### Overlap
+The following variables are cleaned altogether, after state and federal data is appended together. 
 
+### Overlap
+`overlap == 1` if `sh ==1` and case filed before MeToo and resolved after MeToo  
+`overlap == 0` if `sh ==1` and case filed before MeToo and resolved before MeToo  
+`overlap == .` if `sh == 0`  
+`overlap == .` if case filed after MeToo  
 
 ### Treat
-`post = 1` if file date after MeToo.  
-`post = 0` if filed date before MeToo.   
+`post = 1` if file date after MeToo.   
+`post = 0` if file date before MeToo.    
 `post = .` never  
 
-`treat = post*sh` 
+`treat = post*sh`  
 `treat = .` if `sex_cases == 1`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
 `treat = 1` if `overlap == 1` since overlap cases are sh AND treated, but definition of post doesn't capture them.  
 
