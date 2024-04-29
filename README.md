@@ -36,7 +36,7 @@ The following variables are cleaned separately for each state.
 - Disability
 - Age
 - Retaliation
-- Other
+- Other  
 Other includes missings. `basis_clean` is defined using the finer grained `basis` variable. 
 
 ### Sexual harassment
