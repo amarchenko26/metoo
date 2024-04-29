@@ -1,24 +1,25 @@
 # MeToo
 
-## Data description of EEOC Resolutions pdf
+## Description of datasets
 
 $raw_data/EEOC/filed_11_17.txt
-- Total cases in data: 2288
-- Total cases of Sexual Harassment: 445
+- N:
+- SH:
+- Overlap: 
 
-$raw_data/EEOC/filed_11_17.txt
-- Total cases in data: 2288
-- Total cases of Sexual Harassment: 445
+$clean_data/clean_eeoc.dta
+- N: 2288
+- SH: 445
+- Overlap: 
 
 
-- if htere's a mechanical issue where all years cases are filed december 2016, and so are the cases filed dec 2017 picking up the metoo cases. so when is the right timing? is it 2018 actually? 
 
 ## Variable Definitions Guide 
 ### Sexual harassment
 `sh == 1` if `basis` is Sexual Harassment or `issue` (less common) is Sexual Harassment.  
-`sh == 0` for all other cases.  
+`sh == 0` otherwise  
+`sh == .` if `sex_cases == 0 & sh == 1`, so a sexual harassment case was filed not on the basis of sex but of race, age, etc. These are weird and we'd like to exclude these altogether. 
 
-Some `sh` == 1 cases have a `basis` that is not Sex because cases are sometimes filed as racial discrimination / sexual harassment. I don't get this. DECIDE IF WE WANT TO "replace sh == 0 if basis != "Sex" & sh ==1". 
 
 ### Sex-based cases
 `sex_cases` == 1 includes all cases where `basis` has the word Sex.  
@@ -33,7 +34,7 @@ This is determined using regexm, which searches for string matches to "Sex". `se
 We should not have `relief = 0` if the plaintiff lost. If the plaintiff lost, `relief == .` and `missing_relief == 1`.  
 
 ### Probable cause
-`probable_cause == 1` if outcome explicitly says discrimination was found at hearing; or if case went to court and plaintiff won the case  
+`probable_cause == 1` if outcome explicitly says discrimination was found at hearing; or if case went to court and plaintiff won the case.
 `probable_cause == 0` if outcome explicitly says discrimination was not found  
 `probable_cause == .` otherwise...e.g., if case was settled, was dismissed, etc.  
 
@@ -42,18 +43,27 @@ If case went to court and plaintiff won compensation, we do not always make this
 ### Settle
 `settle == 1` if outcome says case was settled or case was withdrawn with benefits  
 `settle == 0` if otherwise  
-`settle == .` should not be present  
+`settle == .` never  
 
 ### Court 
-`court == 1` if we know case went to court because we have court data, or if outcome says "Notice of Right to Sue" was issued, or outcome says case went to court.  
+`court == 1` if data is court data, if outcome says "Notice of Right to Sue" was issued, or outcome says case went to court.  
 `court == 0` if otherwise  
-`court == .` should not be present  
+`court == .` never  
+
+### Overlap
+
 
 ### Treat
+`post = 1` if file date after MeToo.  
+`post = 0` if filed date before MeToo.   
+`post = .` never  
+
+`treat = post*sh` 
+`treat = .` if `sex_cases == 1`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
+`treat = 1` if `overlap == 1` since overlap cases are sh AND treated, but definition of post doesn't capture them.  
 
 
-
-----
+## Trash - remove
 - Total cases brought under Title VII / Sex‐Female: 594
 - Number of SH cases straddling Oct 2017: 31
 - Number of Title VII / Sex‐Femalecases straddling Oct 2017: 47
@@ -64,6 +74,8 @@ If case went to court and plaintiff won compensation, we do not always make this
 - Relief is missing for SH cases 31 times
 - Mean relief $ for SH if case resolved before October 2017, no zeroes: 343578
 - Mean relief $ for SH if case resolved after October 2017, no zeroes: 382291
+- - if htere's a mechanical issue where all years cases are filed december 2016, and so are the cases filed dec 2017 picking up the metoo cases. so when is the right timing? is it 2018 actually? 
+
 - Mean duration for SH cases, before October 1, 2017: 623.1 days
 - Mean duration for SH cases, after October 1, 2017: 403.1 days
 
