@@ -62,7 +62,7 @@ loc summary ///
     charge_file_year ///
     charge_res_year ///
 	settle ///
-    went_to_court ///
+    court ///
     court_file_year ///
     court_res_year ///
     duration ///
@@ -89,7 +89,7 @@ loc balance ///
 		basis_dummy8 ///
 		basis_dummy9 ///
     settle ///
-	went_to_court ///
+	court ///
 	duration ///
     overlap ///
     relief ///

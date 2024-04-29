@@ -16,7 +16,7 @@ Clean vars
 drop number_of_employees_code naics_code institution_type_code statute_code basis_code issue_code closure_code
 
 // drop 6 weird obs w no content
-drop if closure_action =="CLOSURE_ACTION"
+drop if closure_action == "CLOSURE_ACTION"
 
 // Destring relief 
 destring total_benefit_amount, replace force
@@ -49,22 +49,28 @@ foreach var in charge_file_date charge_res_date court_file_date court_res_date {
 Clean outcomes
 *******************************************************************************/
 
+// Clean basis 
+g basis_clean = "Sex" 				if regexm(basis, "Equal Pay") | regexm(basis, "Sex")
+replace basis_clean = "Religion" 	if regexm(basis, "Religion") 
+replace basis_clean = "Race"		if regexm(basis, "Race")
+replace basis_clean = "Nationality" if regexm(basis, "National Origin")
+replace basis_clean = "Disability" if basis == "Alcoholism" | basis == "Allergies" | basis == "Alzheimers" | basis == "Asthma"| basis == "Autism"| basis == "Blood (Other)"| regexm(basis, "Brain")| basis == "Cancer" | basis == "Cerebral Palsy"| basis == "Chemical Sensitivity"| basis == "Color"| basis == "Cumulative Trauma Disorder"| basis == "Cystic Fibrosis"| basis == "Depression"| basis == "Diabetes"| basis == "Disfigurement"| basis == "Drug Addiction"| basis == "Dwarfism"| basis == "Epilepsy" | basis == "Gastrointestinal" | basis == "HIV" | basis == "Handicap (Not ADA)" | basis == "Hearing Impairment" | basis == "Heart/Cardiovascular"| basis == "Intellectual Disability" | basis == "Kidney Impairment" | basis == "Learning Disability" | regexm(basis, "Depression") | basis == "Missing Digits/Limbs" | regexm(basis, "Sclerosis") | regexm(basis, "Orthopedic") | regexm(basis, "Anxiety") | regexm(basis, "Disability") | regexm(basis, "Neurological") | regexm(basis, "Psychiatric") | regexm(basis, "Respiratory") | regexm(basis, "Paralysis")| regexm(basis, "Stress")| regexm(basis, "Disability")| regexm(basis, "Disabled") | basis == "Schizophrenia" | regexm(basis, "Speech") | regexm(basis, "Tuberculosis") | regexm(basis, "Vision")
+replace basis_clean = "Age" 		if basis == "Age"
+replace basis_clean = "Retaliation" if basis == "Retaliation"
+replace basis_clean = "Other" 		if regexm(basis, "Genetic") | basis == "Other" | basis == "Relationship/Assn." | basis == "Unassigned" | basis == "" // if it's missing
+
+// Sex
+g sex_cases = 0 
+replace sex_cases = 1 if basis_clean == "Sex"
+
+// SH
+g sh = (issue == "Sexual Harassment")
+replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not sex-based
+
 // Probable cause
 g probable_cause = .
 replace probable_cause = 1 if outcome == "Hearings Discrimination Finding"
 replace probable_cause = 0 if outcome == "No Cause Finding Issued"
-
-// Sex
-g sex_cases = 0 
-replace sex_cases = 1 if regexm(basis, "Sex")
-
-// SH
-g sh = (issue == "Sexual Harassment") //WHY ARE THERE RACE BASES FOR SH CASES? 
-replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not sex-based
-
-// Clean basis 
-*g basis_clean = "Sex" if regexm(basis, "^Title VII / Sex")  | regexm(basis, "^EPA / Equal Pay-Female") 
-*replace basis_clean = "Religion" if regexm(basis, "^Title VII / Religion") 
 
 // Court
 g court = (!missing(court_file_date))

@@ -46,15 +46,17 @@ replace basis_clean = "Other" if basis == "Other"
 // Make SH vars
 gen sh = basis == "Sex discrimination / Sexual Harassment"
 gen sex_cases = basis_clean == "Sex"
-replace sex_cases = 0 if basis == "Male" //don't count Male discrimination in Sex
-replace sex_cases = 0 if basis == "Male (Paternity-related)"
+replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not sex-based
+
+/*replace sex_cases = 0 if basis == "Male" //don't count Male discrimination in Sex
+replace sex_cases = 0 if basis == "Male (Paternity-related)" */
 
 // Gen state var
 gen state = "MA"
 
 // Gen outcome vars
-gen went_to_court = outcome == "Closed - Chapter 478 (removed to court)" // 1 if condition met, 0 otherwise
-gen probable_cause = 1 if outcome == "Probable Cause Found"
+g probable_cause = . 
+replace probable_cause = 1 if outcome == "Probable Cause Found"
 replace probable_cause = 0 if outcome == "Closed - Lack of Probable Cause"
 
 gen duration = charge_res_date - charge_file_date

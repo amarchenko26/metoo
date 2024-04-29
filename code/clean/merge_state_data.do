@@ -98,14 +98,14 @@ g charge_res_year = year(charge_res_date)
 g court_file_year = year(court_file_date)
 g court_res_year = year(court_res_date)
 
-// overlap MeToo - 1 if case filed before MeToo & ended after, 0 o/w
+// Overlap MeToo - 1 if case filed before MeToo & ended after, 0 o/w
 g overlap = 1 if 	   common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1
 replace overlap = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1
-
 replace overlap = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
 replace overlap = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than a year before MeToo
 replace overlap = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
-replace overlap = . if sh == 0 // leave only sh cases
+
+replace overlap = . if sh == 0 // Double check to leave only sh cases
 
 // Gen post and treat
 g post = (common_file_date > date("$metoo", "DMY"))
@@ -151,7 +151,7 @@ la var charge_res_year "Year case resolved"
 la var outcome "Outcome of charge: no cause finding, hearing, settlement, etc"
 la var charge_file_date "Date case filed"
 la var charge_res_date "Date case resolved"
-la var went_to_court "Case went to court"
+la var court "Case went to court"
 la var probable_cause "Probable cause" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
 la var settle "Case settled"
 
