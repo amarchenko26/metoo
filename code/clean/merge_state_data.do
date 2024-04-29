@@ -18,7 +18,7 @@ Already merged:
 
 
 /*******************************************************************************
-Clean EEOC data from .py files to match state files
+Clean EEOC court case data from .py files to match state files
 *******************************************************************************/
 
 use "$clean_data/clean_eeoc.dta", clear
@@ -55,6 +55,13 @@ g probable_cause = 1 if missing_relief == 0
 replace probable_cause = 0 if missing_relief == 1 // no probable cause if relief is missing
 
 g court = 1 
+
+/*******************************************************************************
+Append to EEOC filed data (2010-2017)
+*******************************************************************************/
+
+append using "$clean_data/clean_eeoc_filed.dta"
+
 
 /*******************************************************************************
 Append to MA
@@ -112,18 +119,8 @@ replace relief = . if missing_relief == 1 // if relief = 0, person lost, so ever
 
 g relief_scale = relief / 1000
 
-// Clean settle
-g settle = 0 if state == "MA"
-replace settle = 1 if outcome == "Closed - Pre-Determination Settlement"
-replace settle = 1 if outcome == "Closed - Settled At Hearing"
-replace settle = 1 if outcome == "Closed - Withdrawn With Settlement"
-
-// Clean court
-replace court = 1 if outcome == "Closed - Chapter 478 (removed to court)" 
-replace court = 0 if state == "MA" & outcome != "Closed - Chapter 478 (removed to court)" 
-
 // Gen index var for count
-g y = 1 		// index var
+g y = 1
 
 // Gen cases_filed for regression
 bys sh common_year: gen filed_per_year = _N

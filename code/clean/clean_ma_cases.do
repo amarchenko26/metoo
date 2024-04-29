@@ -57,8 +57,18 @@ gen went_to_court = outcome == "Closed - Chapter 478 (removed to court)" // 1 if
 gen probable_cause = 1 if outcome == "Probable Cause Found"
 replace probable_cause = 0 if outcome == "Closed - Lack of Probable Cause"
 
-
 gen duration = charge_res_date - charge_file_date
+
+// Clean settle
+g settle = 0
+replace settle = 1 if outcome == "Closed - Pre-Determination Settlement"
+replace settle = 1 if outcome == "Closed - Settled At Hearing"
+replace settle = 1 if outcome == "Closed - Withdrawn With Settlement"
+
+// Clean court
+g court = 1 if outcome == "Closed - Chapter 478 (removed to court)" 
+replace court = 0 if outcome != "Closed - Chapter 478 (removed to court)" 
+
 
 /*******************************************************************************
 Export data

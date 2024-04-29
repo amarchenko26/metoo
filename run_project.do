@@ -30,8 +30,8 @@ Define folders
 // UPDATE WITH YOUR PATH TO RUN PROJECT
 gl droot "/Users/anyamarchenko/Documents/GitHub/metoo" 
 
-// Make sure you have Dropbox folder with data stored within /metoo
-// Dropbox access granted separately, email Anya
+/*Make sure you have Dropbox folder with data stored within /metoo, like /metoo/data
+Dropbox access granted separately, email Anya */
 
 // DON'T TOUCH
 gl raw_data 	"$droot/data/raw"
@@ -49,9 +49,7 @@ ssc install balancetable
 ssc install binscatter 
 ssc install outreg // for frmttable 
 ssc install winsor
-
 */
-
 
 /*******************************************************************************
 Run files
@@ -59,6 +57,7 @@ Run files
 
 // cleaning files
 do "$droot/code/clean/clean_ma_cases.do"
+do "$droot/code/clean/clean_eeoc_filed.do"
 do "$droot/code/clean/merge_state_data.do"
 
 pause 

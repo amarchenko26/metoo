@@ -4,10 +4,10 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_summary = 0
-loc run_balance = 0
-loc run_duration = 0
-loc	run_did = 0
+loc run_summary = 1
+loc run_balance = 1
+loc run_duration = 1
+loc	run_did = 1
 loc run_overlap = 1
 
 /*******************************************************************************

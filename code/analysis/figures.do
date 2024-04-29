@@ -4,10 +4,10 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc timeseries = 0 // Number of cases, relief, prob winning over time
-loc event 	   = 0 // Event study
-loc diff 	   = 0 // DiD
-loc duration   = 0 // Duration 
+loc timeseries = 1 // Number of cases, relief, prob winning over time
+loc event 	   = 1 // Event study
+loc diff 	   = 1 // DiD
+loc duration   = 1 // Duration 
 
 /*******************************************************************************
 Prep data for plotting
