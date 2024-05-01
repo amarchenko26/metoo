@@ -22,8 +22,13 @@ drop if closure_action == "CLOSURE_ACTION"
 destring total_benefit_amount, replace force
 destring selectsumnvlbackpay0nvlfrontpay0, replace force
 
-replace total_benefit_amount = total_benefit_amount + selectsumnvlbackpay0nvlfrontpay0
-drop selectsumnvlbackpay0nvlfrontpay0
+// Clean relief 
+egen temp_sum = rowtotal(total_benefit_amount selectsumnvlbackpay0nvlfrontpay0)
+replace total_benefit_amount = temp_sum
+drop temp_sum selectsumnvlbackpay0nvlfrontpay0
+
+g missing_relief = (total_benefit_amount == 0)
+replace total_benefit_amount = . if total_benefit_amount == 0
 
 // Rename vars
 ren total_benefit_amount relief
