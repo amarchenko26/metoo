@@ -2,24 +2,49 @@
 
 ## Description of datasets
 
-$raw_data/MA/ma_raw_cases.xlsx
-This data contains all cases filed in MA 2010 - 2022. 
+**$raw_data/MI/mi_raw_cases.xlsx**
+These data contain all cases filed in Michigan from June 1, 2010 to June 1, 2023. 
+
+**$raw_data/MA/ma_raw_cases.xlsx**
+This data contains all housing and employment discrimination cases filed in Massachussets between XX and XX. 
 - N: 32739
 - SH: 1855
-- Overlap: 
 
-$clean_data/clean_eeoc.dta
-This contains all court cases the EEOC filed on behalf of plaintiffs 2010-2022.
+**$clean_data/clean_eeoc.dta**
+This contains all court cases the EEOC filed on behalf of plaintiffs 2010-2022. We retrieved these data by sending a FOIA request for all cases filed. However, this request was denied and only cases where the EEOC took the charge to court were provided. This dataset is constructed by digitizing **$raw_data/EEOC/DATA - 2010-2022 Resolutions as of 08.25.23.pdf** using Python. The resulting .csv is called **$raw_data/EEOC/cases.csv**. 
 - N: 2288
 - SH: 445
-- Overlap: 
 
-$raw_data/EEOC/filed_11_17.txt
-This contains all cases filed with EEOC and their court information, if relevant, from 2010-2017.
-- N:
-- SH:
-- Overlap: 
-
+**$raw_data/EEOC/filed_11_17.txt**
+This contains all employment discrimination cases filed with EEOC for fiscal years 2011 to 2017. These data encompasses charges filed with the EEOC and charges filed with state and local fair employment practices agencies alleging violations of federal anti-discrimination laws. Some cases that went to court have their court information, if relevant.
+- FISCAL_YEAR: fiscal year in which a complainant first filed a charge
+- CHARGE_INQUIRY_SEQ: unique identifier for each case (a case is a collection of related charges)
+- STATE_CODE: complainant state
+- NUMBER_OF_EMPLOYEES_CODE: code indicating the approximate number of employees working for respondent employer
+- NUMBER_OF_EMPLOYEES: approximate number of employees working for respondent employer
+- NAICS_CODE: North American Industry Classification System code of respondent employer
+- NAICS_DESCRIPTION: North American Industry Classification System description of respondent company (e.g., crude petroleum and natural gas extraction)
+- INSTITUTION_TYPE_CODE: classification code of respondent employer
+- INSTITUTION_TYPE: classification of respondent employer (e.g., private employer)
+- DATE_OF_BIRTH: complainant’s date of birth
+- SEX_CODE: complainant’s gender
+- DATE_FIRST_OFFICE: date charge was filed
+- CLOSURE_DATE: date investigation of case was closed
+- CLOSURE_CODE: code indicating how case was closed
+- CLOSURE_ACTION: description indicating how case was closed (e.g., no cause finding issued)
+- TOTAL_BENEFIT_AMOUNT: monetary benefit complainant received
+- STATUTE_CODE: code for statute under which charge was filed
+- STATUTE: statute under which charge was filed (e.g., Americans with Disabilities Act)
+- BASIS_CODE: code for basis of discrimination
+- BASIS: basis of discrimination (e.g., race-black/African American)
+- ISSUE_CODE: type code for adverse action alleged by complainant
+- ISSUE: adverse action alleged by complainant (e.g., harassment)
+- COURT_FILING_DATE: date complainant filed a lawsuit
+- CIVIL_ACTION_NUMBER: case number of lawsuit
+- COURT: court in which lawsuit was filed
+- RESOLUTION_DATE: date lawsuit was resolved
+- CASE_TYPE: case type of lawsuit
+- SELECTSUM(NVL(BACKPAY,0)+NVL(FRONTPAY,0)+NVL(INTEREST,0)+NVL(LIQUIDATED_DAMAGES,0)+NVL(NON_PEC_COMP_DAMAGES,0)+NVL(PEC_COMP_DAMAGES,0)+NVL(PUNITIVE_DAMAGES,0)+NVL(COSTS_AND_FEES,0)..: monetary damages recovered through lawsuit
 
 
 
