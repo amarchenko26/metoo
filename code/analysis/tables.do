@@ -4,10 +4,10 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_summary = 1
-loc run_balance = 1
-loc run_duration = 1
-loc	run_did = 1
+loc run_summary = 0
+loc run_balance = 0
+loc run_duration = 0
+loc	run_did = 0
 loc run_overlap = 1
 
 /*******************************************************************************
@@ -61,6 +61,7 @@ loc summary ///
 		basis_dummy9 ///
     charge_file_year ///
     charge_res_year ///
+	victim_f ///
 	settle ///
     court ///
     court_file_year ///
@@ -256,6 +257,17 @@ if `run_did' == 1 {
 	
 }
 
+/*
+mgroups("\shortstack{Income from \\ non ag wages}" ///
+"\shortstack{Income from \\ NREGA}" ///
+"\shortstack{Income from \\ non-NREGA \\ non ag wage}" ///
+"\shortstack{Income from \\ wage & salary}" ///
+"\shortstack{Income from \\ HH businesses}" ///
+"\shortstack{All Income}" "HH Cons" "\shortstack{Current HH \\ debt}" ///
+, pattern(1 1 1 1 1 1 1 1) ///
+span) ///
+
+*/
 
 /*******************************************************************************
 OVERLAP regression
@@ -286,7 +298,7 @@ if `run_overlap' == 1 {
 	#delimit ;
 	
 	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_overlap.tex", style(tex) replace
-		varlabels(overlap "Overlap") keep(overlap)
+		varlabels(overlap "Overlap" duration "Duration") keep(overlap duration)
 		mgroups("Filed per year" "Settled" "P(win)" "Compensation", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none)

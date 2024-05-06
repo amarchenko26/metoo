@@ -143,6 +143,7 @@ la var court_res_year "Year court case resolved"
 la var relief "Compensation to plaintiff"
 la var relief_scale "Compensation"
 la var missing_relief "Plaintiff lost EEOC case"
+la var victim_f "Complainant is female"
 
 // MA
 la var id "State-given ID"

@@ -50,6 +50,9 @@ foreach var in charge_file_date charge_res_date court_file_date court_res_date {
     rename temp_`var' `var'
 }
 
+g state = "Federal"
+g juris = "Employment"
+
 /*******************************************************************************
 Clean outcomes
 *******************************************************************************/
@@ -89,6 +92,11 @@ replace settle = 1 if outcome == "Withdrawal With Benefits"
 // Duration 
 g duration = charge_res_date - charge_file_date
 g duration_court = court_file_date - court_res_date
+
+
+// Sex of complainant 
+g victim_f = 1 if sex == "F"
+replace victim_f = 0 if sex == "M"
 
 /*******************************************************************************
 Export data
