@@ -127,6 +127,21 @@ bys sh common_year: gen filed_per_year = _N
 bys common_year: gen total_cases_per_year = _N
 replace filed_per_year = filed_per_year / total_cases_per_year
 
+
+/*******************************************************************************
+Create time to treat - 0 is the pre-period before MeToo
+*******************************************************************************/
+
+// Create quarters
+create_time_to_treat, period(3) period_label("Quarters relative to MeToo")
+
+// Create time_to_treat for half-years
+create_time_to_treat, period(6) period_label("Half-years relative to MeToo")
+
+// Create time_to_treat for years
+create_time_to_treat, period(12) period_label("Years relative to MeToo")
+
+
 /*******************************************************************************
 Label all variables
 *******************************************************************************/

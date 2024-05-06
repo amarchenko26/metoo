@@ -237,8 +237,7 @@ if `run_did' == 1 {
 		loc ++i
 	}
 
-	#delimit ;
-	
+	#delimit ;	
 	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace
 		varlabels(treat "SH $\times$ Post") keep(treat)
 		mgroups("Filed per year" "Settled" "P(win)" "Compensation", pattern(1 0 1 0 1 0 1 0) 
@@ -251,7 +250,6 @@ if `run_did' == 1 {
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		prefoot("\\" "\midrule")
 		postfoot("\bottomrule" "\end{tabular}") ;
-
 	#delimit cr
 	estimates clear
 	

@@ -18,20 +18,6 @@ drop if sh == . // drop if missing sh
 di tm(2017m10) // di numeric value for October 2017, it's 693
 
 /*******************************************************************************
-Create time to treat
-*******************************************************************************/
-
-// Create quarters
-create_time_to_treat, period(3) period_label("Quarters relative to MeToo")
-
-// Create time_to_treat for half-years
-create_time_to_treat, period(6) period_label("Half-years relative to MeToo")
-
-// Create time_to_treat for years
-create_time_to_treat, period(12) period_label("Years relative to MeToo")
-
-
-/*******************************************************************************
 Plot
 *******************************************************************************/
 
