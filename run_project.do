@@ -49,18 +49,22 @@ ssc install balancetable
 ssc install binscatter 
 ssc install outreg // for frmttable 
 ssc install winsor
+ssc install sdid, replace // for synthetic DiD, https://github.com/Daniel-Pailanir/sdid
 */
 
 /*******************************************************************************
 Run files
 *******************************************************************************/
 
+// programs
+do "$droot/code/programs/time_to_treat.do"
+
+stop 
+
 // cleaning files
-do "$droot/code/clean/clean_ma_cases.do"
+do "$droot/code/clean/clean_ma.do"
 do "$droot/code/clean/clean_eeoc_filed.do"
 do "$droot/code/clean/merge_state_data.do"
-
-pause 
 
 // analysis files
 do "$droot/code/analysis/tables.do"

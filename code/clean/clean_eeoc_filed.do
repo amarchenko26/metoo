@@ -59,6 +59,7 @@ Clean outcomes
 
 // Clean basis 
 g basis_clean = "Sex" 				if regexm(basis, "Equal Pay") | regexm(basis, "Sex")
+replace basis_clean = "LGBTQ" 		if basis == "Sex-Gender Identity/Transgender"
 replace basis_clean = "Religion" 	if regexm(basis, "Religion") 
 replace basis_clean = "Race"		if regexm(basis, "Race")
 replace basis_clean = "Nationality" if regexm(basis, "National Origin")
