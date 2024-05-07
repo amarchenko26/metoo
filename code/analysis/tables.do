@@ -37,18 +37,18 @@ Define locals
 loc summary ///
     sh ///
     sex_cases ///
-        juris_dummy1 ///
-        juris_dummy2 ///
-        juris_dummy3 ///
-		basis_dummy1 ///
-		basis_dummy2 ///
-		basis_dummy3 ///
-		basis_dummy4 ///
-		basis_dummy5 ///
-		basis_dummy6 ///
-		basis_dummy7 ///
-		basis_dummy8 ///
-		basis_dummy9 ///
+	juris_dummy1 ///
+	juris_dummy2 ///
+	juris_dummy3 ///
+	basis_dummy1 ///
+	basis_dummy2 ///
+	basis_dummy3 ///
+	basis_dummy4 ///
+	basis_dummy5 ///
+	basis_dummy6 ///
+	basis_dummy7 ///
+	basis_dummy8 ///
+	basis_dummy9 ///
     charge_file_year ///
     charge_res_year ///
 	victim_f ///
@@ -65,18 +65,18 @@ loc summary ///
 loc balance ///
     sh ///
     sex_cases ///
-        juris_dummy1 ///
-        juris_dummy2 ///
-        juris_dummy3 ///
-		basis_dummy1 ///
-		basis_dummy2 ///
-		basis_dummy3 ///
-		basis_dummy4 ///
-		basis_dummy5 ///
-		basis_dummy6 ///
-		basis_dummy7 ///
-		basis_dummy8 ///
-		basis_dummy9 ///
+	juris_dummy1 ///
+	juris_dummy2 ///
+	juris_dummy3 ///
+	basis_dummy1 ///
+	basis_dummy2 ///
+	basis_dummy3 ///
+	basis_dummy4 ///
+	basis_dummy5 ///
+	basis_dummy6 ///
+	basis_dummy7 ///
+	basis_dummy8 ///
+	basis_dummy9 ///
     settle ///
 	court ///
 	duration ///
