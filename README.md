@@ -2,20 +2,20 @@
 
 ## Description of datasets
 
-**$raw_data/MI/mi_raw_cases.xlsx**
+**$raw_data/MI/mi_raw_cases.xlsx**  
 These data contain all cases filed in Michigan from June 1, 2010 to June 1, 2023. 
 
-**$raw_data/MA/ma_raw_cases.xlsx**
+**$raw_data/MA/ma_raw_cases.xlsx**  
 This data contains all housing and employment discrimination cases filed in Massachussets between XX and XX. 
 - N: 32739
 - SH: 1855
 
-**$clean_data/clean_eeoc.dta**
+**$clean_data/clean_eeoc.dta**  
 This contains all court cases the EEOC filed on behalf of plaintiffs 2010-2022. We retrieved these data by sending a FOIA request for all cases filed. However, this request was denied and only cases where the EEOC took the charge to court were provided. This dataset is constructed by digitizing **$raw_data/EEOC/DATA - 2010-2022 Resolutions as of 08.25.23.pdf** using Python. The resulting .csv is called **$raw_data/EEOC/cases.csv**. 
 - N: 2288
 - SH: 445
 
-**$raw_data/EEOC/filed_11_17.txt**
+**$raw_data/EEOC/filed_11_17.txt**  
 This contains all employment discrimination cases filed with EEOC for fiscal years 2011 to 2017. These data encompasses charges filed with the EEOC and charges filed with state and local fair employment practices agencies alleging violations of federal anti-discrimination laws. Some cases that went to court have their court information, if relevant.
 - FISCAL_YEAR: fiscal year in which a complainant first filed a charge
 - CHARGE_INQUIRY_SEQ: unique identifier for each case (a case is a collection of related charges)
