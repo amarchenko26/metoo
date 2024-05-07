@@ -17,7 +17,7 @@ This contains all court cases the EEOC filed on behalf of plaintiffs 2010-2022. 
 - SH: 445
 
 **$raw_data/EEOC/filed_11_17.txt**  
-This contains all employment discrimination cases filed with EEOC for fiscal years 2011 to 2017. These data encompasses charges filed with the EEOC and charges filed with state and local fair employment practices agencies alleging violations of federal anti-discrimination laws. Some cases that went to court have their court information, if relevant.
+This contains all employment discrimination cases filed with EEOC for fiscal years 2011 to 2017. N = 3,443,510. These data encompasses charges filed with the EEOC and charges filed with state and local fair employment practices agencies alleging violations of federal anti-discrimination laws. Some cases that went to court have their court information, if relevant.
 - FISCAL_YEAR: fiscal year in which a complainant first filed a charge
 - CHARGE_INQUIRY_SEQ: unique identifier for each case (a case is a collection of related charges)
 - STATE_CODE: complainant state
