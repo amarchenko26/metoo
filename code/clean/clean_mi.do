@@ -15,6 +15,7 @@ drop donotmodifycase donotmodifyrowchecksum donotmodifymodifieddate
 
 // Rename vars
 ren caseid id
+ren caseaccount resp_org
 ren actual relief
 ren closingcodeclosingcodecas outcome
 ren areaofcomplaint juris
@@ -22,34 +23,50 @@ ren issueandbasis basis
 ren createddate charge_file_date
 ren closeddate charge_res_date
 
-
 // Clean relief 
-egen temp_sum = rowtotal(total_benefit_amount selectsumnvlbackpay0nvlfrontpay0)
-replace total_benefit_amount = temp_sum
-drop temp_sum selectsumnvlbackpay0nvlfrontpay0
+egen temp_sum = rowtotal(relief annualized)
+replace relief = temp_sum
+drop temp_sum annualized
 
-g missing_relief = (total_benefit_amount == 0)
-replace total_benefit_amount = . if total_benefit_amount == 0
+g missing_relief = (relief == 0)
+replace relief = . if relief == 0
 
-
-/*
-
-// Clean time
-foreach var in charge_file_date charge_res_date court_file_date court_res_date {
-	replace `var' = "" if `var' == "null"
-    gen temp_`var' = date(`var', "MDY")
-    format temp_`var' %td
-    drop `var'
-    rename temp_`var' `var'
-}
+format charge_file_date %td
+format charge_res_date %td
 
 g state = "Michigan"
-g juris = "Employment"
+
 
 /*******************************************************************************
 Clean outcomes
 *******************************************************************************/
 
+// Probable cause
+g probable_cause = .
+replace probable_cause = 0 if outcome == "I01 - Insufficient evidence - adjusted"
+replace probable_cause = 0 if outcome == "I02 - Insufficient evidence"
+
+// Court
+g court = 0
+replace court = 1 if outcome == "I07 - Claimant in court"
+replace court = 1 if outcome == "I12 - Withdrawn - pursue in Court - no RTS" //Right to Sue
+replace court = 1 if outcome == "I13 - Withdrawn - pursue in Court - with RTS"
+replace court = 1 if outcome == "I16 - Decided by Court - no ruling on merits"
+replace court = 1 if outcome == "I17 - Decided by Court- w/adjustment"
+replace court = 1 if outcome == "I18 - Decided by Court – no adjustment"
+
+// Settle
+g settle = 0 
+replace settle = 1 if outcome == "CO2 - Post-Investigation Settlement Agreement"
+replace settle = 1 if outcome == "I03 - Settlement Agreement"
+replace settle = 1 if outcome == "L02 - Post-Investigation Settlement Agreement"
+replace settle = 1 if outcome == "M01 - Settlement Agreement"
+replace settle = 1 if outcome == "P02 - Post-Charge Settlement Agreement"
+
+// Duration 
+g duration = charge_res_date - charge_file_date
+
+/*
 // Clean basis 
 g basis_clean = "Sex" 				if regexm(basis, "Equal Pay") | regexm(basis, "Sex")
 replace basis_clean = "LGBTQ" 		if basis == "Sex-Gender Identity/Transgender"
@@ -68,29 +85,6 @@ replace sex_cases = 1 if basis_clean == "Sex"
 // SH
 g sh = (issue == "Sexual Harassment")
 replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not sex-based
-
-// Probable cause
-g probable_cause = .
-replace probable_cause = 1 if outcome == "Hearings Discrimination Finding"
-replace probable_cause = 0 if outcome == "No Cause Finding Issued"
-
-// Court
-g court = (!missing(court_file_date))
-replace court = 1 if outcome == "NRTS Issued At CP Request" //CP is charging party, Notice of Right to Sue
-
-// Settle
-g settle = 0 
-replace settle = 1 if outcome == "Settlement With Benefits"
-replace settle = 1 if outcome == "Withdrawal With Benefits"
-
-// Duration 
-g duration = charge_res_date - charge_file_date
-g duration_court = court_file_date - court_res_date
-
-
-// Sex of complainant 
-g victim_f = 1 if sex == "F"
-replace victim_f = 0 if sex == "M"
 
 /*******************************************************************************
 Export data

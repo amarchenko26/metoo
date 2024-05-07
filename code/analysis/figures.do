@@ -40,9 +40,12 @@ if `event' == 1 {
 		// Run dynamic DiD
 		reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
 			absorb(basis_clean `horizon'_pos) ///
-			vce(cluster basis_clean)
-			
+			vce(cluster basis_clean)	
 		estimates store TWFE
+		
+		** FIX HERE
+		//honestdid, pre(1/5) post(7/8) mvec(0.5(0.5)2)
+
 		
 		* Prepare the dynamic labels for the x-axis
 		local num_points = `max_val' - `min_val' 
