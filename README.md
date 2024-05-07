@@ -4,8 +4,18 @@
 
 **$raw_data/MI/mi_raw_cases.xlsx**  
 These data contain all education, employment, housing, and public accommodation/public service cases filed in Michigan from June 1, 2010 to June 1, 2023.
-- N: 17854.
+- N: 17854
 - SH: 811
+- Case ID: unique identifier for each case
+- Created Date: date case was opened
+- Case Account: name of respondent
+- Area of Complaint: description of whether case is related to education, employment, housing, or public accommodation/public service
+- Issue and Basis: basis of discrimination and adverse action alleged by complainant
+- Closed Date: date case was closed
+- Closing Code: description indicating how case was closed
+- Process Stage: (unsure, emailed for clarification)
+- Actual: amounts paid directly to the claimant
+- Annualized: calculated amount to be realized by a claimant over a year’s time, such as an increase in pay or reinstatement in a job as part of a settlement agreement
 
 **$raw_data/MA/ma_raw_cases.xlsx**  
 This data contains all housing and employment discrimination cases filed in Massachussets between XX and XX. 
