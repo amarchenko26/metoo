@@ -127,6 +127,9 @@ bys sh common_year: gen filed_per_year = _N
 bys common_year: gen total_cases_per_year = _N
 replace filed_per_year = filed_per_year / total_cases_per_year
 
+// Gen categorical version of common vars
+encode state, g(state_cat)
+encode basis_clean, g(basis_cat)
 
 /*******************************************************************************
 Create time to treat - 0 is the pre-period before MeToo
