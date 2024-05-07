@@ -3,8 +3,9 @@
 ## Description of datasets
 
 **$raw_data/MI/mi_raw_cases.xlsx**  
-These data contain all cases filed in Michigan from June 1, 2010 to June 1, 2023. N = 17854.
-
+These data contain all education, employment, housing, and public accommodation/public service cases filed in Michigan from June 1, 2010 to June 1, 2023.
+- N: 17854.
+- SH: 811
 
 **$raw_data/MA/ma_raw_cases.xlsx**  
 This data contains all housing and employment discrimination cases filed in Massachussets between XX and XX. 
