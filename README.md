@@ -83,7 +83,7 @@ This is determined using regexm, which searches for string matches to "Sex". `se
 We should not have `relief = 0` if the plaintiff lost. If the plaintiff lost, `relief == .` and `missing_relief == 1`.  
 
 ### Probable cause
-`probable_cause == 1` if outcome explicitly says discrimination was found at hearing; or if case went to court and plaintiff won the case.
+`probable_cause == 1` if outcome explicitly says discrimination was found at hearing; or if case went to court and plaintiff won the case.  
 `probable_cause == 0` if outcome explicitly says discrimination was not found  
 `probable_cause == .` otherwise...e.g., if case was settled, was dismissed, etc.  
 
