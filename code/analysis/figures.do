@@ -4,9 +4,9 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc timeseries = 1 // Number of cases, relief, prob winning over time
+loc timeseries = 0 // Number of cases, relief, prob winning over time
 loc event 	   = 1 // Event study
-loc diff 	   = 1 // DiD
+loc diff 	   = 0 // DiD
 loc duration   = 0 // Duration 
 
 /*******************************************************************************
@@ -43,9 +43,15 @@ if `event' == 1 {
 			vce(cluster basis_clean)	
 		estimates store TWFE
 		
-		** FIX HERE
-		//honestdid, pre(1/5) post(7/8) mvec(0.5(0.5)2)
+		loc pre_end = `omit' - 1
+		loc post_start = `omit' + 1
+		
+		// Run Rambachan & Roth (2021)
+		honestdid, pre(`min_val'/`pre_end') post(`post_start'/`max_val') mvec(0.5(0.5)2)
+		//honestdid, coefplot cached xtitle(Mbar) ytitle(95% Robust CI)
+		//graph export "$figures/honest_did.png", replace
 
+		stop 
 		
 		* Prepare the dynamic labels for the x-axis
 		local num_points = `max_val' - `min_val' 
