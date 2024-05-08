@@ -21,8 +21,8 @@ di tm(2017m10) // di numeric value for October 2017, it's 693
 Plot
 *******************************************************************************/
 
-local horizons "months_to_treat_6 months_to_treat_12"
-local outcomes "relief_w probable_cause"
+local horizons "months_to_treat_6" //months_to_treat_12
+local outcomes "probable_cause" //relief_w
 
 // Event study
 if `event' == 1 {
@@ -32,29 +32,27 @@ if `event' == 1 {
 		sum `horizon'
 		loc min_val = r(min)
 		loc max_val = r(max)
+		loc num_points = `max_val' - `min_val' 
 		loc omit	= -1 * `min_val'
-		loc xline	= `omit' + .5
+		loc xline	= `omit' + 1
 
-		g `horizon'_pos = `horizon' + (-1*`min_val') + 1
+		g `horizon'_pos = `horizon' + (-1*`min_val')
 		
 		// Run dynamic DiD
 		reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
 			absorb(basis_clean `horizon'_pos) ///
-			vce(cluster basis_clean)	
+			vce(cluster basis_clean) noconstant
 		estimates store TWFE
 		
 		loc pre_end = `omit' - 1
 		loc post_start = `omit' + 1
 		
 		// Run Rambachan & Roth (2021)
-		honestdid, pre(`min_val'/`pre_end') post(`post_start'/`max_val') mvec(0.5(0.5)2)
-		//honestdid, coefplot cached xtitle(Mbar) ytitle(95% Robust CI)
-		//graph export "$figures/honest_did.png", replace
+		honestdid, pre(1/`pre_end') post(`post_start'/`num_points') ///
+			mvec(0.5(0.5)2) coefplot cached xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honest_did.png", replace
 
-		stop 
-		
 		* Prepare the dynamic labels for the x-axis
-		local num_points = `max_val' - `min_val' 
 		local xlabel_str = ""
 		forval i = 1/`num_points' {
 			local label_val = `i' + `min_val' - 1
@@ -68,7 +66,7 @@ if `event' == 1 {
 			yline(0, lc(gs8) lp(dash)) ///
 			xline(`xline', lp(dash) lc(gs4)) ///
 			ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
-			ytitle("Effect of MeToo (SH minus non-SH cases)") ///
+			ytitle("Effect of MeToo") ///
 			xtitle("Time relative to treatment") ///
 			xlabel(`xlabel_str', labsize(medium))
 					
