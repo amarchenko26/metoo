@@ -94,10 +94,11 @@ replace settle = 1 if outcome == "Withdrawal With Benefits"
 g duration = charge_res_date - charge_file_date
 g duration_court = court_file_date - court_res_date
 
-
 // Sex of complainant 
 g victim_f = 1 if sex == "F"
 replace victim_f = 0 if sex == "M"
+
+g eeoc_filed = 1
 
 /*******************************************************************************
 Export data

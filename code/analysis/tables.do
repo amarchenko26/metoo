@@ -9,6 +9,7 @@ loc run_balance = 0
 loc run_duration = 0
 loc	run_did = 1
 loc run_overlap = 0
+loc run_robust = 0
 
 /*******************************************************************************
 Prep vars for tables
@@ -217,24 +218,18 @@ if `run_did' == 1 {
 		eststo s`i'
 		qui estadd loc feunit_s "Yes", replace
 		qui estadd loc fetime_s "Yes", replace
-				
-		reghdfe ``y'' treat c.ym#i.basis_cat, absorb(basis_clean ym) vce(cluster basis_clean)
-		eststo u`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
-		qui estadd loc unit_time "Yes", replace
-		
+						
 		loc ++i
 	}
 
 	#delimit ;	
-	estout a1 s1 u1 a2 s2 u2 a3 s3 u3 a4 s4 u4 using "$tables/did.tex", style(tex) replace
+	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace
 		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Filed per year" "Settled" "P(win)" "Compensation", pattern(1 0 0 1 0 0 1 0 0 1 0 0) 
+		mgroups("Filed per year" "Settled" "P(win)" "Compensation", pattern(1 0 1 0 1 0 1  0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none)
-		stats(feunit fetime feunit_s fetime_s unit_time N r2, 
-			label("Case type FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 3 %9.0fc 3))
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
@@ -301,3 +296,5 @@ if `run_overlap' == 1 {
 	#delimit cr
 	estimates clear
 }
+
+

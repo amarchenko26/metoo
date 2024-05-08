@@ -162,6 +162,7 @@ la var relief "Compensation to plaintiff"
 la var relief_scale "Compensation"
 la var missing_relief "Plaintiff lost EEOC case"
 la var victim_f "Complainant is female"
+la var eeoc_filed "Indicator for if data from ProPublica request"
 
 // MA
 la var id "State-given ID"

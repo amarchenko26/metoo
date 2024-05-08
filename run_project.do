@@ -30,7 +30,7 @@ Define folders
 // UPDATE WITH YOUR PATH TO RUN PROJECT
 gl droot "/Users/anyamarchenko/Documents/GitHub/metoo" 
 
-/*Make sure you have Dropbox folder with data stored within /metoo, like /metoo/data
+/* Make sure you have Dropbox folder with data stored within /metoo, like /metoo/data
 Dropbox access granted separately, email Anya */
 
 // DON'T TOUCH

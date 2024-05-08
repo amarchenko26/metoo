@@ -4,16 +4,19 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc timeseries = 0 // Number of cases, relief, prob winning over time
+loc timeseries = 1 // Number of cases, relief, prob winning over time
 loc event 	   = 1 // Event study
-loc diff 	   = 0 // DiD
-loc duration   = 0 // Duration 
+loc diff 	   = 1 // DiD
+loc duration   = 1 // Duration 
 
 /*******************************************************************************
 Prep data for plotting
 *******************************************************************************/
 
-drop if ym < 606 // drop cases before Jan 2010
+drop if eeoc_filed == 1 		// drop journalist cases
+drop if ym < 609				// drop obs before Oct 2010
+drop if months_to_treat_12 == 6 // drop obs after 2022 
+
 drop if sh == . // drop if missing sh
 di tm(2017m10) // di numeric value for October 2017, it's 693
 
@@ -21,44 +24,42 @@ di tm(2017m10) // di numeric value for October 2017, it's 693
 Plot
 *******************************************************************************/
 
-local horizons "months_to_treat_6" //months_to_treat_12
-local outcomes "probable_cause" //relief_w
+local horizons "months_to_treat_6 months_to_treat_12"
+local outcomes "probable_cause relief_w"
 
 // Event study
 if `event' == 1 {
+		
 	foreach y in `outcomes' {
 		foreach horizon in `horizons' {
 		
 		sum `horizon'
 		loc min_val = r(min)
 		loc max_val = r(max)
-		loc num_points = `max_val' - `min_val' 
-		loc omit	= -1 * `min_val'
-		loc xline	= `omit' + 1
-
-		g `horizon'_pos = `horizon' + (-1*`min_val')
+		loc num_points = `max_val' - `min_val' + 1
 		
+		gen `horizon'_pos = `horizon' - `min_val'
+		loc omit = -1 - `min_val'
+		loc xline = `omit' + 1
+
+		// Generate dynamic labels for the x-axis
+		local xlabel_str = ""
+		forval i = 1/`num_points' {
+			local label_val = `i' + `min_val' - 1
+			local xlabel_str `xlabel_str' `i' "`label_val'"
+		}
+
 		// Run dynamic DiD
 		reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
 			absorb(basis_clean `horizon'_pos) ///
 			vce(cluster basis_clean) noconstant
 		estimates store TWFE
 		
-		loc pre_end = `omit' - 1
-		loc post_start = `omit' + 1
-		
 		// Run Rambachan & Roth (2021)
-		honestdid, pre(1/`pre_end') post(`post_start'/`num_points') ///
-			mvec(0.5(0.5)2) coefplot cached xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honest_did.png", replace
+		honestdid, numpre(`xline') omit ///
+			coefplot xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honestdid_`y'_`horizon'.png", replace
 
-		* Prepare the dynamic labels for the x-axis
-		local xlabel_str = ""
-		forval i = 1/`num_points' {
-			local label_val = `i' + `min_val' - 1
-			local xlabel_str `xlabel_str' `i' "`label_val'"
-		}
-		
 		// Make graph
 		coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
 			addplot(line @b @at, lcolor(orange_red*0.8)) ///
