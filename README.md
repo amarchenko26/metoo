@@ -93,10 +93,10 @@ This is determined using regexm, which searches for string matches to "Sex". `se
 
 We should not have `relief = 0` if the plaintiff lost. If the plaintiff lost, `relief == .` and `missing_relief == 1`.  
 
-### Probable cause
-`probable_cause == 1` if outcome explicitly says discrimination was found at hearing; or if case went to court and plaintiff won the case.  
-`probable_cause == 0` if outcome explicitly says discrimination was not found  
-`probable_cause == .` otherwise...e.g., if case was settled, was dismissed, etc.  
+### Win
+`win == 1` if outcome explicitly says discrimination was found at hearing (this may be called probable cause); or if case went to court and plaintiff won the case.  
+`win == 0` if outcome explicitly says discrimination was not found (no probable cause)  
+`win == .` otherwise...e.g., if case was settled, was dismissed, etc.  
 
 If case went to court and plaintiff won compensation, we do not always make this variable equal 1 because receiving $ may not be an admission of discrimination being found. 
 
@@ -124,7 +124,7 @@ The following variables are cleaned altogether, after state and federal data is 
 `post = .` never  
 
 `treat = post*sh`  
-`treat = .` if `sex_cases == 1`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
+`treat = .` if `sex_cases == 1 & sh == 0`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
 `treat = 1` if `overlap == 1` since overlap cases are sh AND treated, but definition of post doesn't capture them.  
 
 
