@@ -124,7 +124,7 @@ The following variables are cleaned altogether, after state and federal data is 
 `post = .` never  
 
 `treat = post*sh`  
-`treat = .` if `sex_cases == 1`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
+`treat = .` if `sex_cases == 1 & sh == 0`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
 `treat = 1` if `overlap == 1` since overlap cases are sh AND treated, but definition of post doesn't capture them.  
 
 
