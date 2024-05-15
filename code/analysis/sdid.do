@@ -17,62 +17,64 @@ Load data
 
 use "$clean_data/clean_cases.dta", replace
 
+loc run_sdid   = 1
 loc run_robust = 1
 
 /*******************************************************************************
 Prep data 
 *******************************************************************************/
 
+drop if eeoc_filed == 1
 drop if ym < 606 // drop cases before Jan 2010
 
 /*******************************************************************************
 Do SDID treat
 *******************************************************************************/
 
-preserve
-	loc y 	 settle
-	loc time months_to_treat_12
-	loc unit basis_clean
+if `run_sdid' == 1 {
 
-	collapse (mean) `y', by(`time' `unit')
-	drop if `time' == .
+	preserve
+		loc y 	 settle
+		loc time months_to_treat_12
+		loc unit basis_clean
 
-	g treat = 0 
-	replace treat = 1 if `unit' == "Sex" & `time' > 0 
+		collapse (mean) `y', by(`time' `unit')
+		drop if `time' == .
 
-	#delimit ;
-	eststo sdid_s: sdid `y' `unit' `time' treat, //covariates(r, projected)
-		vce(placebo) reps(100) seed(123) method(sdid) 
-		graph g1on msize(medium)
-		g2_opt(xlabel(-7(1)6) ytitle("Probability of settlement") xtitle("Time relative to MeToo (12 months)"))
-		graph_export("$figures/sdid_`y'_", .png); 
-	
-	#delimit cr
-restore
-	
-	
-preserve 
-	loc y 	 win
-	loc time months_to_treat_6
-	loc unit basis_clean
+		g treat = 0 
+		replace treat = 1 if `unit' == "Sex" & `time' > 0 
 
-	collapse (mean) `y', by(`time' `unit')
-	drop if `time' == .
+		#delimit ;
+		eststo sdid_s: sdid `y' `unit' `time' treat, //covariates(r, projected)
+			vce(placebo) reps(100) seed(123) method(sdid) 
+			graph g1on msize(medium)
+			g2_opt(xlabel(-8(1)5) ytitle("Probability of settlement") xtitle("Time to MeToo (12 month intervals)"))
+			graph_export("$figures/sdid_`y'_", .png); 
+		
+		#delimit cr
+	restore
+		
+		
+	preserve 
+		loc y 	 win
+		loc time months_to_treat_6
+		loc unit basis_clean
 
-	g treat = 0 
-	replace treat = 1 if `unit' == "Sex" & `time' > 0 
+		collapse (mean) `y', by(`time' `unit')
+		drop if `time' == .
 
-	#delimit ;
-	eststo sdid_p: sdid `y' `unit' `time' treat, 
-		vce(placebo) reps(100) seed(123) method(sdid) 
-		graph g1on msize(medium)
-		g2_opt(xlabel(-14(1)12) ytitle("Probability of win") xtitle("Time relative to MeToo (6 months)"))
-		graph_export("$figures/sdid_`y'_", .png); 
-	#delimit cr
-restore
+		g treat = 0 
+		replace treat = 1 if `unit' == "Sex" & `time' > 0 
 
-
-
+		#delimit ;
+		eststo sdid_p: sdid `y' `unit' `time' treat, 
+			vce(placebo) reps(100) seed(123) method(sdid) 
+			graph g1on msize(medium)
+			g2_opt(xlabel(-15(1)10) ytitle("Probability of win") xtitle("Time to MeToo (6 month intervals)"))
+			graph_export("$figures/sdid_`y'_", .png); 
+		#delimit cr
+	restore
+}
 
 
 /*******************************************************************************
@@ -100,11 +102,12 @@ if `run_robust' == 1 {
 	}
 	
 	#delimit ;	
-	estout sdid_s u1 sdid_p u2 u3 using "$tables/sdid.tex", style(tex) replace
+	estout u1 u2 u3 sdid_s sdid_p using "$tables/sdid.tex", style(tex) replace
 		varlabels(treat "ATT") keep(treat)
-		mgroups("Settled" "P(win)" "Compensation", pattern(1 0 1 0 1 1) 
+		mgroups("Unit trends" "SDID", pattern(1 0 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
+		mlabel("Settle" "Win" "Comp." "Settle" "Win", pattern(1 1 1 1 1) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		stats(feunit fetime unit_time N r2, label("Case FE" "Time FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 

@@ -4,12 +4,12 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_summary = 0
-loc run_balance = 0
-loc run_duration = 0
+loc run_summary = 1
+loc run_balance = 1
+loc run_duration = 1
 loc	run_did = 1
-loc run_overlap = 0
-loc run_robust = 0
+loc run_overlap = 1
+loc run_robust = 1
 
 /*******************************************************************************
 Prep vars for tables
@@ -227,6 +227,8 @@ if `run_did' == 1 {
 	
 }
 
+drop time_state unit_state
+
 /*
 mgroups("\shortstack{Income from \\ non ag wages}" ///
 "\shortstack{Income from \\ NREGA}" ///
@@ -246,6 +248,8 @@ OVERLAP regression
 loc i 1
 
 if `run_overlap' == 1 {
+	
+	keep if eeoc_filed == 1 | eeoc_filed == 0 
 
 	foreach y of local outcome_vars {
 		

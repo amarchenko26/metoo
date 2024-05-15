@@ -13,6 +13,7 @@ loc duration   = 1 // Duration
 Prep data for plotting
 *******************************************************************************/
 
+drop if eeoc_filed == 1
 drop if ym < 609				// drop obs before Oct 2010
 drop if months_to_treat_12 == 6 // drop obs after 2022 
 
@@ -28,7 +29,7 @@ local outcomes "win relief_w"
 
 // Event study
 if `event' == 1 {
-		
+			
 	foreach y in `outcomes' {
 		foreach horizon in `horizons' {
 		
@@ -165,7 +166,7 @@ restore
 if `duration' == 1{
 	
 	binscatter win duration_w , n(50) ///
-		xtitle("Duration (winsorized at 1%)") ytitle("Probable cause found")
+		xtitle("Duration (winsorized at 1%)") ytitle("Probability of win")
 
 	graph export "$figures/duration_cause.png", replace 	
 
