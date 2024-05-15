@@ -51,8 +51,8 @@ replace basis_clean = "Age" if regexm(basis, "^ADEA") //Age Discrimination in Em
 replace basis_clean = "Retaliation" if regexm(basis, "^Title VII / Retaliation") | regexm(basis, "^EPA / Retaliation")
 replace basis_clean = "Other" if regexm(basis, "^Title VII / Other") | regexm(basis, "^GINA") | basis == "" // if it's missing
 
-g probable_cause = 1 if missing_relief == 0
-replace probable_cause = 0 if missing_relief == 1 // no probable cause if relief is missing
+g win = 1 if missing_relief == 0
+replace win = 0 if missing_relief == 1 // no probable cause if relief is missing
 
 g court = 1 
 
@@ -61,7 +61,6 @@ Append to EEOC filed data (2010-2017)
 *******************************************************************************/
 
 append using "$clean_data/clean_eeoc_filed.dta"
-
 
 /*******************************************************************************
 Append to MA
@@ -110,7 +109,7 @@ replace overlap = . if sh == 0 // Double check to leave only sh cases
 // Gen post and treat
 g post = (common_file_date > date("$metoo", "DMY"))
 g treat = post*sh // treat=1 if post =1 and sh=1
-replace treat = . if sex_cases == 1 
+replace treat = . if sex_cases == 1 & sh == 0 
 replace treat = 1 if overlap == 1
 
 // Clean relief
@@ -130,6 +129,8 @@ replace filed_per_year = filed_per_year / total_cases_per_year
 // Gen categorical version of common vars
 encode state, g(state_cat)
 encode basis_clean, g(basis_cat)
+
+replace eeoc_filed = 0 if missing(eeoc_filed)
 
 /*******************************************************************************
 Create time to treat - 0 is the pre-period before MeToo
@@ -172,7 +173,7 @@ la var outcome "Outcome of charge: no cause finding, hearing, settlement, etc"
 la var charge_file_date "Date case filed"
 la var charge_res_date "Date case resolved"
 la var court "Case went to court"
-la var probable_cause "Probable cause" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
+la var win "Probable cause" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
 la var settle "Case settled"
 
 //Common

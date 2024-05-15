@@ -55,9 +55,9 @@ replace sex_cases = 0 if basis == "Male (Paternity-related)" */
 gen state = "MA"
 
 // Gen outcome vars
-g probable_cause = . 
-replace probable_cause = 1 if outcome == "Probable Cause Found"
-replace probable_cause = 0 if outcome == "Closed - Lack of Probable Cause"
+g win = . 
+replace win = 1 if outcome == "Probable Cause Found"
+replace win = 0 if outcome == "Closed - Lack of Probable Cause"
 
 gen duration = charge_res_date - charge_file_date
 

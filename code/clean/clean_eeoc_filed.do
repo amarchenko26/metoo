@@ -77,9 +77,9 @@ g sh = (issue == "Sexual Harassment")
 replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not sex-based
 
 // Probable cause
-g probable_cause = .
-replace probable_cause = 1 if outcome == "Hearings Discrimination Finding"
-replace probable_cause = 0 if outcome == "No Cause Finding Issued"
+g win = .
+replace win = 1 if outcome == "Hearings Discrimination Finding"
+replace win = 0 if outcome == "No Cause Finding Issued"
 
 // Court
 g court = (!missing(court_file_date))

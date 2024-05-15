@@ -60,7 +60,7 @@ loc summary ///
     duration ///
     overlap ///
     relief ///
-    probable_cause
+    win
 
 
 loc balance ///
@@ -83,13 +83,15 @@ loc balance ///
 	duration ///
     overlap ///
     relief ///
-    probable_cause
+    win
 
 /*******************************************************************************
 Summary
 *******************************************************************************/
 if `run_summary' == 1 {
 
+	keep if eeoc_filed == 0
+	
 	est clear
 	estpost tabstat post `summary', c(stat) stat(mean sd min max n)
 
@@ -99,34 +101,15 @@ if `run_summary' == 1 {
 		collabels("Mean" "SD" "Min" "Max" "N")
 }
 
-/*******************************************************************************
-Balance table
-*******************************************************************************/
-capture program drop balancetable_program
-program define balancetable_program
-    syntax [anything] [, using(string) sample(string) ctitles(string) wide(string) by(string) errors(string)]
-
-    balancetable `by' `anything' ///
-        using "`using'", ///
-        varlabels vce(`errors') replace ///
-        ctitles(`ctitles') ///
-        pvalues staraux pval(nopar) format(%9.2f) ///
-        wide(`wide')
-        if `"`sample'"' != "" {
-            balancetable `by' `anything' if `sample' ///
-                using "`using'", ///
-                varlabels vce(`errors') replace ///
-                ctitles(`ctitles') ///
-                pvalues staraux pval(nopar) format(%9.2f) ///
-                wide(`wide')
-        }
-end
 
 /****************************************************************************
 Balance table
 ****************************************************************************/
 
 if `run_balance' == 1 {
+	
+	keep if eeoc_filed == 0
+
     balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
 
     balancetable_program `balance', sample(sh == 1) using("$tables/balance_sex.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(robust)
@@ -151,6 +134,8 @@ Correlation b/w duration and outcomes
 *******************************************************************************/
 if `run_duration' == 1 {
 
+	keep if eeoc_filed == 0
+
 	reg duration relief_scale, r
 		eststo A
 
@@ -160,20 +145,20 @@ if `run_duration' == 1 {
 	reg duration relief_scale if sex_cases == 1, r
 		eststo C
 
-	reg duration i.probable_cause, r
+	reg duration i.win, r
 		eststo D
 
-	reg duration i.probable_cause if sh == 1, r
+	reg duration i.win if sh == 1, r
 		eststo E
 
-	reg duration i.probable_cause if sex_cases == 1, r
+	reg duration i.win if sex_cases == 1, r
 		eststo F
 		
 	#delimit ;
 	
 	estout D E F A B C using "$tables/duration_corr.tex", style(tex) replace
 		drop(_cons)
-		varlabels(relief_scale "Compensation" 1.probable_cause "Probable cause")
+		varlabels(relief_scale "Compensation" 1.win "Probable cause")
 		mgroups("Duration", pattern(1 0 0 0 0 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel("All" "SH" "Sex" "All" "SH" "Sex")
@@ -195,7 +180,7 @@ DiD regression
 
 loc y1 filed_per_year
 loc y2 settle
-loc y3 probable_cause
+loc y3 win
 loc y4 relief_scale
 
 loc outcome_vars y1 y2 y3 y4
@@ -205,6 +190,8 @@ g unit_state = basis_clean * state_cat
 g time_state = ym * state_cat
 
 if `run_did' == 1 {
+
+	keep if eeoc_filed == 0
 
 	foreach y of local outcome_vars {
 		

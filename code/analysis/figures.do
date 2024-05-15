@@ -13,7 +13,6 @@ loc duration   = 1 // Duration
 Prep data for plotting
 *******************************************************************************/
 
-drop if eeoc_filed == 1 		// drop journalist cases
 drop if ym < 609				// drop obs before Oct 2010
 drop if months_to_treat_12 == 6 // drop obs after 2022 
 
@@ -25,7 +24,7 @@ Plot
 *******************************************************************************/
 
 local horizons "months_to_treat_6 months_to_treat_12"
-local outcomes "probable_cause relief_w"
+local outcomes "win relief_w"
 
 // Event study
 if `event' == 1 {
@@ -85,7 +84,6 @@ if `event' == 1 {
 if `timeseries' == 1 {
     preserve
     collapse (count) mean_y = y, by(ym sh)
-	pause
 		twoway ///
 		scatter mean_y ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Number of Other Cases", axis(1)) ///
 		|| scatter mean_y ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Number of Sexual Harassment Cases", axis(2)) ///
@@ -119,7 +117,7 @@ if `timeseries' == 1 {
 
 // Probability of winning over time
 	preserve 
-	collapse (mean) mean_prob_cause = probable_cause, by(ym sh)
+	collapse (mean) mean_prob_cause = win, by(ym sh)
 		twoway ///
 			scatter mean_prob_cause ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Other Cases", axis(1)) /// 
 			|| scatter mean_prob_cause ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Sexual Harassment Cases", axis(2)) ///
@@ -166,7 +164,7 @@ restore
 
 if `duration' == 1{
 	
-	binscatter probable_cause duration_w , n(50) ///
+	binscatter win duration_w , n(50) ///
 		xtitle("Duration (winsorized at 1%)") ytitle("Probable cause found")
 
 	graph export "$figures/duration_cause.png", replace 	

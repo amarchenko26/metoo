@@ -52,7 +52,7 @@ restore
 	
 	
 preserve 
-	loc y 	 probable_cause
+	loc y 	 win
 	loc time months_to_treat_6
 	loc unit basis_clean
 
@@ -79,7 +79,7 @@ restore
 Robustness 
 *******************************************************************************/
 loc y2 settle
-loc y3 probable_cause
+loc y3 win
 loc y4 relief_scale
 
 loc outcome_vars y2 y3 y4

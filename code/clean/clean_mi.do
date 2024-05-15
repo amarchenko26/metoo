@@ -42,9 +42,9 @@ Clean outcomes
 *******************************************************************************/
 
 // Probable cause
-g probable_cause = .
-replace probable_cause = 0 if outcome == "I01 - Insufficient evidence - adjusted"
-replace probable_cause = 0 if outcome == "I02 - Insufficient evidence"
+g win = .
+replace win = 0 if outcome == "I01 - Insufficient evidence - adjusted"
+replace win = 0 if outcome == "I02 - Insufficient evidence"
 
 // Court
 g court = 0
