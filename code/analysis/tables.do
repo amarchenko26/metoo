@@ -4,12 +4,13 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_summary = 1
-loc run_balance = 1
+loc	run_did 	 = 1
+loc run_did_all  = 1
+loc run_overlap  = 1
+
+loc run_summary  = 1
+loc run_balance  = 1
 loc run_duration = 1
-loc	run_did = 1
-loc run_overlap = 1
-loc run_robust = 1
 
 /*******************************************************************************
 Prep vars for tables
@@ -81,6 +82,165 @@ loc balance ///
     overlap ///
     relief ///
     win
+
+
+/*******************************************************************************
+OVERLAP regression
+*******************************************************************************/
+
+loc y1 filed_per_year
+loc y2 settle
+loc y3 win
+loc y4 relief_scale
+
+loc outcome_vars y1 y2 y3 y4
+loc i 1
+
+if `run_overlap' == 1 {
+	
+	foreach y of local outcome_vars {
+		
+		// Outcome `y'
+		reg ``y'' overlap, r
+		eststo a`i'
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		qui estadd loc festate "No", replace
+		
+		reg ``y'' overlap duration, r
+		eststo s`i'
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		qui estadd loc festate "Yes", replace
+				
+		loc ++i
+	}
+	
+	#delimit ;
+	
+	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_overlap.tex", style(tex) replace
+		varlabels(overlap "Overlap" duration "Duration") keep(overlap duration)
+		mgroups("Filed per year" "Settle" "Win" "Compensation", pattern(1 0 1 0 1 0 1 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none)
+		stats(N r2, 
+			label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") ;
+
+	#delimit cr
+	estimates clear
+}
+
+/*******************************************************************************
+DiD regression
+*******************************************************************************/
+
+loc y1 filed_per_year
+loc y2 settle
+loc y3 win
+loc y4 relief_scale
+
+loc outcome_vars y1 y2 y3 y4
+loc i 1
+
+g unit_state = basis_clean * state_cat
+g time_state = ym * state_cat
+
+if `run_did_all' == 1 {
+
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat, absorb(basis_clean ym) vce(cluster basis_clean)
+		eststo a`i'
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis_clean)
+		eststo s`i'
+		qui estadd loc feunit_s "Yes", replace
+		qui estadd loc fetime_s "Yes", replace
+						
+		loc ++i
+	}
+
+	#delimit ;	
+	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_all.tex", style(tex) replace
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mgroups("Filed per year" "Settle" "Win" "Compensation", pattern(1 0 1 0 1 0 1  0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none)
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") ;
+	#delimit cr
+	estimates clear
+
+}
+
+loc outcome_vars y1 y2 y3 y4
+loc i 1
+
+if `run_did' == 1 {
+
+	keep if eeoc_filed == 0
+
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat, absorb(basis_clean ym) vce(cluster basis_clean)
+		eststo a`i'
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis_clean)
+		eststo s`i'
+		qui estadd loc feunit_s "Yes", replace
+		qui estadd loc fetime_s "Yes", replace
+						
+		loc ++i
+	}
+
+	#delimit ;	
+	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mgroups("Filed per year" "Settle" "Win" "Compensation", pattern(1 0 1 0 1 0 1  0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none)
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") ;
+	#delimit cr
+	estimates clear
+
+}
+
+drop time_state unit_state
+
+
+/*
+mgroups("\shortstack{Income from \\ non ag wages}" ///
+"\shortstack{Income from \\ NREGA}" ///
+"\shortstack{Income from \\ non-NREGA \\ non ag wage}" ///
+"\shortstack{Income from \\ wage & salary}" ///
+"\shortstack{Income from \\ HH businesses}" ///
+"\shortstack{All Income}" "HH Cons" "\shortstack{Current HH \\ debt}" ///
+, pattern(1 1 1 1 1 1 1 1) ///
+span) ///
+
+*/
+
+
 
 /*******************************************************************************
 Summary
@@ -155,7 +315,7 @@ if `run_duration' == 1 {
 	
 	estout D E F A B C using "$tables/duration_corr.tex", style(tex) replace
 		drop(_cons)
-		varlabels(relief_scale "Compensation" 1.win "Probable cause")
+		varlabels(relief_scale "Compensation" 1.win "Win")
 		mgroups("Duration", pattern(1 0 0 0 0 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel("All" "SH" "Sex" "All" "SH" "Sex")
@@ -169,120 +329,3 @@ if `run_duration' == 1 {
 	#delimit cr
 	estimates clear
 }
-
-
-/*******************************************************************************
-DiD regression
-*******************************************************************************/
-
-loc y1 filed_per_year
-loc y2 settle
-loc y3 win
-loc y4 relief_scale
-
-loc outcome_vars y1 y2 y3 y4
-loc i 1
-
-g unit_state = basis_clean * state_cat
-g time_state = ym * state_cat
-
-if `run_did' == 1 {
-
-	keep if eeoc_filed == 0
-
-	foreach y of local outcome_vars {
-		
-		// Outcome `y'
-		reghdfe ``y'' treat, absorb(basis_clean ym) vce(cluster basis_clean)
-		eststo a`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
-		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis_clean)
-		eststo s`i'
-		qui estadd loc feunit_s "Yes", replace
-		qui estadd loc fetime_s "Yes", replace
-						
-		loc ++i
-	}
-
-	#delimit ;	
-	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace
-		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Filed per year" "Settled" "P(win)" "Compensation", pattern(1 0 1 0 1 0 1  0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
-		stats(feunit fetime feunit_s fetime_s N r2, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") ;
-	#delimit cr
-	estimates clear
-	
-}
-
-drop time_state unit_state
-
-/*
-mgroups("\shortstack{Income from \\ non ag wages}" ///
-"\shortstack{Income from \\ NREGA}" ///
-"\shortstack{Income from \\ non-NREGA \\ non ag wage}" ///
-"\shortstack{Income from \\ wage & salary}" ///
-"\shortstack{Income from \\ HH businesses}" ///
-"\shortstack{All Income}" "HH Cons" "\shortstack{Current HH \\ debt}" ///
-, pattern(1 1 1 1 1 1 1 1) ///
-span) ///
-
-*/
-
-/*******************************************************************************
-OVERLAP regression
-*******************************************************************************/
-
-loc i 1
-
-if `run_overlap' == 1 {
-	
-	keep if eeoc_filed == 1 | eeoc_filed == 0 
-
-	foreach y of local outcome_vars {
-		
-		// Outcome `y'
-		reg ``y'' overlap, r
-		eststo a`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
-		qui estadd loc festate "No", replace
-		
-		reg ``y'' overlap duration, r
-		eststo s`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
-		qui estadd loc festate "Yes", replace
-				
-		loc ++i
-	}
-	
-	#delimit ;
-	
-	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_overlap.tex", style(tex) replace
-		varlabels(overlap "Overlap" duration "Duration") keep(overlap duration)
-		mgroups("Filed per year" "Settled" "P(win)" "Compensation", pattern(1 0 1 0 1 0 1 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
-		stats(N r2, 
-			label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") ;
-
-	#delimit cr
-	estimates clear
-}
-
-

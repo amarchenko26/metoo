@@ -167,14 +167,11 @@ la var eeoc_filed "Indicator for if data from ProPublica request"
 
 // MA
 la var id "State-given ID"
-la var charge_file_year "Year case filed"
-la var charge_res_year "Year case resolved"
+la var charge_file_year "Year filed"
+la var charge_res_year "Year resolved"
 la var outcome "Outcome of charge: no cause finding, hearing, settlement, etc"
 la var charge_file_date "Date case filed"
 la var charge_res_date "Date case resolved"
-la var court "Case went to court"
-la var win "Plaintiff won case" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
-la var settle "Case settled"
 
 //Common
 la var state "State"
@@ -182,14 +179,16 @@ la var basis "Basis of discrimination alleged"
 la var basis_clean "Basis of discrimination, standardized"
 la var sh "Sexual harassment"
 la var sex_cases "Sex-related charge" // Title VII / Sex‐Female or Title VII / Sex‐Female / Sexual-Harassment for EEOC
-la var post "Filing date after MeToo"
+la var post "Filed after MeToo"
 la var treat "Post = 1 and case is SH or overlap"
 la var juris "Employment, public housing, or education"
-la var duration "Days between filing and resolution"
-la var overlap "Case overlaps with MeToo"
-la var court "Case went to court"
+la var duration "Duration (days)"
+la var overlap "Overlaps with MeToo"
+la var court "Went to court"
 la var filed "Number of cases filed by SH and Post"
 la var common_year "Year of filing"
+la var win "Plaintiff won case" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
+la var settle "Settled"
 
 /*******************************************************************************
 Export all cases

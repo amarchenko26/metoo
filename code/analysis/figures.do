@@ -4,16 +4,16 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc timeseries = 1 // Number of cases, relief, prob winning over time
 loc event 	   = 1 // Event study
-loc diff 	   = 1 // DiD
-loc duration   = 1 // Duration 
+loc event_all  = 1 // All cases (eeoc_filed == 1) 
+loc timeseries = 0 
+loc diff 	   = 0 
+loc duration   = 0 
 
 /*******************************************************************************
 Prep data for plotting
 *******************************************************************************/
 
-drop if eeoc_filed == 1
 drop if ym < 609				// drop obs before Oct 2010
 drop if months_to_treat_12 == 6 // drop obs after 2022 
 
@@ -21,65 +21,139 @@ drop if sh == . // drop if missing sh
 di tm(2017m10) // di numeric value for October 2017, it's 693
 
 /*******************************************************************************
-Plot
+Event-study
 *******************************************************************************/
 
-local horizons "months_to_treat_6 months_to_treat_12"
-local outcomes "win relief_w"
+local horizons "months_to_treat_12"
+local outcomes "relief_scale win"
 
-// Event study
-if `event' == 1 {
+if `event_all' == 1 {
+		
+	foreach horizon in `horizons' {
+		foreach y in `outcomes' {
 			
-	foreach y in `outcomes' {
-		foreach horizon in `horizons' {
-		
-		sum `horizon'
-		loc min_val = r(min)
-		loc max_val = r(max)
-		loc num_points = `max_val' - `min_val' + 1
-		
-		gen `horizon'_pos = `horizon' - `min_val'
-		loc omit = -1 - `min_val'
-		loc xline = `omit' + 1
+			if "`y'" == "relief_w" {
+				drop if `horizon' == 5
+				drop if `horizon' == -8
+			}
+			
+			sum `horizon'
+			loc min_val = r(min)
+			loc max_val = r(max)
+			loc num_points = `max_val' - `min_val' + 1
 
-		// Generate dynamic labels for the x-axis
-		local xlabel_str = ""
-		forval i = 1/`num_points' {
-			local label_val = `i' + `min_val' - 1
-			local xlabel_str `xlabel_str' `i' "`label_val'"
-		}
+			gen `horizon'_pos = `horizon' - `min_val'
+			loc omit = -1 - `min_val'
+			loc xline = `omit' + 2
 
-		// Run dynamic DiD
-		reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
-			absorb(basis_clean `horizon'_pos) ///
-			vce(cluster basis_clean) noconstant
-		estimates store TWFE
-		
-		// Run Rambachan & Roth (2021)
-		honestdid, numpre(`xline') omit ///
-			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'_`horizon'.png", replace
+			// Generate dynamic labels for the x-axis
+			local xlabel_str = ""
+			forval i = 1/`num_points' {
+				local label_val = `i' + `min_val' - 1
+				local xlabel_str `xlabel_str' `i' "`label_val'"
+			}
 
-		// Make graph
-		coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
-			addplot(line @b @at, lcolor(orange_red*0.8)) ///
-			ciopts(recast(rcap) msize(medium) color(orange_red)) ///
-			yline(0, lc(gs8) lp(dash)) ///
-			xline(`xline', lp(dash) lc(gs4)) ///
-			ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
-			ytitle("Effect of MeToo") ///
-			xtitle("Time relative to treatment") ///
-			xlabel(`xlabel_str', labsize(medium))
-					
-		graph export "$figures/eventstudy_`y'_`horizon'.png", replace 
-		
-		// Clean up
-		estimates clear
-		drop `horizon'_pos 
+			// Run dynamic DiD
+			reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
+				absorb(basis_clean `horizon'_pos) ///
+				vce(cluster basis_clean) noconstant
+			estimates store TWFE
+			
+			// Run Rambachan & Roth (2021)
+			honestdid, numpre(`xline') omit ///
+				coefplot xtitle(Mbar) ytitle(95% Robust CI)
+			graph export "$figures/honestdid_`y'_`horizon'_all.png", replace
+
+			// Make graph
+			coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
+				addplot(line @b @at, lcolor(orange_red*0.8)) ///
+				ciopts(recast(rcap) msize(medium) color(orange_red)) ///
+				yline(0, lc(gs8) lp(dash)) ///
+				xline(`xline', lp(dash) lc(gs4)) ///
+				ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
+				ytitle("Effect of MeToo") ///
+				xtitle("Time relative to treatment") ///
+				xlabel(`xlabel_str', labsize(medium))
+						
+			graph export "$figures/eventstudy_`y'_`horizon'_all.png", replace 
+			
+			// Clean up
+			estimates clear
+			drop `horizon'_pos 
 		}
 	}
+	
 }
 
+
+// For rest of .do file, drop journalist cases that mess up the graphs
+
+drop if eeoc_filed == 1
+
+if `event' == 1 {
+		
+	foreach horizon in `horizons' {
+		foreach y in `outcomes' {
+			
+			if "`y'" == "relief_w" {
+				drop if `horizon' == 5
+				drop if `horizon' == -8
+			}
+			
+			sum `horizon'
+			loc min_val = r(min)
+			loc max_val = r(max)
+			loc num_points = `max_val' - `min_val' + 1
+
+			gen `horizon'_pos = `horizon' - `min_val'
+			loc omit = -1 - `min_val'
+			loc xline = `omit' + 2
+
+			// Generate dynamic labels for the x-axis
+			local xlabel_str = ""
+			forval i = 1/`num_points' {
+				local label_val = `i' + `min_val' - 1
+				local xlabel_str `xlabel_str' `i' "`label_val'"
+			}
+
+			// Run dynamic DiD
+			reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
+				absorb(basis_clean `horizon'_pos) ///
+				vce(cluster basis_clean) noconstant
+			estimates store TWFE
+			
+			// Run Rambachan & Roth (2021)
+			honestdid, numpre(`xline') omit ///
+				coefplot xtitle(Mbar) ytitle(95% Robust CI)
+			graph export "$figures/honestdid_`y'_`horizon'.png", replace
+
+			// Make graph
+			coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
+				addplot(line @b @at, lcolor(orange_red*0.8)) ///
+				ciopts(recast(rcap) msize(medium) color(orange_red)) ///
+				yline(0, lc(gs8) lp(dash)) ///
+				xline(`xline', lp(dash) lc(gs4)) ///
+				ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
+				ytitle("Effect of MeToo") ///
+				xtitle("Time relative to treatment") ///
+				xlabel(`xlabel_str', labsize(medium))
+						
+			graph export "$figures/eventstudy_`y'_`horizon'.png", replace 
+			
+			// Clean up
+			estimates clear
+			drop `horizon'_pos 
+		}
+	}
+	
+}
+
+
+
+
+/*******************************************************************************
+Other graphs
+*******************************************************************************/
 
 // Number of discrimination cases filed over time
 if `timeseries' == 1 {
