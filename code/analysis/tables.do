@@ -15,7 +15,7 @@ loc run_robust = 1
 Prep vars for tables
 *******************************************************************************/
 tab juris, gen(juris_dummy)
-la var juris_dummy1 "\hspace{5mm} Employment"
+la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Employment"
 la var juris_dummy2 "\hspace{5mm} Private housing"
 la var juris_dummy3 "\hspace{5mm} Public housing"
 
@@ -37,7 +37,6 @@ Define locals
 
 loc summary ///
     sh ///
-    sex_cases ///
 	juris_dummy1 ///
 	juris_dummy2 ///
 	juris_dummy3 ///
@@ -52,7 +51,6 @@ loc summary ///
 	basis_dummy9 ///
     charge_file_year ///
     charge_res_year ///
-	victim_f ///
 	settle ///
     court ///
     court_file_year ///
@@ -65,10 +63,6 @@ loc summary ///
 
 loc balance ///
     sh ///
-    sex_cases ///
-	juris_dummy1 ///
-	juris_dummy2 ///
-	juris_dummy3 ///
 	basis_dummy1 ///
 	basis_dummy2 ///
 	basis_dummy3 ///
@@ -78,6 +72,9 @@ loc balance ///
 	basis_dummy7 ///
 	basis_dummy8 ///
 	basis_dummy9 ///
+	juris_dummy1 ///
+	juris_dummy2 ///
+	juris_dummy3 ///
     settle ///
 	court ///
 	duration ///

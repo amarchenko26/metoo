@@ -173,14 +173,14 @@ la var outcome "Outcome of charge: no cause finding, hearing, settlement, etc"
 la var charge_file_date "Date case filed"
 la var charge_res_date "Date case resolved"
 la var court "Case went to court"
-la var win "Probable cause" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
+la var win "Plaintiff won case" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
 la var settle "Case settled"
 
 //Common
 la var state "State"
 la var basis "Basis of discrimination alleged"
 la var basis_clean "Basis of discrimination, standardized"
-la var sh "Sexual harassment charge"
+la var sh "Sexual harassment"
 la var sex_cases "Sex-related charge" // Title VII / Sex‐Female or Title VII / Sex‐Female / Sexual-Harassment for EEOC
 la var post "Filing date after MeToo"
 la var treat "Post = 1 and case is SH or overlap"
