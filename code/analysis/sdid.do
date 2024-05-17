@@ -48,7 +48,7 @@ if `run_sdid' == 1 {
 		eststo sdid_s: sdid `y' `unit' `time' treat, //covariates(r, projected)
 			vce(placebo) reps(100) seed(123) method(sdid) 
 			graph g1on msize(medium)
-			g2_opt(xlabel(-8(1)5) ytitle("Probability of settlement") xtitle("Time to MeToo (12 month intervals)"))
+			g2_opt(xlabel(-8(1)5) ytitle("Probability of settlement", size(medium)) xtitle("Time to MeToo", size(medium)))
 			graph_export("$figures/sdid_`y'_", .png); 
 		
 		#delimit cr
@@ -57,7 +57,7 @@ if `run_sdid' == 1 {
 		
 	preserve 
 		loc y 	 win
-		loc time months_to_treat_6
+		loc time months_to_treat_12
 		loc unit basis_clean
 
 		collapse (mean) `y', by(`time' `unit')
@@ -70,7 +70,7 @@ if `run_sdid' == 1 {
 		eststo sdid_p: sdid `y' `unit' `time' treat, 
 			vce(placebo) reps(100) seed(123) method(sdid) 
 			graph g1on msize(medium)
-			g2_opt(xlabel(-15(1)10) ytitle("Probability of win") xtitle("Time to MeToo (6 month intervals)"))
+			g2_opt(xlabel(-8(1)5) ytitle("Probability of win", size(medium)) xtitle("Time to MeToo", size(medium)))
 			graph_export("$figures/sdid_`y'_", .png); 
 		#delimit cr
 	restore
@@ -82,7 +82,7 @@ Robustness
 *******************************************************************************/
 loc y2 settle
 loc y3 win
-loc y4 relief_scale
+loc y4 relief_w
 
 loc outcome_vars y2 y3 y4
 loc i 1

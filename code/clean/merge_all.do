@@ -187,7 +187,7 @@ la var overlap "Overlaps with MeToo"
 la var court "Went to court"
 la var filed "Number of cases filed by SH and Post"
 la var common_year "Year of filing"
-la var win "Plaintiff won case" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
+la var win "Plaintiff won" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
 la var settle "Settled"
 
 /*******************************************************************************

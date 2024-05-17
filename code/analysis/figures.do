@@ -6,9 +6,9 @@ use "$clean_data/clean_cases.dta", replace
 
 loc event 	   = 1 // Event study
 loc event_all  = 1 // All cases (eeoc_filed == 1) 
-loc timeseries = 0 
-loc diff 	   = 0 
-loc duration   = 0 
+loc timeseries = 1
+loc diff 	   = 1 
+loc duration   = 1 
 
 /*******************************************************************************
 Prep data for plotting
@@ -25,17 +25,15 @@ Event-study
 *******************************************************************************/
 
 local horizons "months_to_treat_12"
-local outcomes "relief_scale win"
+local outcomes "relief_w win settle"
 
 if `event_all' == 1 {
 		
 	foreach horizon in `horizons' {
 		foreach y in `outcomes' {
 			
-			if "`y'" == "relief_w" {
-				drop if `horizon' == 5
-				drop if `horizon' == -8
-			}
+			preserve
+			drop if `horizon' == 5 | `horizon' == -8
 			
 			sum `horizon'
 			loc min_val = r(min)
@@ -71,8 +69,8 @@ if `event_all' == 1 {
 				yline(0, lc(gs8) lp(dash)) ///
 				xline(`xline', lp(dash) lc(gs4)) ///
 				ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
-				ytitle("Effect of MeToo") ///
-				xtitle("Time relative to treatment") ///
+				ytitle("Effect of MeToo", size(medium)) ///
+				xtitle("Time relative to treatment", size(medium)) ///
 				xlabel(`xlabel_str', labsize(medium))
 						
 			graph export "$figures/eventstudy_`y'_`horizon'_all.png", replace 
@@ -80,6 +78,7 @@ if `event_all' == 1 {
 			// Clean up
 			estimates clear
 			drop `horizon'_pos 
+			restore
 		}
 	}
 	
@@ -95,10 +94,8 @@ if `event' == 1 {
 	foreach horizon in `horizons' {
 		foreach y in `outcomes' {
 			
-			if "`y'" == "relief_w" {
-				drop if `horizon' == 5
-				drop if `horizon' == -8
-			}
+			preserve 
+			drop if `horizon' == 5 | `horizon' == -8
 			
 			sum `horizon'
 			loc min_val = r(min)
@@ -134,8 +131,8 @@ if `event' == 1 {
 				yline(0, lc(gs8) lp(dash)) ///
 				xline(`xline', lp(dash) lc(gs4)) ///
 				ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
-				ytitle("Effect of MeToo") ///
-				xtitle("Time relative to treatment") ///
+				ytitle("Effect of MeToo", size(medium)) ///
+				xtitle("Time relative to treatment", size(medium)) ///
 				xlabel(`xlabel_str', labsize(medium))
 						
 			graph export "$figures/eventstudy_`y'_`horizon'.png", replace 
@@ -143,6 +140,8 @@ if `event' == 1 {
 			// Clean up
 			estimates clear
 			drop `horizon'_pos 
+			
+			restore 
 		}
 	}
 	
@@ -166,7 +165,7 @@ if `timeseries' == 1 {
 		|| lowess mean_y ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
 		legend(order(1 "Other" 3 "Sexual harassment") ///
 		region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
-		xtitle("Date filed") ///
+		xtitle("Date filed", size(medium)) ///
 		xline(693, lpattern(solid))
     graph export "$figures/timeseries.png", replace
     restore
@@ -183,8 +182,8 @@ if `timeseries' == 1 {
 			|| lowess mean_relief ym if sh == 1, color("orange_red") lwidth(thick) ///
 			legend(order(1 "Other" 2 "Sexual harassment") ///
 				 region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
-			xtitle("Date filed") ///
-			ytitle("Number of cases filed") ///
+			xtitle("Date filed",size(medium)) ///
+			ytitle("Number of cases filed", size(medium)) ///
 			xline(693, lpattern(solid))
 		graph export "$figures/timeseries_relief.png", replace 	
 	restore	
@@ -200,7 +199,7 @@ if `timeseries' == 1 {
 			|| lowess mean_prob_cause ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
 			legend(order(1 "Other" 3 "Sexual harassment") ///
 				 region(lcolor(none)) position(2) ring(0)) /// Legend inside plot region
-			xtitle("Date filed") ///
+			xtitle("Date filed", size(medium)) ///
 			xline(693, lpattern(solid))
 	graph export "$figures/timeseries_winprob.png", replace 	
 	restore	
@@ -220,7 +219,7 @@ if `diff' == 1 {
 		scatter diff ym, mcolor("gs3") /// 
 		|| lowess diff ym, color("gs3") ///
 		legend(off) ///
-		xtitle("Date filed") ytitle("Number of cases") ///
+		xtitle("Date filed", size(medium)) ytitle("Number of cases", size(medium)) ///
 		xline(693)
 	graph export "$figures/timeseries2.png", replace 	
 
@@ -231,7 +230,7 @@ if `diff' == 1 {
 		scatter diff ym, mcolor("gs3") /// 
 		|| lowess diff ym, color("gs3") ///
 		legend(off) ///
-		xtitle("Date filed") ytitle("Number of cases") ///
+		xtitle("Date filed", size(medium)) ytitle("Number of cases", size(medium)) ///
 		xline(693)
 	graph export "$figures/timeseries_nocovid.png", replace 	
 restore	
@@ -266,7 +265,7 @@ if `duration' == 1{
 					label(4 "April") label(5 "May") label(6 "June")
 					label(7 "July") label(8 "Aug") label(9 "Sept")
 					label(10 "Oct") label(11 "Nov") label(12 "Dec"))
-			 xtitle("Duration") ytitle("Density by month filed")
+			 xtitle("Duration", size(medium)) ytitle("Density by month filed", size(medium))
 			 note("Kruskal–Wallis test where Null is equality of distributions: p < 0.336");
 	#delimit cr
 

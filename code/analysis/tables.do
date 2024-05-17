@@ -91,7 +91,7 @@ OVERLAP regression
 loc y1 filed_per_year
 loc y2 settle
 loc y3 win
-loc y4 relief_scale
+loc y4 relief_w
 
 loc outcome_vars y1 y2 y3 y4
 loc i 1
@@ -142,7 +142,7 @@ DiD regression
 loc y1 filed_per_year
 loc y2 settle
 loc y3 win
-loc y4 relief_scale
+loc y4 relief_w
 
 loc outcome_vars y1 y2 y3 y4
 loc i 1
@@ -293,13 +293,13 @@ if `run_duration' == 1 {
 
 	keep if eeoc_filed == 0
 
-	reg duration relief_scale, r
+	reg duration relief_w, r
 		eststo A
 
-	reg duration relief_scale if sh == 1, r
+	reg duration relief_w if sh == 1, r
 		eststo B
 
-	reg duration relief_scale if sex_cases == 1, r
+	reg duration relief_w if sex_cases == 1, r
 		eststo C
 
 	reg duration i.win, r
@@ -315,7 +315,7 @@ if `run_duration' == 1 {
 	
 	estout D E F A B C using "$tables/duration_corr.tex", style(tex) replace
 		drop(_cons)
-		varlabels(relief_scale "Compensation" 1.win "Win")
+		varlabels(relief_w "Compensation" 1.win "Win")
 		mgroups("Duration", pattern(1 0 0 0 0 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel("All" "SH" "Sex" "All" "SH" "Sex")
