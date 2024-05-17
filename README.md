@@ -2,6 +2,23 @@
 
 ## Description of datasets
 
+**$raw_data/HI/hi_raw_cases.xlsx**  
+These data contain all employment, housing, and public accommodation/public service cases filed in Hawaii from June 1, 2010 to June 1, 2023.
+- N: 3790
+- SH: 310
+- CaseType: identifies whether the case is employment, housing, or public accommodations
+- Island: identifies on which island the case was filed
+- Docket: unique identifier for each case
+- EEOC No.: corresponding EEOC case number
+- ComplaintFiled: date complaint was filed
+- Basis: basis of discrimination alleged by complainant
+- AdverseAct: adverse action alleged by complainant
+- Closed: date complaint was closed at investigation stage
+- Closure Code: code for closure at investigation stage
+- Enf Closure: date complaint was closed at enforcement stage
+- Enf Closure Code: code for closure at enforcement stage
+- Compensation: amounts paid directly to the claimant
+
 **$raw_data/MI/mi_raw_cases.xlsx**  
 These data contain all education, employment, housing, and public accommodation/public service cases filed in Michigan from June 1, 2010 to June 1, 2023.
 - N: 17854
