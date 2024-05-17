@@ -74,6 +74,7 @@ if `run_sdid' == 1 {
 			graph_export("$figures/sdid_`y'_", .png); 
 		#delimit cr
 	restore
+
 }
 
 
