@@ -21,6 +21,7 @@ Already merged:
 Clean EEOC court case data from .py files to match state files
 *******************************************************************************/
 
+// coming from stata file not python
 use "$clean_data/clean_eeoc.dta", clear
 
 drop index 
