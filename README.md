@@ -20,7 +20,7 @@ These data contain all employment, housing, and public accommodation/public serv
 - Compensation: amounts paid directly to the claimant
 
 - Cases labeled `win == 1` if closure code “ORDER” in the enforcement closure column with compensation to complainant (equivalent of the case going to a hearing and the complainant winning)
-- Cases label `win == 1` and `settle == 1` if closure code "CA" in the investigation closure column and closure code “SETTLED” in the enforcement closure column
+- Cases labeled `win == 1` and `settle == 1` if closure code "CA" in the investigation closure column and closure code “SETTLED” in the enforcement closure column
 
 **$raw_data/MI/mi_raw_cases.xlsx**  
 These data contain all education, employment, housing, and public accommodation/public service cases filed in Michigan from June 1, 2010 to June 1, 2023.
