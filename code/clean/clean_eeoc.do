@@ -12,14 +12,12 @@ Rename Variables
 *******************************************************************************/
 
 ren casename resp_org
-ren civilactionnumber Civil_Action_Number
+ren civilactionnumber civil_action_number
 ren court court_name
-ren courtfilingdate Court_Filing_Date_temp
-ren resolutiondate Resolution_Date_temp
-ren relief Relief_temp
+ren courtfilingdate court_filing_date_temp
+ren resolutiondate resolution_date_temp
+ren relief relief
 ren allegations basis
-
-ren *, lower
 
 gen state = "Federal"
 gen juris = "Employment"
@@ -45,35 +43,28 @@ Clean columns
 *******************************************************************************/
 
 // convert 'Court Filing Date' and 'Resolution Date' to datetime format
-
 gen court_file_date = date(court_filing_date_temp, "MDY"), after(court_filing_date_temp)
 gen court_res_date = date(resolution_date_temp, "MDY"), after(resolution_date_temp)
 
 // Calculate the duration in days between filing and resolution
 gen duration = court_res_date - court_file_date
 
-// Remove the dollar sign and commas from the 'Relief' column
-replace relief_temp = regexreplaceall(relief_temp, "[$,]", "")
+// Convert the 'Relief' column to numbers
+replace relief = regexreplaceall(relief, "[$,]", "")
+destring relief, replace
 
 // Create a new column to indicate missing relief
-gen missing_relief = 1 if missing(relief_temp)
-replace missing_relief = 0 if missing_relief != 1
-//
-// // Convert to numeric, coercing errors to NaN, and fill NaNs with 0
-replace relief_temp = "0" if missing(relief_temp)
-destring relief_temp, gen(relief)
+g missing_relief = missing(relief)
 
-drop relief_temp court_filing_date_temp resolution_date_temp
+drop court_filing_date_temp resolution_date_temp
 
 
 
 /*******************************************************************************
-Clean EEOC court case data from .py files to match state files
+Clean EEOC court case data to match state files
 *******************************************************************************/
- 
 
-
-// remove time (all times are zero anyway)
+// reformat time
 format court_file_date %td
 
 format court_res_date %td
@@ -92,6 +83,7 @@ g win = 1 if missing_relief == 0
 replace win = 0 if missing_relief == 1 // no probable cause if relief is missing
 
 g court = 1 
+
 
 // save dta file to clean data folder
 save "$clean_data/clean_eeoc.dta", replace
