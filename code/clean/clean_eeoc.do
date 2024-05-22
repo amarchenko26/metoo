@@ -93,7 +93,7 @@ replace win = 0 if missing_relief == 1 // no probable cause if relief is missing
 
 g court = 1 
 
-// save dta file to desktop
+// save dta file to clean data folder
 save "$clean_data/clean_eeoc.dta", replace
 
 
