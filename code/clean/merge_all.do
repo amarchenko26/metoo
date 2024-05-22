@@ -18,44 +18,11 @@ Already merged:
 
 
 /*******************************************************************************
-Clean EEOC court case data from .py files to match state files
+Pull cleaned EEOC court case data
 *******************************************************************************/
 
-// coming from stata file not python
 use "$clean_data/clean_eeoc.dta", clear
 
-drop index 
-ren *, lower
-
-ren case_name resp_org
-ren allegations basis
-ren resolution_date court_res_date
-ren court_filing_date court_file_date
-ren court court_name
-gen state = "Federal"
-gen juris = "Employment"
-
-// remove time (all times are zero anyway)
-replace court_file_date = dofc(court_file_date)
-format court_file_date %td
-
-replace court_res_date = dofc(court_res_date)
-format court_res_date %td
-
-// Clean basis 
-g basis_clean = "Sex" if regexm(basis, "^Title VII / Sex")  | regexm(basis, "^EPA / Equal Pay-Female") 
-replace basis_clean = "Religion" if regexm(basis, "^Title VII / Religion") 
-replace basis_clean = "Race" if regexm(basis, "^Title VII / Race") | regexm(basis, "^Title VII / Color")
-replace basis_clean = "Nationality" if regexm(basis, "^Title VII / National Origin")
-replace basis_clean = "Disability" if regexm(basis, "^ADA") //Americans with Disabilities
-replace basis_clean = "Age" if regexm(basis, "^ADEA") //Age Discrimination in Employment
-replace basis_clean = "Retaliation" if regexm(basis, "^Title VII / Retaliation") | regexm(basis, "^EPA / Retaliation")
-replace basis_clean = "Other" if regexm(basis, "^Title VII / Other") | regexm(basis, "^GINA") | basis == "" // if it's missing
-
-g win = 1 if missing_relief == 0
-replace win = 0 if missing_relief == 1 // no probable cause if relief is missing
-
-g court = 1 
 
 /*******************************************************************************
 Append to EEOC filed data (2010-2017)
