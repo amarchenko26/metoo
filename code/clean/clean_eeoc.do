@@ -6,10 +6,6 @@ Cleans EEOC data
 
 import delimited "$raw_data/EEOC/cases.csv", varnames(1) clear
 
-// import excel "$raw_data/MA/ma_raw_cases.xlsx", ///
-// 	sheet("No Duplicate Complaints") firstrow clear
-	
-// save "/Users/jacobhirschhorn/Desktop/eeoc_test.dta", replace
 	
 /*******************************************************************************
 Rename Variables
