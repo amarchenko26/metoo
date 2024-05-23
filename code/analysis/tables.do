@@ -4,13 +4,13 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 = 1
-loc run_did_all  = 1
-loc run_overlap  = 1
+loc	run_did 	 = 0
+loc run_did_all  = 0
+loc run_overlap  = 0
 
-loc run_summary  = 1
+loc run_summary  = 0
 loc run_balance  = 1
-loc run_duration = 1
+loc run_duration = 0
 
 /*******************************************************************************
 Prep vars for tables
@@ -190,6 +190,7 @@ loc i 1
 
 if `run_did' == 1 {
 
+	preserve 
 	keep if eeoc_filed == 0
 
 	foreach y of local outcome_vars {
@@ -223,6 +224,7 @@ if `run_did' == 1 {
 	#delimit cr
 	estimates clear
 
+	restore
 }
 
 drop time_state unit_state
@@ -247,6 +249,7 @@ Summary
 *******************************************************************************/
 if `run_summary' == 1 {
 
+	preserve
 	keep if eeoc_filed == 0
 	
 	est clear
@@ -256,6 +259,7 @@ if `run_summary' == 1 {
 		nomtitle nonote noobs label booktabs f ///
 		cells("mean(fmt(%13.2fc)) sd(fmt(%13.2fc)) min(fmt(a2)) max(fmt(a2)) count(fmt(a2))") ///
 		collabels("Mean" "SD" "Min" "Max" "N")
+	restore
 }
 
 
@@ -265,6 +269,12 @@ Balance table
 
 if `run_balance' == 1 {
 	
+	preserve 
+
+	// Run overlap on ALL CASES
+    balancetable_program `balance', sample(overlap !=.) using("$tables/balance_overlap.tex") ctitles("Before" "Overlap" "Diff" "p-value") wide(mean diff pval) by(overlap) errors(robust)
+
+	// Now restrict sample 
 	keep if eeoc_filed == 0
 
     balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
@@ -279,10 +289,7 @@ if `run_balance' == 1 {
     // Resolved pre-covid
     balancetable_program `balance', sample(common_res_date < covid) using("$tables/balance_res_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
 
-	drop covid 
-	
-	// overlap case characteristics
-    balancetable_program `balance', using("$tables/balance_overlap.tex") ctitles("Before" "Overlap" "Diff" "p-value") wide(mean diff pval) by(overlap) errors(robust)
+	restore
 }
 
 
@@ -291,6 +298,7 @@ Correlation b/w duration and outcomes
 *******************************************************************************/
 if `run_duration' == 1 {
 
+	preserve 
 	keep if eeoc_filed == 0
 
 	reg duration relief_w, r
@@ -328,4 +336,5 @@ if `run_duration' == 1 {
 
 	#delimit cr
 	estimates clear
+	restore
 }
