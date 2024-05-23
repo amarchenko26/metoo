@@ -81,15 +81,31 @@ replace overlap_1 = . if common_file_date < date("$metoo", "DMY") - 730 // drop 
 replace overlap_1 = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
 replace overlap_1 = . if (common_file_date < date("$metoo", "DMY") - 365) & (overlap == 1) // remove overlap cases filed more than a year before MeToo
 
-// overlap_2 - All overlap cases are used, control cases are curated so that the mean duration of overlap and control is the same, ~317
+// overlap_2 - All overlap cases are used, control cases are curated so that the mean duration of overlap and control is the same
 g overlap_2 = overlap
-replace overlap_2 = . if (overlap_2 == 0) & (duration < 70) // remove control cases with duration less than 70 days
+
+sum duration if overlap_2 == 1 // get mean duration for overlap cases
+loc mean_dur_overlap `r(mean)' // saves mean from previous line to a local named mean_dur_overlap'
+sum duration if overlap_2 == 0 // get mean duration for control cases
+loc mean_dur_control `r(mean)' // saves mean from previous line to a local named mean_dur_control'
+loc i = 0
+
+// While the control duration mean is less than the overlap duration mean
+while `mean_dur_control' < `mean_dur_overlap' {
+	loc i = `i' + 1
+	// remove the shortest duration control cases to increase the mean of the control duration
+	replace overlap_2 = . if (overlap_2 == 0) & (duration < `i')
+	sum duration if overlap_2 == 0 // get the new control mean duration
+	loc mean_dur_control `r(mean)' // update `mean_dur_control'
+}
 
 // overlap_3 - All control and all overlap cases are used
 g overlap_3 = overlap
 
 // leave only the three definitions
 drop overlap
+
+
 
 
 // Gen post and treat
