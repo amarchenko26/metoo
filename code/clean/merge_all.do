@@ -91,13 +91,27 @@ loc mean_dur_control `r(mean)' // saves mean from previous line to a local named
 loc i = 0
 
 // While the control duration mean is less than the overlap duration mean
-while `mean_dur_control' < `mean_dur_overlap' {
-	loc i = `i' + 1
-	// remove the shortest duration control cases to increase the mean of the control duration
-	replace overlap_2 = . if (overlap_2 == 0) & (duration < `i')
-	sum duration if overlap_2 == 0 // get the new control mean duration
-	loc mean_dur_control `r(mean)' // update `mean_dur_control'
+while (abs(`mean_dur_control' - `mean_dur_overlap') > `threshold') {
+    loc mean_diff = `mean_dur_control' - `mean_dur_overlap'
+    // Identify the control case closest to the current mean difference
+    qui {
+        if `mean_diff' > 0 {
+            // Control mean is greater, so remove the longest duration case first
+            sort -duration if overlap_2 == 0 // Sort in descending order by duration
+            replace overlap_2 = . if overlap_2 == 0 & _n == 1
+        } else {
+            // Control mean is lesser, so remove the shortest duration case first
+            sort duration if overlap_2 == 0 // Sort in ascending order by duration
+            replace overlap_2 = . if overlap_2 == 0 & _n == 1
+        }
+    }
+    // Recalculate the mean duration for control cases
+    sum duration if overlap_2 == 0
+    loc mean_dur_control = `r(mean)'
 }
+// Display the final means
+display "Mean duration for overlap cases: `mean_dur_overlap'"
+display "Mean duration for control cases: `mean_dur_control'"
 
 // overlap_3 - All control and all overlap cases are used
 g overlap_3 = overlap
