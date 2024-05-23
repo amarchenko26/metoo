@@ -88,12 +88,11 @@ loc balance ///
 OVERLAP regression
 *******************************************************************************/
 
-loc y1 filed_per_year
-loc y2 settle
-loc y3 win
-loc y4 relief_w
+loc y1 settle
+loc y2 win
+loc y3 relief_w
 
-loc outcome_vars y1 y2 y3 y4
+loc outcome_vars y1 y2 y3
 loc i 1
 
 if `run_overlap' == 1 {
@@ -118,9 +117,9 @@ if `run_overlap' == 1 {
 	
 	#delimit ;
 	
-	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_overlap.tex", style(tex) replace
+	estout a1 s1 a2 s2 a3 s3 using "$tables/did_overlap.tex", style(tex) replace
 		varlabels(overlap "Overlap" duration "Duration") keep(overlap duration)
-		mgroups("Filed per year" "Settle" "Win" "Compensation", pattern(1 0 1 0 1 0 1 0) 
+		mgroups(Settle" "Win" "Compensation", pattern(1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none)
 		stats(N r2, 
