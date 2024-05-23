@@ -66,13 +66,31 @@ g court_file_year = year(court_file_date)
 g court_res_year = year(court_res_date)
 
 // Overlap MeToo - 1 if case filed before MeToo & ended after, 0 o/w
-g overlap = 1 if 	   common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1
-replace overlap = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1
+g overlap = 1 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1 // 1 if case ended after MeToo
+replace overlap = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1 // 0 if case ended before MeToo
 replace overlap = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
-replace overlap = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than a year before MeToo
-replace overlap = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
-
 replace overlap = . if sh == 0 // Double check to leave only sh cases
+
+/*******************************************************************************
+3 Definitions of Overlap and Control sets
+*******************************************************************************/
+
+// overlap_1 - Overlap cases and control cases are bounded at a duration of 2 years maximum
+g overlap_1 = overlap
+replace overlap_1 = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than two years before MeToo
+replace overlap_1 = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
+replace overlap_1 = . if (common_file_date < date("$metoo", "DMY") - 365) & (overlap == 1) // remove overlap cases filed more than a year before MeToo
+
+// overlap_2 - All overlap cases are used, control cases are curated so that the mean duration of overlap and control is the same, ~317
+g overlap_2 = overlap
+replace overlap_2 = . if (overlap_2 == 0) & (duration < 70) // remove control cases with duration less than 70 days
+
+// overlap_3 - All control and all overlap cases are used
+g overlap_3 = overlap
+
+// leave only the three definitions
+drop overlap
+
 
 // Gen post and treat
 g post = (common_file_date > date("$metoo", "DMY"))
