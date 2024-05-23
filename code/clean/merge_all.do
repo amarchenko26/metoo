@@ -66,13 +66,61 @@ g court_file_year = year(court_file_date)
 g court_res_year = year(court_res_date)
 
 // Overlap MeToo - 1 if case filed before MeToo & ended after, 0 o/w
-g overlap = 1 if 	   common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1
-replace overlap = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1
+g overlap = 1 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1 // 1 if case ended after MeToo
+replace overlap = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1 // 0 if case ended before MeToo
 replace overlap = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
-replace overlap = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than a year before MeToo
-replace overlap = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
-
 replace overlap = . if sh == 0 // Double check to leave only sh cases
+
+/*******************************************************************************
+3 Definitions of Overlap and Control sets
+*******************************************************************************/
+
+// overlap_1 - Overlap cases and control cases are bounded at a duration of 2 years maximum
+g overlap_1 = overlap
+replace overlap_1 = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than two years before MeToo
+replace overlap_1 = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
+replace overlap_1 = . if (common_file_date < date("$metoo", "DMY") - 365) & (overlap == 1) // remove overlap cases filed more than a year before MeToo
+
+// overlap_2 - All overlap cases are used, control cases are curated so that the mean duration of overlap and control is the same
+g overlap_2 = overlap
+
+sum duration if overlap_2 == 1 // get mean duration for overlap cases
+loc mean_dur_overlap `r(mean)' // saves mean from previous line to a local named mean_dur_overlap'
+sum duration if overlap_2 == 0 // get mean duration for control cases
+loc mean_dur_control `r(mean)' // saves mean from previous line to a local named mean_dur_control'
+loc i = 0
+
+// While the control duration mean is less than the overlap duration mean
+while (abs(`mean_dur_control' - `mean_dur_overlap') > `threshold') {
+    loc mean_diff = `mean_dur_control' - `mean_dur_overlap'
+    // Identify the control case closest to the current mean difference
+    qui {
+        if `mean_diff' > 0 {
+            // Control mean is greater, so remove the longest duration case first
+            sort -duration if overlap_2 == 0 // Sort in descending order by duration
+            replace overlap_2 = . if overlap_2 == 0 & _n == 1
+        } else {
+            // Control mean is lesser, so remove the shortest duration case first
+            sort duration if overlap_2 == 0 // Sort in ascending order by duration
+            replace overlap_2 = . if overlap_2 == 0 & _n == 1
+        }
+    }
+    // Recalculate the mean duration for control cases
+    sum duration if overlap_2 == 0
+    loc mean_dur_control = `r(mean)'
+}
+// Display the final means
+display "Mean duration for overlap cases: `mean_dur_overlap'"
+display "Mean duration for control cases: `mean_dur_control'"
+
+// overlap_3 - All control and all overlap cases are used
+g overlap_3 = overlap
+
+// leave only the three definitions
+drop overlap
+
+
+
 
 // Gen post and treat
 g post = (common_file_date > date("$metoo", "DMY"))
