@@ -148,23 +148,3 @@ The following variables are cleaned altogether, after state and federal data is 
 `treat = post*sh`  
 `treat = .` if `sex_cases == 1 & sh == 0`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
 `treat = 1` if `overlap == 1` since overlap cases are sh AND treated, but definition of post doesn't capture them.  
-
-
-## Trash - remove
-- Total cases brought under Title VII / Sex‐Female: 594
-- Number of SH cases straddling Oct 2017: 31
-- Number of Title VII / Sex‐Femalecases straddling Oct 2017: 47
-- Number of SH cases started and resolved before Oct 2017: 309
-- Number of SH cases started and resolved after Oct 2017: 105
-- Mean relief $ for SH if case resolved before October 2017, with zeroes: 315780
-- Mean relief $ for SH if case resolved after October 2017, with zeroes: 364087
-- Relief is missing for SH cases 31 times
-- Mean relief $ for SH if case resolved before October 2017, no zeroes: 343578
-- Mean relief $ for SH if case resolved after October 2017, no zeroes: 382291
-- - if htere's a mechanical issue where all years cases are filed december 2016, and so are the cases filed dec 2017 picking up the metoo cases. so when is the right timing? is it 2018 actually? 
-
-- Mean duration for SH cases, before October 1, 2017: 623.1 days
-- Mean duration for SH cases, after October 1, 2017: 403.1 days
-
-
-
