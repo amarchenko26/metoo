@@ -1,5 +1,7 @@
 # MeToo
 
+Run the project by navigating to metoo Github folder (using `cd`) and typing `./run_project.sh` into command line. 
+
 ## Description of datasets
 
 **$raw_data/HI/hi_raw_cases.xlsx**  
