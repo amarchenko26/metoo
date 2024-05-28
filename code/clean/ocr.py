@@ -18,7 +18,7 @@ pdf_directory = "/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw
 # Directory to save the extracted text files
 output_directory = "/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw/PA/PA_extracted"
 
-# type which tesseract into command line to get path for tesseract install
+# type "which tesseract" into command line to get path for tesseract install
 pytesseract.pytesseract.tesseract_cmd = r'/opt/homebrew/bin/tesseract'
 
 # Function to perform OCR on a PDF and save the text to a file
