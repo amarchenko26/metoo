@@ -12,6 +12,15 @@ import pytesseract
 from PIL import Image
 import io
 
+# Directory containing the PDFs
+pdf_directory = "/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw/PA/PA_PDFs"
+
+# Directory to save the extracted text files
+output_directory = "/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw/PA/PA_extracted"
+
+# type which tesseract into command line to get path for tesseract install
+pytesseract.pytesseract.tesseract_cmd = r'/opt/homebrew/bin/tesseract'
+
 # Function to perform OCR on a PDF and save the text to a file
 def ocr_pdf_to_text(pdf_path, output_path):
     # Open the PDF file
@@ -34,11 +43,6 @@ def ocr_pdf_to_text(pdf_path, output_path):
     with open(output_path, "w", encoding="utf-8") as text_file:
         text_file.write(text_content)
 
-# Directory containing the PDFs
-pdf_directory = "/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw/PA/PA_PDFs"
-
-# Directory to save the extracted text files
-output_directory = "/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw/PA/PA_extracted"
 
 # Iterate through each PDF file in the directory
 for filename in os.listdir(pdf_directory):
@@ -47,7 +51,9 @@ for filename in os.listdir(pdf_directory):
         output_path = os.path.join(output_directory, f"{os.path.splitext(filename)[0]}.txt")
         
         # Perform OCR on the PDF and save the text
+        print("Processing", pdf_path)
         ocr_pdf_to_text(pdf_path, output_path)
+
 
 print("OCR process completed for all PDFs.")
 
