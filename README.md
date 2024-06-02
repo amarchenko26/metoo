@@ -4,6 +4,51 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 
 ## Description of datasets
 
+**$raw_data/IL/il_raw_cases.xlsx**  
+These data contain all education, employment, housing, and public accommodation/public service cases filed in Illinois from June 1, 2010 to June 1, 2023.
+- N: 46431
+- SH: 
+- Charge #: unique identifier for each case
+- CP Name: complainant name
+- RP Name: respondent name
+- RP Addess: respondent address
+- RP CITY: respondent city
+- RP STATE: respondent state
+- RP ZIP: respondent ZIP code
+- File Date: date case was filed
+- Close Date: date case was closed
+- Finding: how case was closed
+  - LSE: lack of substantial evidence
+  - LOJ: lack of jurisdiction
+  - SE: substantial evidence
+  - WD: withdrawn
+  - AW: adjusted and withdrawn
+  - AT: adjusted/terms of settlement
+  - OPT: opt out
+  - FTP: failure to proceed
+  - UNK: unknown
+  - EXP: ?
+  - STA: ?
+  - ACL: ?
+- Settle: settlement amount
+- Basis: basis of discrimination
+- Issue: adverse action alleged by complainant
+- Request for Review: date complainant requested the case for review (cases with LSE findings)
+- Dept filed Complaint: date department filed a complaint (cases with SE findings)
+- Pro Se Complaint: 
+
+**$raw_data/TX/tx_raw_cases.xlsx**  
+These data contain all housing cases filed in Texas from June 1, 2010 to June 1, 2023.
+- N: 
+- SH:
+- Case Name: complainant v. respondent
+- Closure Reason: how case was closed
+- HUD Filing Date: date case was filed
+- HUD Closure Date: date case was closed
+- Bases: basis of discrimination
+- Relief Summary with Amounts: summary of relief given after case closed (monetary relief, housing, reasonable accommodation, etc.)
+- Compensation Amount: amounts paid directly to the claimant
+
 **$raw_data/HI/hi_raw_cases.xlsx**  
 These data contain all employment, housing, and public accommodation/public service cases filed in Hawaii from June 1, 2010 to June 1, 2023.
 - N: 3790
@@ -27,7 +72,7 @@ These data contain all employment, housing, and public accommodation/public serv
 **$raw_data/MI/mi_raw_cases.xlsx**  
 These data contain all education, employment, housing, and public accommodation/public service cases filed in Michigan from June 1, 2010 to June 1, 2023.
 - N: 17854
-- SH: 811
+- SH: 348
 - Case ID: unique identifier for each case
 - Created Date: date case was opened
 - Case Account: name of respondent
