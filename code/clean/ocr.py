@@ -22,11 +22,14 @@ elif userid == "maggie":
 elif userid == "jacobhirschhorn":
     root = "/Users/jacobhirschhorn/Dropbox (Brown)/metoo_data"
 
+# State name
+state = "RI"
+
 # Directory containing the PDFs
-pdf_directory = root + "/raw/PA/PA_PDFs"
+pdf_directory = root + "/raw/" + state + "/" + state + "_PDFs"
 
 # Directory to save the extracted text files
-output_directory = root + "/raw/PA/PA_extracted"
+output_directory = root + "/raw/" + state + "/" + state + "_extracted"
 
 # type "which tesseract" into command line to get path for tesseract install
 pytesseract.pytesseract.tesseract_cmd = r'/opt/homebrew/bin/tesseract'
