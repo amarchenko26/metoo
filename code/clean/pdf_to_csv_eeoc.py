@@ -9,7 +9,7 @@ Created on Tue Feb 20 17:09:59 2024
 import pdfplumber
 import pandas as pd
 
-file_path = '/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw/DATA - 2010-2022 Resolutions as of 08.25.23.pdf'
+file_path = '/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw/EEOC/DATA - 2010-2022 Resolutions as of 08.25.23.pdf'
 
 # Initialize an empty list to store all tables
 all_tables = []
@@ -26,5 +26,5 @@ with pdfplumber.open(file_path) as pdf:
 # Concatenate all DataFrames in the list into a single DataFrame
 final_df = pd.concat(all_tables, ignore_index=True)
 
-final_df.to_csv('data/raw/cases.csv', index=False)
+final_df.to_csv('data/raw/EEOC/cases.csv', index=False)
 
