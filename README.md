@@ -18,6 +18,14 @@ These data contain all education, employment, housing, and public accommodation/
 - File Date: date case was filed
 - Close Date: date case was closed
 - Finding: how case was closed
+  - ACL: ?
+  - ADM: ?
+  - DEF: ?
+  - DUP: ?
+  - EXP: ?
+  - LOS: ?
+  - STA: ?
+  - UNK: ?
   - LSE: lack of substantial evidence
   - LOJ: lack of jurisdiction
   - SE: substantial evidence
@@ -26,10 +34,6 @@ These data contain all education, employment, housing, and public accommodation/
   - AT: adjusted/terms of settlement
   - OPT: opt out
   - FTP: failure to proceed
-  - UNK: unknown
-  - EXP: ?
-  - STA: ?
-  - ACL: ?
 - Settle: settlement amount
 - Basis: basis of discrimination
 - Issue: adverse action alleged by complainant
@@ -39,7 +43,7 @@ These data contain all education, employment, housing, and public accommodation/
 
 **$raw_data/TX/tx_raw_cases.xlsx**  
 These data contain all housing cases filed in Texas from June 1, 2010 to June 1, 2023.
-- N: 
+- N: 5018
 - SH:
 - Case Name: complainant v. respondent
 - Closure Reason: how case was closed
