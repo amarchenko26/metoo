@@ -6,10 +6,10 @@ use "$clean_data/clean_cases.dta", replace
 
 loc	run_did 	 = 0
 loc run_did_all  = 0
-loc run_overlap  = 0
+loc run_overlap  = 1
 
 loc run_summary  = 0
-loc run_balance  = 1
+loc run_balance  = 0
 loc run_duration = 0
 
 /*******************************************************************************
@@ -97,43 +97,61 @@ loc i 1
 
 if `run_overlap' == 1 {
 	
+	// Panel A
 	foreach y of local outcome_vars {
-		
-		// Outcome `y'
-		reg ``y'' overlap, r
-		eststo a`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
-		qui estadd loc festate "No", replace
-		
-		reg ``y'' overlap duration, r
-		eststo s`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
-		qui estadd loc festate "Yes", replace
-				
+		eststo: reg ``y'' overlap duration, r
+		qui: sum ``y'' if overlap == 0
+		estadd scalar control_mean = `r(mean)' 
+
 		loc ++i
 	}
 	
 	#delimit ;
-	
-	estout a1 s1 a2 s2 a3 s3 using "$tables/did_overlap.tex", style(tex) replace
+	estout _all using "$tables/overlap_panel_a.tex", style(tex) replace
 		varlabels(overlap "Overlap" duration "Duration") keep(overlap duration)
-		mgroups(Settle" "Win" "Compensation", pattern(1 0 1 0 1 0) 
+		mgroups("Settle" "Win" "Compensation", pattern(1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none)
-		stats(N r2, 
-			label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		stats(N r2 control_mean, 
+			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") ;
-
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") ;
 	#delimit cr
+	eststo clear
+	estimates clear
+	
+	// Panel B 
+	foreach y of local outcome_vars {
+		eststo: reg ``y'' overlap_2 duration, r
+		qui: sum ``y'' if overlap == 0
+		estadd scalar control_mean = `r(mean)' 
+
+		loc ++i
+	}
+	
+	#delimit ;	
+	estout _all using "$tables/overlap_panel_b.tex", style(tex) replace
+		varlabels(overlap_2 "Overlap" duration "Duration") keep(overlap_2 duration)
+		stats(N r2 control_mean, 
+			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		mlabel(none)
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+	#delimit cr
+	
+	// this breaks at panel combine and i hate it and idk what to do 
+	panelcombine, use($tables/did_overlap.tex $tables/did_overlap.tex) columncount(3) paneltitles("Overlap 1" "Overlap 2") save("$tables/did_overlap.tex") cleanup
+
+	eststo clear
 	estimates clear
 }
 
+	*	refcat(age18 "\emph{Age}" male "\emph{Demographics}" educationage "\emph{Education}" employeddummy "\emph{Employment}" oowner "\emph{Housing}" hhincome_thou "\emph{Household Finances}" reduntant "\emph{Income and Expenditure Risk}" literacyscore "\emph{Behavioural Characteristics}", nolabel) ///
+
+	
 /*******************************************************************************
 DiD regression
 *******************************************************************************/
@@ -181,7 +199,7 @@ if `run_did_all' == 1 {
 		postfoot("\bottomrule" "\end{tabular}") ;
 	#delimit cr
 	estimates clear
-
+	eststo clear
 }
 
 loc outcome_vars y1 y2 y3 y4
@@ -222,7 +240,7 @@ if `run_did' == 1 {
 		postfoot("\bottomrule" "\end{tabular}") ;
 	#delimit cr
 	estimates clear
-
+	eststo clear
 	restore
 }
 
@@ -251,14 +269,15 @@ if `run_summary' == 1 {
 	preserve
 	keep if eeoc_filed == 0
 	
-	est clear
-	estpost tabstat post `summary', c(stat) stat(mean sd min max n)
+	tabstat post `summary', c(stat) stat(mean sd min max n)
 
 	esttab using "$tables/summary.tex", replace ///
 		nomtitle nonote noobs label booktabs f ///
 		cells("mean(fmt(%13.2fc)) sd(fmt(%13.2fc)) min(fmt(a2)) max(fmt(a2)) count(fmt(a2))") ///
 		collabels("Mean" "SD" "Min" "Max" "N")
 	restore
+	eststo clear
+
 }
 
 
@@ -300,27 +319,21 @@ if `run_duration' == 1 {
 	preserve 
 	keep if eeoc_filed == 0
 
-	reg duration relief_w, r
-		eststo A
+	eststo: reg duration i.win, r
 
-	reg duration relief_w if sh == 1, r
-		eststo B
+	eststo: reg duration i.win if sh == 1, r
 
-	reg duration relief_w if sex_cases == 1, r
-		eststo C
+	eststo:	reg duration i.win if sex_cases == 1, r
 
-	reg duration i.win, r
-		eststo D
+	eststo:	reg duration relief_w, r
 
-	reg duration i.win if sh == 1, r
-		eststo E
+	eststo:	reg duration relief_w if sh == 1, r
 
-	reg duration i.win if sex_cases == 1, r
-		eststo F
+	eststo:	reg duration relief_w if sex_cases == 1, r
 		
 	#delimit ;
 	
-	estout D E F A B C using "$tables/duration_corr.tex", style(tex) replace
+	estout _all using "$tables/duration_corr.tex", style(tex) replace
 		drop(_cons)
 		varlabels(relief_w "Compensation" 1.win "Win")
 		mgroups("Duration", pattern(1 0 0 0 0 0) 
@@ -335,5 +348,6 @@ if `run_duration' == 1 {
 
 	#delimit cr
 	estimates clear
+	eststo clear
 	restore
 }

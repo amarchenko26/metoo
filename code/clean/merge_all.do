@@ -72,13 +72,13 @@ g court_res_year = year(court_res_date)
 *******************************************************************************/
 
 // Overlap MeToo - 1 if case filed before MeToo & ended after, 0 o/w
-g overlap = 1 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1 // 1 if case ended after MeToo
-replace overlap = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1 // 0 if case ended before MeToo
-replace overlap = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
-replace overlap = . if sh == 0 // Double check to leave only sh cases
+g overlap_all = 1 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1 // 1 if case ended after MeToo
+replace overlap_all = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1 // 0 if case ended before MeToo
+replace overlap_all = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
+replace overlap_all = . if sh == 0 // Double check to leave only sh cases
 
 // overlap_2 - Bounded at a duration of 2 years maximum
-g overlap_2 = overlap
+g overlap_2 = overlap_all
 replace overlap_2 = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than two years before MeToo
 replace overlap_2 = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
 replace overlap_2 = . if (common_file_date < date("$metoo", "DMY") - 365) & (overlap_2 == 1) // remove overlap cases filed more than a year before MeToo
@@ -172,6 +172,11 @@ la var common_year "Year of filing"
 la var win "Plaintiff won" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
 la var settle "Settled"
 
+// Indent all variable labels for tables
+foreach v of varlist * {
+	label variable `v' `"\hspace{0.1cm} `: variable label `v''"'
+	}
+	
 /*******************************************************************************
 Export all cases
 *******************************************************************************/

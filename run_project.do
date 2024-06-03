@@ -52,6 +52,7 @@ Required packages - uncomment to install
 *******************************************************************************/
 
 /*
+ssc install estout
 ssc install schemepack, replace //for graph schemes, https://github.com/asjadnaqvi/stata-schemepack?tab=readme-ov-file
 ssc install balancetable
 ssc install binscatter 
@@ -59,6 +60,8 @@ ssc install outreg // for frmttable
 ssc install winsor
 ssc install sdid, replace // for synthetic DiD, https://github.com/Daniel-Pailanir/sdid
 ssc install honestdid, replace // https://github.com/mcaceresb/stata-honestdid
+include "https://raw.githubusercontent.com/steveofconnell/PanelCombine/master/PanelCombine.do"
+
 */
 
 /*******************************************************************************
