@@ -6,12 +6,21 @@ Created on Sun Jun  2 17:50:55 2024
 @author: maggie
 """
 
+import getpass
 import pdfplumber
 import pandas as pd
 
+userid = getpass.getuser()
+if userid == "anyamarchenko":
+    root = "/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data"
+elif userid == "maggie":
+    root = "/Users/maggie/Dropbox (Brown)/metoo_data"
+elif userid == "jacobhirschhorn":
+    root = "/Users/jacobhirschhorn/Dropbox (Brown)/metoo_data"
+
 ## Illinois
 
-file_path = '/Users/maggie/Dropbox (Brown)/metoo_data/raw/IL/JIang FOIA documentation 5.31.24.pdf'
+file_path = root + '/raw/IL/JIang FOIA documentation 5.31.24.pdf'
 
 # Initialize an empty list to store all tables
 all_tables = []
@@ -29,7 +38,7 @@ with pdfplumber.open(file_path) as pdf:
 final_df = pd.concat(all_tables, ignore_index=True)
 
 # Save the final DataFrame to a CSV file
-output_csv_path = '/Users/maggie/Dropbox (Brown)/metoo_data/raw/IL/il_raw_cases.csv'
+output_csv_path = root + '/raw/IL/il_raw_cases.csv'
 final_df.to_csv(output_csv_path, index=False)
 
 # Print completion message
@@ -37,7 +46,7 @@ print(f"Data has been successfully extracted from {file_path} and written to '{o
 
 ## Texas
 
-file_path = '/Users/maggie/Dropbox (Brown)/metoo_data/raw/tx/Housing_Discrimination_Cases_from_1_June_2010_-_1_June_2023.pdf'
+file_path = root + '/raw/tx/Housing_Discrimination_Cases_from_1_June_2010_-_1_June_2023.pdf'
 
 # Initialize an empty list to store all tables
 all_tables = []
@@ -63,7 +72,7 @@ with pdfplumber.open(file_path) as pdf:
 try:
     final_df = pd.concat(all_tables, ignore_index=True)
     # Save the final DataFrame to a CSV file
-    output_csv_path = '/Users/maggie/Dropbox (Brown)/metoo_data/raw/TX/tx_raw_cases.csv'
+    output_csv_path = root + '/raw/TX/tx_raw_cases.csv'
     final_df.to_csv(output_csv_path, index=False)
     print(f"Data has been successfully extracted from {file_path} and written to '{output_csv_path}'")
 except Exception as e:
