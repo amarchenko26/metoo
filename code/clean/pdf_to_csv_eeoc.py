@@ -6,10 +6,20 @@ Created on Tue Feb 20 17:09:59 2024
 @author: anyamarchenko
 """
 
+import getpass
 import pdfplumber
 import pandas as pd
 
-file_path = '/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data/raw/EEOC/DATA - 2010-2022 Resolutions as of 08.25.23.pdf'
+userid = getpass.getuser()
+if userid == "anyamarchenko":
+    root = "/Users/anyamarchenko/CEGA Dropbox/Anya Marchenko/metoo_data"
+elif userid == "maggie":
+    root = "/Users/maggie/Dropbox (Brown)/metoo_data"
+elif userid == "jacobhirschhorn":
+    root = "/Users/jacobhirschhorn/Dropbox (Brown)/metoo_data"
+
+
+file_path = root + '/raw/EEOC/DATA - 2010-2022 Resolutions as of 08.25.23.pdf'
 
 # Initialize an empty list to store all tables
 all_tables = []
