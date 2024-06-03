@@ -6,6 +6,7 @@ Clean Michigan cases
 
 import excel "$raw_data/MI/mi_raw_cases.xlsx", sheet("FOIA Data Request") firstrow case(lower) clear
 
+
 /*******************************************************************************
 Clean vars
 *******************************************************************************/
@@ -34,7 +35,7 @@ replace relief = . if relief == 0
 format charge_file_date %td
 format charge_res_date %td
 
-g state = "Michigan"
+g state = "MI"
 
 
 /*******************************************************************************
@@ -66,25 +67,51 @@ replace settle = 1 if outcome == "P02 - Post-Charge Settlement Agreement"
 // Duration 
 g duration = charge_res_date - charge_file_date
 
-/*
-// Clean basis 
-g basis_clean = "Sex" 				if regexm(basis, "Equal Pay") | regexm(basis, "Sex")
-replace basis_clean = "LGBTQ" 		if basis == "Sex-Gender Identity/Transgender"
-replace basis_clean = "Religion" 	if regexm(basis, "Religion") 
-replace basis_clean = "Race"		if regexm(basis, "Race")
-replace basis_clean = "Nationality" if regexm(basis, "National Origin")
-replace basis_clean = "Disability" if basis == "Alcoholism" | basis == "Allergies" | basis == "Alzheimers" | basis == "Asthma"| basis == "Autism"| basis == "Blood (Other)"| regexm(basis, "Brain")| basis == "Cancer" | basis == "Cerebral Palsy"| basis == "Chemical Sensitivity"| basis == "Color"| basis == "Cumulative Trauma Disorder"| basis == "Cystic Fibrosis"| basis == "Depression"| basis == "Diabetes"| basis == "Disfigurement"| basis == "Drug Addiction"| basis == "Dwarfism"| basis == "Epilepsy" | basis == "Gastrointestinal" | basis == "HIV" | basis == "Handicap (Not ADA)" | basis == "Hearing Impairment" | basis == "Heart/Cardiovascular"| basis == "Intellectual Disability" | basis == "Kidney Impairment" | basis == "Learning Disability" | regexm(basis, "Depression") | basis == "Missing Digits/Limbs" | regexm(basis, "Sclerosis") | regexm(basis, "Orthopedic") | regexm(basis, "Anxiety") | regexm(basis, "Disability") | regexm(basis, "Neurological") | regexm(basis, "Psychiatric") | regexm(basis, "Respiratory") | regexm(basis, "Paralysis")| regexm(basis, "Stress")| regexm(basis, "Disability")| regexm(basis, "Disabled") | basis == "Schizophrenia" | regexm(basis, "Speech") | regexm(basis, "Tuberculosis") | regexm(basis, "Vision")
-replace basis_clean = "Age" 		if basis == "Age"
-replace basis_clean = "Retaliation" if basis == "Retaliation"
-replace basis_clean = "Other" 		if regexm(basis, "Genetic") | basis == "Other" | basis == "Relationship/Assn." | basis == "Unassigned" | basis == "" // if it's missing
+// Clean basis (general)
+split basis, parse(;)
+
+foreach a of numlist 7/12 {
+	drop basis`a'
+}
+
+foreach a of numlist 1/6 {
+	replace basis`a' = "" if basis`a' == "?" | basis`a' == " ?" | strpos(basis`a', "?: ?") > 0
+	replace basis`a' = subinstr(basis`a', ": ", ":", .)
+	split basis`a', parse(:)
+	drop basis`a'
+}
+
+// SH
+g sh = 0
+replace sh = 1 if basis11 == "Sexual harassment" | (basis21 == "Sexual harassment" & basis11 == "") | (basis31 == "Sexual harassment" & basis11 == "" & basis21 == "")
+// no cases that are SH but not sex-based
+
+// basis_clean
+foreach a of numlist 1/6 {
+	drop basis`a'1
+	rename basis`a'2 basis`a'
+	replace basis`a' = subinstr(basis`a', ", ", ",", .)
+	split basis`a', parse(,)
+	drop basis`a'
+}
+
+g basis_clean = "Sex" 				if basis11 == "Sex" | (basis21 == "Sex" & basis11 == "") | (basis31 == "Sex" & basis11 == "" & basis21 == "")
+replace basis_clean = "Religion" 	if basis11 == "Religion"
+replace basis_clean = "Race"		if basis11 == "Race" | (basis21 == "Race" & basis11 == "")
+replace basis_clean = "Nationality" if basis11 == "National Origin" | (basis21 == "National Origin" & basis11 == "")
+replace basis_clean = "Disability"  if basis11 == "Disability" | (basis21 == "Disability" & basis11 == "")
+replace basis_clean = "Age" 		if basis11 == "Age" | (basis21 == "Age" & basis11 == "")
+replace basis_clean = "Retaliation" if basis11 == "Retaliation" | (basis21 == "Retaliation" & basis11 == "")
+replace basis_clean = "Other" 		if inlist(basis11, "Arrest Record", "Color", "Familial Status", "Height", "Marital Status", "Weight") | ///
+(basis21 == "Familial Status" & basis11 == "") | (basis11 == "" & basis21 == "" & basis31 == "")
+replace basis_clean = "Sex"         if sh == 1
+
+drop basis11-basis61
 
 // Sex
 g sex_cases = 0 
 replace sex_cases = 1 if basis_clean == "Sex"
 
-// SH
-g sh = (issue == "Sexual Harassment")
-replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not sex-based
 
 /*******************************************************************************
 Export data
