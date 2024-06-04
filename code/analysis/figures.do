@@ -53,8 +53,8 @@ if `event_all' == 1 {
 
 			// Run dynamic DiD
 			reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
-				absorb(basis_clean `horizon'_pos) ///
-				vce(cluster basis_clean) noconstant
+				absorb(basis `horizon'_pos) ///
+				vce(cluster basis) noconstant
 			estimates store TWFE
 			
 			// Run Rambachan & Roth (2021)
@@ -115,8 +115,8 @@ if `event' == 1 {
 
 			// Run dynamic DiD
 			reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
-				absorb(basis_clean `horizon'_pos) ///
-				vce(cluster basis_clean) noconstant
+				absorb(basis `horizon'_pos) ///
+				vce(cluster basis) noconstant
 			estimates store TWFE
 			
 			// Run Rambachan & Roth (2021)
