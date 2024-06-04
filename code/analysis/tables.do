@@ -116,6 +116,7 @@ if `run_overlap' == 1 {
 			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)")
+		refcat(overlap_2 "\emph{Overlap: 2 years}")
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		prefoot("\\" "\midrule")
 		postfoot("\bottomrule" "\end{tabular}");
@@ -139,21 +140,16 @@ if `run_overlap' == 1 {
 			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		refcat(overlap_all "\emph{Overlap: All years}")
 		mlabel(none)
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		prefoot("\\" "\midrule")
 		postfoot("\bottomrule" "\end{tabular}");
 
 	#delimit cr
-	
-// 	include "https://raw.githubusercontent.com/steveofconnell/PanelCombine/master/PanelCombine.do"
-// 	panelcombine, use($tables/overlap_panel_b.tex $tables/overlap_panel_a.tex ) columncount(3) paneltitles("Overlap 1" "Overlap 2") save("$tables/did_overlap.tex") cleanup
-
 	eststo clear
 	estimates clear
 }
-
-	*	refcat(age18 "\emph{Age}" male "\emph{Demographics}" educationage "\emph{Education}" employeddummy "\emph{Employment}" oowner "\emph{Housing}" hhincome_thou "\emph{Household Finances}" reduntant "\emph{Income and Expenditure Risk}" literacyscore "\emph{Behavioural Characteristics}", nolabel) ///
 
 	
 /*******************************************************************************
