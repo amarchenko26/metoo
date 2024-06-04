@@ -20,7 +20,7 @@ ren Jurisdiction juris
 ren Outcome outcome
 ren RespondentLastName resp_ln 
 ren RespondentOrganization resp_org
-ren AllegationsBasisofdiscrimina basis
+ren AllegationsBasisofdiscrimina basis_raw
 
 
 /*******************************************************************************
@@ -31,21 +31,21 @@ Define new vars
 drop if charge_file_date == . & charge_res_date == .
 
 // Clean basis 
-g basis_clean = "Sex" if regexm(basis, "Sex|Female|Male")
-replace basis_clean = "LGBTQ" if regexm(basis, "Sexual orientation|Gender")
-replace basis_clean = "Religion" if regexm(basis, "Atheist|Catholic|Creed|Orthodox|Islamic|Jehovah's|Jewish|Protestant|Sabbath|Adventist") | regexm(basis, "^Other Religion")| regexm(basis, "^Other religious")| regexm(basis, "^Other specified creed")
-replace basis_clean = "Race" if regexm(basis, "African|Asian|Black|Hispanic|White|hispanic|Race") | regexm(basis, "^Other Race")
-replace basis_clean = "Nationality" if regexm(basis, "American|Arab|Chinese|Caribbean|Indian|European|Filipino|Greek|Italian|Japanese|Korean|Mexican|Middle Eastern|National|Polish|national") | regexm(basis, "^Other European") | regexm(basis, "^Other National")
-replace basis_clean = "Disability" if regexm(basis, "Abnormal pregnancy|AIDS|Acquired|Alcoholism|Back|Blindness|Cancer|Diabetes|Deafness|Disability|Epilepsy|Disease|Illness|Obesity|Retarded|Skin|Speech|Uses|motor|asthma") | regexm(basis, "^Other Visual") | regexm(basis, "^Other disability")| regexm(basis, "^Other hearing")| regexm(basis, "^Other hearing")| regexm(basis, "^Other mental")| regexm(basis, "^Other organic")
-replace basis_clean = "Age" if regexm(basis, "Age") 
-replace basis_clean = "Retaliation" if regexm(basis, "Retaliation")
-replace basis_clean = "Other" if regexm(basis, "Arrest|Children|Conviction|Divorced|Drug|Familial|Genetic|Lead|Marital|Married|Military|Misdemeanor|Police|Public|Separated|Single|Unspecified|Veteran|Widowed")
-replace basis_clean = "Other" if basis == "Other"
+g basis = "Sex" if regexm(basis_raw, "Sex|Female|Male")
+replace basis = "LGBTQ" if regexm(basis_raw, "Sexual orientation|Gender")
+replace basis = "Religion" if regexm(basis_raw, "Atheist|Catholic|Creed|Orthodox|Islamic|Jehovah's|Jewish|Protestant|Sabbath|Adventist") | regexm(basis_raw, "^Other Religion")| regexm(basis_raw, "^Other religious")| regexm(basis_raw, "^Other specified creed")
+replace basis = "Race" if regexm(basis_raw, "African|Asian|Black|Hispanic|White|hispanic|Race") | regexm(basis_raw, "^Other Race")
+replace basis = "Nationality" if regexm(basis_raw, "American|Arab|Chinese|Caribbean|Indian|European|Filipino|Greek|Italian|Japanese|Korean|Mexican|Middle Eastern|National|Polish|national") | regexm(basis_raw, "^Other European") | regexm(basis_raw, "^Other National")
+replace basis = "Disability" if regexm(basis_raw, "Abnormal pregnancy|AIDS|Acquired|Alcoholism|Back|Blindness|Cancer|Diabetes|Deafness|Disability|Epilepsy|Disease|Illness|Obesity|Retarded|Skin|Speech|Uses|motor|asthma") | regexm(basis_raw, "^Other Visual") | regexm(basis_raw, "^Other disability")| regexm(basis_raw, "^Other hearing")| regexm(basis_raw, "^Other hearing")| regexm(basis_raw, "^Other mental")| regexm(basis_raw, "^Other organic")
+replace basis = "Age" if regexm(basis_raw, "Age") 
+replace basis = "Retaliation" if regexm(basis_raw, "Retaliation")
+replace basis = "Other" if regexm(basis_raw, "Arrest|Children|Conviction|Divorced|Drug|Familial|Genetic|Lead|Marital|Married|Military|Misdemeanor|Police|Public|Separated|Single|Unspecified|Veteran|Widowed")
+replace basis = "Other" if basis_raw == "Other"
 
 
 // Make SH vars
-gen sh = basis == "Sex discrimination / Sexual Harassment"
-gen sex_cases = basis_clean == "Sex"
+gen sh = basis_raw == "Sex discrimination / Sexual Harassment"
+gen sex_cases = basis == "Sex"
 replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not sex-based
 
 /*replace sex_cases = 0 if basis == "Male" //don't count Male discrimination in Sex

@@ -40,6 +40,7 @@ ren resolution_date court_res_date
 ren closure_action outcome
 ren charge_inquiry_seq id //unique identifier for each case (a case is a collection of related charges)
 ren court court_name
+ren basis basis_raw
 
 // Clean time
 foreach var in charge_file_date charge_res_date court_file_date court_res_date {
@@ -58,19 +59,19 @@ Clean outcomes
 *******************************************************************************/
 
 // Clean basis 
-g basis_clean = "Sex" 				if regexm(basis, "Equal Pay") | regexm(basis, "Sex")
-replace basis_clean = "LGBTQ" 		if basis == "Sex-Gender Identity/Transgender"
-replace basis_clean = "Religion" 	if regexm(basis, "Religion") 
-replace basis_clean = "Race"		if regexm(basis, "Race")
-replace basis_clean = "Nationality" if regexm(basis, "National Origin")
-replace basis_clean = "Disability" if basis == "Alcoholism" | basis == "Allergies" | basis == "Alzheimers" | basis == "Asthma"| basis == "Autism"| basis == "Blood (Other)"| regexm(basis, "Brain")| basis == "Cancer" | basis == "Cerebral Palsy"| basis == "Chemical Sensitivity"| basis == "Color"| basis == "Cumulative Trauma Disorder"| basis == "Cystic Fibrosis"| basis == "Depression"| basis == "Diabetes"| basis == "Disfigurement"| basis == "Drug Addiction"| basis == "Dwarfism"| basis == "Epilepsy" | basis == "Gastrointestinal" | basis == "HIV" | basis == "Handicap (Not ADA)" | basis == "Hearing Impairment" | basis == "Heart/Cardiovascular"| basis == "Intellectual Disability" | basis == "Kidney Impairment" | basis == "Learning Disability" | regexm(basis, "Depression") | basis == "Missing Digits/Limbs" | regexm(basis, "Sclerosis") | regexm(basis, "Orthopedic") | regexm(basis, "Anxiety") | regexm(basis, "Disability") | regexm(basis, "Neurological") | regexm(basis, "Psychiatric") | regexm(basis, "Respiratory") | regexm(basis, "Paralysis")| regexm(basis, "Stress")| regexm(basis, "Disability")| regexm(basis, "Disabled") | basis == "Schizophrenia" | regexm(basis, "Speech") | regexm(basis, "Tuberculosis") | regexm(basis, "Vision")
-replace basis_clean = "Age" 		if basis == "Age"
-replace basis_clean = "Retaliation" if basis == "Retaliation"
-replace basis_clean = "Other" 		if regexm(basis, "Genetic") | basis == "Other" | basis == "Relationship/Assn." | basis == "Unassigned" | basis == "" // if it's missing
+g basis = "Sex" 				if regexm(basis_raw, "Equal Pay") | regexm(basis_raw, "Sex")
+replace basis = "LGBTQ" 		if basis_raw == "Sex-Gender Identity/Transgender"
+replace basis = "Religion" 	if regexm(basis_raw, "Religion") 
+replace basis = "Race"		if regexm(basis_raw, "Race")
+replace basis = "Nationality" if regexm(basis_raw, "National Origin")
+replace basis = "Disability"  if basis_raw == "Alcoholism" | basis_raw == "Allergies" | basis_raw == "Alzheimers" | basis_raw == "Asthma"| basis_raw == "Autism"| basis_raw == "Blood (Other)"| regexm(basis_raw, "Brain")| basis_raw == "Cancer" | basis_raw == "Cerebral Palsy"| basis_raw == "Chemical Sensitivity"| basis_raw == "Color"| basis_raw == "Cumulative Trauma Disorder"| basis_raw == "Cystic Fibrosis"| basis_raw == "Depression"| basis_raw == "Diabetes"| basis_raw == "Disfigurement"| basis_raw == "Drug Addiction"| basis_raw == "Dwarfism"| basis_raw == "Epilepsy" | basis_raw == "Gastrointestinal" | basis_raw == "HIV" | basis_raw == "Handicap (Not ADA)" | basis_raw == "Hearing Impairment" | basis_raw == "Heart/Cardiovascular"| basis_raw == "Intellectual Disability" | basis_raw == "Kidney Impairment" | basis_raw == "Learning Disability" | regexm(basis_raw, "Depression") | basis_raw == "Missing Digits/Limbs" | regexm(basis_raw, "Sclerosis") | regexm(basis_raw, "Orthopedic") | regexm(basis_raw, "Anxiety") | regexm(basis_raw, "Disability") | regexm(basis_raw, "Neurological") | regexm(basis_raw, "Psychiatric") | regexm(basis_raw, "Respiratory") | regexm(basis_raw, "Paralysis")| regexm(basis_raw, "Stress")| regexm(basis_raw, "Disability")| regexm(basis_raw, "Disabled") | basis_raw == "Schizophrenia" | regexm(basis_raw, "Speech") | regexm(basis_raw, "Tuberculosis") | regexm(basis_raw, "Vision")
+replace basis = "Age" 		if basis_raw == "Age"
+replace basis = "Retaliation" if basis_raw == "Retaliation"
+replace basis = "Other" 		if regexm(basis_raw, "Genetic") | basis_raw == "Other" | basis_raw == "Relationship/Assn." | basis_raw == "Unassigned" | basis_raw == "" // if it's missing
 
 // Sex
 g sex_cases = 0 
-replace sex_cases = 1 if basis_clean == "Sex"
+replace sex_cases = 1 if basis == "Sex"
 
 // SH
 g sh = (issue == "Sexual Harassment")

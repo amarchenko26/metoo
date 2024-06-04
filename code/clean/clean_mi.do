@@ -12,7 +12,7 @@ Clean vars
 *******************************************************************************/
 
 // drop random vars 
-drop donotmodifycase donotmodifyrowchecksum donotmodifymodifieddate
+drop donotmodifycase donotmodifyrowchecksum donotmodifymodifieddate processstage
 
 // Rename vars
 ren caseid id
@@ -20,7 +20,7 @@ ren caseaccount resp_org
 ren actual relief
 ren closingcodeclosingcodecas outcome
 ren areaofcomplaint juris
-ren issueandbasis basis
+ren issueandbasis basis_raw
 ren createddate charge_file_date
 ren closeddate charge_res_date
 
@@ -34,6 +34,9 @@ replace relief = . if relief == 0
 
 format charge_file_date %td
 format charge_res_date %td
+
+// Jurisdiction
+replace juris = "Public Accommodation" if juris == "Public Accommodation/Public Service"
 
 g state = "MI"
 
@@ -68,49 +71,47 @@ replace settle = 1 if outcome == "P02 - Post-Charge Settlement Agreement"
 g duration = charge_res_date - charge_file_date
 
 // Clean basis (general)
-split basis, parse(;)
+split basis_raw, parse(;)
 
-foreach a of numlist 7/12 {
-	drop basis`a'
-}
+drop basis_raw7-basis_raw12
 
 foreach a of numlist 1/6 {
-	replace basis`a' = "" if basis`a' == "?" | basis`a' == " ?" | strpos(basis`a', "?: ?") > 0
-	replace basis`a' = subinstr(basis`a', ": ", ":", .)
-	split basis`a', parse(:)
-	drop basis`a'
+	replace basis_raw`a' = "" if basis_raw`a' == "?" | basis_raw`a' == " ?" | strpos(basis_raw`a', "?: ?") > 0
+	replace basis_raw`a' = subinstr(basis_raw`a', ": ", ":", .)
+	split basis_raw`a', parse(:)
+	drop basis_raw`a'
 }
 
 // SH
 g sh = 0
-replace sh = 1 if basis11 == "Sexual harassment" | (basis21 == "Sexual harassment" & basis11 == "") | (basis31 == "Sexual harassment" & basis11 == "" & basis21 == "")
+replace sh = 1 if basis_raw11 == "Sexual harassment" | (basis_raw21 == "Sexual harassment" & basis_raw11 == "") | (basis_raw31 == "Sexual harassment" & basis_raw11 == "" & basis_raw21 == "")
 // no cases that are SH but not sex-based
 
 // basis_clean
 foreach a of numlist 1/6 {
-	drop basis`a'1
-	rename basis`a'2 basis`a'
-	replace basis`a' = subinstr(basis`a', ", ", ",", .)
-	split basis`a', parse(,)
-	drop basis`a'
+	drop basis_raw`a'1
+	rename basis_raw`a'2 basis_raw`a'
+	replace basis_raw`a' = subinstr(basis_raw`a', ", ", ",", .)
+	split basis_raw`a', parse(,)
+	drop basis_raw`a'
 }
 
-g basis_clean = "Sex" 				if basis11 == "Sex" | (basis21 == "Sex" & basis11 == "") | (basis31 == "Sex" & basis11 == "" & basis21 == "")
-replace basis_clean = "Religion" 	if basis11 == "Religion"
-replace basis_clean = "Race"		if basis11 == "Race" | (basis21 == "Race" & basis11 == "")
-replace basis_clean = "Nationality" if basis11 == "National Origin" | (basis21 == "National Origin" & basis11 == "")
-replace basis_clean = "Disability"  if basis11 == "Disability" | (basis21 == "Disability" & basis11 == "")
-replace basis_clean = "Age" 		if basis11 == "Age" | (basis21 == "Age" & basis11 == "")
-replace basis_clean = "Retaliation" if basis11 == "Retaliation" | (basis21 == "Retaliation" & basis11 == "")
-replace basis_clean = "Other" 		if inlist(basis11, "Arrest Record", "Color", "Familial Status", "Height", "Marital Status", "Weight") | ///
-(basis21 == "Familial Status" & basis11 == "") | (basis11 == "" & basis21 == "" & basis31 == "")
-replace basis_clean = "Sex"         if sh == 1
+g basis = "Sex" 				if basis_raw11 == "Sex" | (basis_raw21 == "Sex" & basis_raw11 == "") | (basis_raw31 == "Sex" & basis_raw11 == "" & basis_raw21 == "")
+replace basis = "Religion" 	    if basis_raw11 == "Religion"
+replace basis = "Race"		    if basis_raw11 == "Race" | (basis_raw21 == "Race" & basis_raw11 == "")
+replace basis = "Nationality"   if basis_raw11 == "National Origin" | (basis_raw21 == "National Origin" & basis_raw11 == "")
+replace basis = "Disability"    if basis_raw11 == "Disability" | (basis_raw21 == "Disability" & basis_raw11 == "")
+replace basis = "Age" 		    if basis_raw11 == "Age" | (basis_raw21 == "Age" & basis_raw11 == "")
+replace basis = "Retaliation"   if basis_raw11 == "Retaliation" | (basis_raw21 == "Retaliation" & basis_raw11 == "")
+replace basis = "Other" 		if inlist(basis_raw11, "Arrest Record", "Color", "Familial Status", "Height", "Marital Status", "Weight") | ///
+(basis_raw21 == "Familial Status" & basis_raw11 == "") | (basis_raw11 == "" & basis_raw21 == "" & basis_raw31 == "")
+replace basis = "Sex"           if sh == 1
 
-drop basis11-basis61
+drop basis_raw11-basis_raw61
 
 // Sex
 g sex_cases = 0 
-replace sex_cases = 1 if basis_clean == "Sex"
+replace sex_cases = 1 if basis == "Sex"
 
 
 /*******************************************************************************
