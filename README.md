@@ -135,9 +135,17 @@ This contains all employment discrimination cases filed with EEOC for fiscal yea
 
 The following variables are cleaned separately for each state. 
 
+### Jurisdiction
+`juris` takes the following categories
+- Employment
+- Public Accommodation
+- Housing
+- Education
+
 ### Basis 
 `basis_clean` takes the following categories
 - Sex
+- LGBTQ
 - Religion
 - Race
 - Nationality
