@@ -20,7 +20,7 @@ la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Employment"
 la var juris_dummy2 "\hspace{5mm} Private housing"
 la var juris_dummy3 "\hspace{5mm} Public housing"
 
-tab basis_clean, gen(basis_dummy)
+tab basis, gen(basis_dummy)
 la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
 la var basis_dummy2 "\hspace{5mm} Disability"
 la var basis_dummy3 "\hspace{5mm} LGBTQ"
@@ -99,8 +99,8 @@ if `run_overlap' == 1 {
 	
 	// Panel A
 	foreach y of local outcome_vars {
-		eststo: reg ``y'' overlap duration, r
-		qui: sum ``y'' if overlap == 0
+		eststo: reg ``y'' overlap_2 duration, r
+		qui: sum ``y'' if overlap_2 == 0
 		estadd scalar control_mean = `r(mean)' 
 
 		loc ++i
@@ -108,23 +108,25 @@ if `run_overlap' == 1 {
 	
 	#delimit ;
 	estout _all using "$tables/overlap_panel_a.tex", style(tex) replace
-		varlabels(overlap "Overlap" duration "Duration") keep(overlap duration)
+		varlabels(overlap_2 "Overlap" duration "Duration") keep(overlap_2 duration)
 		mgroups("Settle" "Win" "Compensation", pattern(1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none)
 		stats(N r2 control_mean, 
 			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") ;
+		cells("b(fmt(3)star)" "se(fmt(3)par)")
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
 	#delimit cr
 	eststo clear
 	estimates clear
 	
 	// Panel B 
 	foreach y of local outcome_vars {
-		eststo: reg ``y'' overlap_2 duration, r
-		qui: sum ``y'' if overlap == 0
+		eststo: reg ``y'' overlap_all duration, r
+		qui: sum ``y'' if overlap_all == 0
 		estadd scalar control_mean = `r(mean)' 
 
 		loc ++i
@@ -132,18 +134,20 @@ if `run_overlap' == 1 {
 	
 	#delimit ;	
 	estout _all using "$tables/overlap_panel_b.tex", style(tex) replace
-		varlabels(overlap_2 "Overlap" duration "Duration") keep(overlap_2 duration)
+		varlabels(overlap_all "Overlap" duration "Duration") keep(overlap_all duration)
 		stats(N r2 control_mean, 
 			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
 		mlabel(none)
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		prefoot("\\" "\midrule")
 		postfoot("\bottomrule" "\end{tabular}");
+
 	#delimit cr
 	
-	// this breaks at panel combine and i hate it and idk what to do 
-	panelcombine, use($tables/did_overlap.tex $tables/did_overlap.tex) columncount(3) paneltitles("Overlap 1" "Overlap 2") save("$tables/did_overlap.tex") cleanup
+// 	include "https://raw.githubusercontent.com/steveofconnell/PanelCombine/master/PanelCombine.do"
+// 	panelcombine, use($tables/overlap_panel_b.tex $tables/overlap_panel_a.tex ) columncount(3) paneltitles("Overlap 1" "Overlap 2") save("$tables/did_overlap.tex") cleanup
 
 	eststo clear
 	estimates clear
@@ -164,19 +168,19 @@ loc y4 relief_w
 loc outcome_vars y1 y2 y3 y4
 loc i 1
 
-g unit_state = basis_clean * state_cat
+g unit_state = basis * state_cat
 g time_state = ym * state_cat
 
 if `run_did_all' == 1 {
 
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis_clean ym) vce(cluster basis_clean)
+		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "Yes", replace
 		qui estadd loc fetime "Yes", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis_clean)
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "Yes", replace
 		qui estadd loc fetime_s "Yes", replace
@@ -212,12 +216,12 @@ if `run_did' == 1 {
 
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis_clean ym) vce(cluster basis_clean)
+		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "Yes", replace
 		qui estadd loc fetime "Yes", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis_clean)
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "Yes", replace
 		qui estadd loc fetime_s "Yes", replace
@@ -295,17 +299,17 @@ if `run_balance' == 1 {
 	// Now restrict sample 
 	keep if eeoc_filed == 0
 
-    balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
+    balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
     balancetable_program `balance', sample(sh == 1) using("$tables/balance_sex.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(robust)
 
     // Filed pre-covid
-    balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
+    balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
 	g covid = date("11mar2020", "DMY")
 	
     // Resolved pre-covid
-    balancetable_program `balance', sample(common_res_date < covid) using("$tables/balance_res_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
+    balancetable_program `balance', sample(common_res_date < covid) using("$tables/balance_res_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
 	restore
 }
