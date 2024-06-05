@@ -43,14 +43,14 @@ These data contain all education, employment, housing, and public accommodation/
 - File Date: date case was filed
 - Close Date: date case was closed
 - Finding: how case was closed
-  - ACL: ?
-  - ADM: ?
-  - DEF: ?
-  - DUP: ?
-  - EXP: ?
-  - LOS: ?
-  - STA: ?
-  - UNK: ?
+  - ACL: administrative closure
+  - ADM: administrative dismissal
+  - DEF: default
+  - DUP: duplicate
+  - EXP: expired
+  - LOS: lack of service/letter of service
+  - STA: stay
+  - UNK: unknown
   - LSE: lack of substantial evidence
   - LOJ: lack of jurisdiction
   - SE: substantial evidence
