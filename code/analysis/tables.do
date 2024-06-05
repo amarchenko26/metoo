@@ -4,13 +4,13 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 = 0
-loc run_did_all  = 0
+loc	run_did 	 = 1
+loc run_did_all  = 1
 loc run_overlap  = 1
 
-loc run_summary  = 0
-loc run_balance  = 0
-loc run_duration = 0
+loc run_summary  = 1
+loc run_balance  = 1
+loc run_duration = 1
 
 /*******************************************************************************
 Prep vars for tables
@@ -57,7 +57,7 @@ loc summary ///
     court_file_year ///
     court_res_year ///
     duration ///
-    overlap ///
+    overlap_2 ///
     relief ///
     win
 
@@ -79,13 +79,13 @@ loc balance ///
     settle ///
 	court ///
 	duration ///
-    overlap ///
+    overlap_2 ///
     relief ///
     win
 
 
 /*******************************************************************************
-OVERLAP regression
+overlap_2 regression
 *******************************************************************************/
 
 loc y1 settle
@@ -116,7 +116,7 @@ if `run_overlap' == 1 {
 			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)")
-		refcat(overlap_2 "\emph{Control group: 2 years pre-MeToo}", nolabel)
+		refcat(overlap_2_2 "\emph{Control group: 2 years pre-MeToo}", nolabel)
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		prefoot("\\" "\midrule")
 		postfoot("\bottomrule" "\end{tabular}");
@@ -140,7 +140,7 @@ if `run_overlap' == 1 {
 			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		refcat(overlap_all "\emph{Control group: All pre-MeToo SH}", nolabel)
+		refcat(overlap_2_all "\emph{Control group: All pre-MeToo SH}", nolabel)
 		mlabel(none)
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		prefoot("\\" "\midrule")
@@ -289,8 +289,8 @@ if `run_balance' == 1 {
 	
 	preserve 
 
-	// Run overlap on ALL CASES
-    balancetable_program `balance', sample(overlap !=.) using("$tables/balance_overlap.tex") ctitles("Before" "Overlap" "Diff" "p-value") wide(mean diff pval) by(overlap) errors(robust)
+	// Run overlap_2 on ALL CASES
+    balancetable_program `balance', sample(overlap_2 !=.) using("$tables/balance_overlap_2.tex") ctitles("Before" "overlap_2" "Diff" "p-value") wide(mean diff pval) by(overlap_2) errors(robust)
 
 	// Now restrict sample 
 	keep if eeoc_filed == 0
