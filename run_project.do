@@ -60,6 +60,7 @@ ssc install outreg // for frmttable
 ssc install winsor
 ssc install sdid, replace // for synthetic DiD, https://github.com/Daniel-Pailanir/sdid
 ssc install honestdid, replace // https://github.com/mcaceresb/stata-honestdid
+ssc install coefplot, replace
 */
 
 /*******************************************************************************
