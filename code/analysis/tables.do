@@ -20,7 +20,7 @@ la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Employment"
 la var juris_dummy2 "\hspace{5mm} Private housing"
 la var juris_dummy3 "\hspace{5mm} Public housing"
 
-tab basis_clean, gen(basis_dummy)
+tab basis, gen(basis_dummy)
 la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
 la var basis_dummy2 "\hspace{5mm} Disability"
 la var basis_dummy3 "\hspace{5mm} LGBTQ"
@@ -164,19 +164,19 @@ loc y4 relief_w
 loc outcome_vars y1 y2 y3 y4
 loc i 1
 
-g unit_state = basis_clean * state_cat
+g unit_state = basis * state_cat
 g time_state = ym * state_cat
 
 if `run_did_all' == 1 {
 
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis_clean ym) vce(cluster basis_clean)
+		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "Yes", replace
 		qui estadd loc fetime "Yes", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis_clean)
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "Yes", replace
 		qui estadd loc fetime_s "Yes", replace
@@ -212,12 +212,12 @@ if `run_did' == 1 {
 
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis_clean ym) vce(cluster basis_clean)
+		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "Yes", replace
 		qui estadd loc fetime "Yes", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis_clean)
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "Yes", replace
 		qui estadd loc fetime_s "Yes", replace
@@ -295,17 +295,17 @@ if `run_balance' == 1 {
 	// Now restrict sample 
 	keep if eeoc_filed == 0
 
-    balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
+    balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
     balancetable_program `balance', sample(sh == 1) using("$tables/balance_sex.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(robust)
 
     // Filed pre-covid
-    balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
+    balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
 	g covid = date("11mar2020", "DMY")
 	
     // Resolved pre-covid
-    balancetable_program `balance', sample(common_res_date < covid) using("$tables/balance_res_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis_clean)
+    balancetable_program `balance', sample(common_res_date < covid) using("$tables/balance_res_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
 	restore
 }
