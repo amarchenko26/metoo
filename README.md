@@ -4,7 +4,32 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 
 ## Description of datasets
 
-**$raw_data/IL/il_raw_cases.xlsx**  
+**$raw_data/ND/nd_raw_cases.csv**  
+These data contain all employment, housing, and public accommodation/public service cases filed in North Dakota from June 1, 2010 to June 1, 2023.
+- N: 
+- SH:
+- Entity: respondent name
+- Case Type: identifies whether the case is employment, housing, or public accommodations
+- Date Opened: date case was filed
+- Status Reason: current status of case
+- Date Closed: date case was closed
+- Basis of discrimination is listed in wide format:
+  - (Other) Color
+  - Age
+  - Disability
+  - (Other) Religion
+  - (Other) Race
+  - (Other) National Origin
+  - (Other) Public Assistance
+  - Retaliation
+  - Sex
+  - Pregnancy
+  - Marital Status
+  - Lawful Activity
+  - Other Issue
+- Closure Resolution: how case was closed
+
+**$raw_data/IL/il_raw_cases.csv**  
 These data contain all education, employment, housing, and public accommodation/public service cases filed in Illinois from June 1, 2010 to June 1, 2023.
 - N: 46431
 - SH: 
@@ -39,9 +64,9 @@ These data contain all education, employment, housing, and public accommodation/
 - Issue: adverse action alleged by complainant
 - Request for Review: date complainant requested the case for review (cases with LSE findings)
 - Dept filed Complaint: date department filed a complaint (cases with SE findings)
-- Pro Se Complaint: 
+- Pro Se Complaint: date complainant decided to appear pro se (represent themselves in court)
 
-**$raw_data/TX/tx_raw_cases.xlsx**  
+**$raw_data/TX/tx_raw_cases.csv**  
 These data contain all housing cases filed in Texas from June 1, 2010 to June 1, 2023.
 - N: 5018
 - SH:
@@ -53,7 +78,7 @@ These data contain all housing cases filed in Texas from June 1, 2010 to June 1,
 - Relief Summary with Amounts: summary of relief given after case closed (monetary relief, housing, reasonable accommodation, etc.)
 - Compensation Amount: amounts paid directly to the claimant
 
-**$raw_data/HI/hi_raw_cases.xlsx**  
+**$raw_data/HI/hi_raw_cases.xls**  
 These data contain all employment, housing, and public accommodation/public service cases filed in Hawaii from June 1, 2010 to June 1, 2023.
 - N: 3790
 - SH: 310
