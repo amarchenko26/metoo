@@ -17,7 +17,7 @@ ren court court_name
 ren courtfilingdate court_filing_date_temp
 ren resolutiondate resolution_date_temp
 ren relief relief
-ren allegations basis
+ren allegations basis_raw
 
 gen state = "Federal"
 gen juris = "Employment"
@@ -27,9 +27,9 @@ gen juris = "Employment"
 Identify SH cases
 *******************************************************************************/
 
-g sh = regexm(lower(basis), "sexual harassment")
+g sh = regexm(lower(basis_raw), "sexual harassment")
 
-g sex_cases = regexm(lower(basis), "title vii / sex‐female")
+g sex_cases = regexm(lower(basis_raw), "title vii / sex‐female")
 
 // // Total cases of Sexual Harassment
 count if sh == 1
@@ -70,14 +70,14 @@ format court_file_date %td
 format court_res_date %td
 
 // Clean basis 
-g basis_clean = "Sex" if regexm(basis, "^Title VII / Sex")  | regexm(basis, "^EPA / Equal Pay-Female") 
-replace basis_clean = "Religion" if regexm(basis, "^Title VII / Religion") 
-replace basis_clean = "Race" if regexm(basis, "^Title VII / Race") | regexm(basis, "^Title VII / Color")
-replace basis_clean = "Nationality" if regexm(basis, "^Title VII / National Origin")
-replace basis_clean = "Disability" if regexm(basis, "^ADA") //Americans with Disabilities
-replace basis_clean = "Age" if regexm(basis, "^ADEA") //Age Discrimination in Employment
-replace basis_clean = "Retaliation" if regexm(basis, "^Title VII / Retaliation") | regexm(basis, "^EPA / Retaliation")
-replace basis_clean = "Other" if regexm(basis, "^Title VII / Other") | regexm(basis, "^GINA") | basis == "" // if it's missing
+g basis = "Sex" if regexm(basis_raw, "^Title VII / Sex")  | regexm(basis_raw, "^EPA / Equal Pay-Female") 
+replace basis = "Religion" if regexm(basis_raw, "^Title VII / Religion") 
+replace basis = "Race" if regexm(basis_raw, "^Title VII / Race") | regexm(basis_raw, "^Title VII / Color")
+replace basis = "Nationality" if regexm(basis_raw, "^Title VII / National Origin")
+replace basis = "Disability" if regexm(basis_raw, "^ADA") //Americans with Disabilities
+replace basis = "Age" if regexm(basis_raw, "^ADEA") //Age Discrimination in Employment
+replace basis = "Retaliation" if regexm(basis_raw, "^Title VII / Retaliation") | regexm(basis_raw, "^EPA / Retaliation")
+replace basis = "Other" if regexm(basis_raw, "^Title VII / Other") | regexm(basis_raw, "^GINA") | basis == "" // if it's missing
 
 g win = 1 if missing_relief == 0
 replace win = 0 if missing_relief == 1 // no probable cause if relief is missing

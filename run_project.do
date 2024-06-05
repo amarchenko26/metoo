@@ -71,8 +71,10 @@ do "$droot/code/programs/programs.do"
 
 // cleaning files
 do "$droot/code/clean/clean_eeoc.do"
-do "$droot/code/clean/clean_ma.do"
 do "$droot/code/clean/clean_eeoc_filed.do"
+do "$droot/code/clean/clean_hi.do"
+do "$droot/code/clean/clean_ma.do"
+do "$droot/code/clean/clean_mi.do"
 do "$droot/code/clean/merge_all.do"
 
 // analysis files

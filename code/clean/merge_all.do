@@ -13,6 +13,7 @@ Outputs:
 Already merged: 
 	- EEOC
 	- MA
+	- HI
 
 *******************************************************************************/
 
@@ -35,6 +36,19 @@ Append to MA
 *******************************************************************************/
 
 append using "$clean_data/clean_ma.dta"
+
+/*******************************************************************************
+Append to HI
+*******************************************************************************/
+
+append using "$clean_data/clean_hi.dta"
+
+/*******************************************************************************
+Append to MI
+*******************************************************************************/
+
+//append using "$clean_data/clean_mi.dta"
+//waiting on MI to respond to definition of "win"
 
 
 /*******************************************************************************
@@ -92,7 +106,7 @@ Gen post and treat
 g post = (common_file_date > date("$metoo", "DMY"))
 g treat = post*sh // treat=1 if post =1 and sh=1
 replace treat = . if sex_cases == 1 & sh == 0 
-replace treat = 1 if overlap == 1
+replace treat = 1 if overlap_2 == 1
 
 // Clean relief
 winsor relief, p(.05) gen(relief_w)
@@ -110,7 +124,7 @@ replace filed_per_year = filed_per_year / total_cases_per_year
 
 // Gen categorical version of common vars
 encode state, g(state_cat)
-encode basis_clean, g(basis_cat)
+encode basis, g(basis_cat)
 
 replace eeoc_filed = 0 if missing(eeoc_filed)
 
@@ -157,15 +171,15 @@ la var charge_res_date "Date case resolved"
 
 //Common
 la var state "State"
-la var basis "Basis of discrimination alleged"
-la var basis_clean "Basis of discrimination, standardized"
+la var basis_raw "Basis of discrimination alleged"
+la var basis "Basis of discrimination, standardized"
 la var sh "Sexual harassment"
 la var sex_cases "Sex-related charge" // Title VII / Sex‐Female or Title VII / Sex‐Female / Sexual-Harassment for EEOC
 la var post "Filed after MeToo"
 la var treat "Post = 1 and case is SH or overlap"
 la var juris "Employment, public housing, or education"
 la var duration "Duration (days)"
-la var overlap "Overlaps with MeToo"
+la var overlap_2 "Overlaps with MeToo"
 la var court "Went to court"
 la var filed "Number of cases filed by SH and Post"
 la var common_year "Year of filing"
