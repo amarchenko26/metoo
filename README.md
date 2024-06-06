@@ -6,7 +6,7 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 
 **$raw_data/ND/nd_raw_cases.csv**  
 These data contain all employment, housing, and public accommodation/public service cases filed in North Dakota from June 1, 2010 to June 1, 2023.
-- N: 
+- N: 2977
 - SH:
 - Entity: respondent name
 - Case Type: identifies whether the case is employment, housing, or public accommodations
@@ -32,7 +32,7 @@ These data contain all employment, housing, and public accommodation/public serv
 **$raw_data/IL/il_raw_cases.csv**  
 These data contain all education, employment, housing, and public accommodation/public service cases filed in Illinois from June 1, 2010 to June 1, 2023.
 - N: 46431
-- SH: 
+- SH: 3224
 - Charge #: unique identifier for each case
 - CP Name: complainant name
 - RP Name: respondent name
@@ -81,7 +81,7 @@ These data contain all housing cases filed in Texas from June 1, 2010 to June 1,
 **$raw_data/HI/hi_raw_cases.xls**  
 These data contain all employment, housing, and public accommodation/public service cases filed in Hawaii from June 1, 2010 to June 1, 2023.
 - N: 3790
-- SH: 310
+- SH: 161
 - CaseType: identifies whether the case is employment, housing, or public accommodations
 - Island: identifies on which island the case was filed
 - Docket: unique identifier for each case
