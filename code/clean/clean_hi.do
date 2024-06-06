@@ -11,9 +11,6 @@ import excel "$raw_data/HI/hi_raw_cases.xls", sheet("HCRC Closures") firstrow ca
 Clean vars
 *******************************************************************************/
 
-// drop random vars 
-drop island eeocno adverseact
-
 // Rename vars
 ren casetype juris
 ren docket id
@@ -47,12 +44,12 @@ split basis_raw, parse()
 g basis = "Sex" 				if inlist(basis_raw1, "BRE", "DSV", "SEX", "SEX-H", "SEX-P")
 replace basis = "LGBTQ"         if inlist(basis_raw1, "SEX-I", "SOR")
 replace basis = "Religion" 	    if basis_raw1 == "REL"
-replace basis = "Race"		    if basis_raw1 == "RAC"
+replace basis = "Race"		    if inlist(basis_raw1, "RAC", "COL")
 replace basis = "Nationality"   if basis_raw1 == "NOR"
 replace basis = "Disability"    if strpos(basis_raw1, "DIS") > 0
 replace basis = "Age" 		    if basis_raw1 == "AGE"
 replace basis = "Retaliation"   if basis_raw1 == "RET"
-replace basis = "Other" 		if inlist(basis_raw1, "ANC", "ARR", "CHI", "COL", "CRE", "FAM", "MAR", "NAT")
+replace basis = "Other" 		if inlist(basis_raw1, "ANC", "ARR", "CHI", "CRE", "FAM", "MAR", "NAT")
 
 // SH
 g sh = 0
@@ -81,7 +78,7 @@ replace settle = 1 if enfclosurecode == "Settled"
 
 // Court
 g court = 0
-replace court = 1 if outcome == "06"
+replace court = 1 if outcome == "6"
 
 // Outcome
 replace outcome = "No Jurisdiction" if outcome == "1"

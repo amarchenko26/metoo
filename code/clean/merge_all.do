@@ -50,6 +50,27 @@ Append to MI
 //append using "$clean_data/clean_mi.dta"
 //waiting on MI to respond to definition of "win"
 
+/*******************************************************************************
+Append to IL
+*******************************************************************************/
+
+append using "$clean_data/clean_il.dta"
+
+/*******************************************************************************
+Append to TX
+*******************************************************************************/
+
+//append using "$clean_data/clean_tx.dta"
+//waiting on TX to respond to identification of sh cases filed
+
+/*******************************************************************************
+Append to ND
+*******************************************************************************/
+
+//append using "$clean_data/clean_nd.dta"
+//waiting on ND to respond to identification of primary basis
+
+
 
 /*******************************************************************************
 Clean joint data

@@ -12,7 +12,7 @@ Clean vars
 *******************************************************************************/
 
 // drop random vars 
-drop donotmodifycase donotmodifyrowchecksum donotmodifymodifieddate processstage
+drop donotmodifycase donotmodifyrowchecksum donotmodifymodifieddate
 
 // Rename vars
 ren caseid id
@@ -98,12 +98,12 @@ foreach a of numlist 1/6 {
 
 g basis = "Sex" 				if basis_raw11 == "Sex" | (basis_raw21 == "Sex" & basis_raw11 == "") | (basis_raw31 == "Sex" & basis_raw11 == "" & basis_raw21 == "")
 replace basis = "Religion" 	    if basis_raw11 == "Religion"
-replace basis = "Race"		    if basis_raw11 == "Race" | (basis_raw21 == "Race" & basis_raw11 == "")
+replace basis = "Race"		    if inlist(basis_raw11, "Race", "Color") | (basis_raw21 == "Race" & basis_raw11 == "")
 replace basis = "Nationality"   if basis_raw11 == "National Origin" | (basis_raw21 == "National Origin" & basis_raw11 == "")
 replace basis = "Disability"    if basis_raw11 == "Disability" | (basis_raw21 == "Disability" & basis_raw11 == "")
 replace basis = "Age" 		    if basis_raw11 == "Age" | (basis_raw21 == "Age" & basis_raw11 == "")
 replace basis = "Retaliation"   if basis_raw11 == "Retaliation" | (basis_raw21 == "Retaliation" & basis_raw11 == "")
-replace basis = "Other" 		if inlist(basis_raw11, "Arrest Record", "Color", "Familial Status", "Height", "Marital Status", "Weight") | ///
+replace basis = "Other" 		if inlist(basis_raw11, "Arrest Record", "Familial Status", "Height", "Marital Status", "Weight") | ///
 (basis_raw21 == "Familial Status" & basis_raw11 == "") | (basis_raw11 == "" & basis_raw21 == "" & basis_raw31 == "")
 replace basis = "Sex"           if sh == 1
 
