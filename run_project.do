@@ -74,8 +74,11 @@ do "$droot/code/programs/programs.do"
 do "$droot/code/clean/clean_eeoc.do"
 do "$droot/code/clean/clean_eeoc_filed.do"
 do "$droot/code/clean/clean_hi.do"
+do "$droot/code/clean/clean_il.do"
 do "$droot/code/clean/clean_ma.do"
 do "$droot/code/clean/clean_mi.do"
+do "$droot/code/clean/clean_nd.do"
+do "$droot/code/clean/clean_tx.do"
 do "$droot/code/clean/merge_all.do"
 
 // analysis files
