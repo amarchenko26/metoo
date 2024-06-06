@@ -14,6 +14,9 @@ Already merged:
 	- EEOC
 	- MA
 	- HI
+	- MI
+	- IL
+
 
 *******************************************************************************/
 
@@ -47,8 +50,7 @@ append using "$clean_data/clean_hi.dta"
 Append to MI
 *******************************************************************************/
 
-//append using "$clean_data/clean_mi.dta"
-//waiting on MI to respond to definition of "win"
+append using "$clean_data/clean_mi.dta"
 
 /*******************************************************************************
 Append to IL
