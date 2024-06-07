@@ -4,7 +4,21 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 
 ## Description of datasets
 
-**$raw_data/ND/nd_raw_cases.csv**  
+**$raw_data/WA/wa_raw_cases.dta**  
+These data contain all employment, housing, public accommodation/public service, and education cases filed in Washington from June 1, 2010 to June 1, 2023.
+- N: 9949
+- SH:
+- wshrc: unique identifier for each case
+- respondent: respondent name
+- date filed: date case was filed
+- basismergedcolumn: basis of discrimination
+- closuredate: date case was closed
+- findingsbyname: how case was closed
+- settlementamountaladdin: settlement amount
+- settlementamountspreadsheet: settlement amount
+- cause: whether probable cause was found
+
+**$raw_data/ND/nd_raw_cases.dta**  
 These data contain all employment, housing, and public accommodation/public service cases filed in North Dakota from June 1, 2010 to June 1, 2023.
 - N: 2977
 - SH:
