@@ -95,7 +95,7 @@ drop closure*
 
 // Probable cause
 g win = .
-replace win = 1 if inlist(outcome, "Probable Cause", "Notice of Right to Sue")
+replace win = 1 if outcome == "Probable Cause"
 replace win = 0 if inlist(outcome, "No Probable Cause", "No Reasonable Cause")
 
 // Settle
