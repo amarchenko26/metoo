@@ -72,6 +72,12 @@ Append to ND
 //append using "$clean_data/clean_nd.dta"
 //waiting on ND to respond to identification of primary basis
 
+/*******************************************************************************
+Append to WA
+*******************************************************************************/
+
+//append using "$clean_data/clean_wa.dta"
+//waiting on WA to respond to identification of sh cases filed
 
 
 /*******************************************************************************
