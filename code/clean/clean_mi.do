@@ -49,6 +49,9 @@ Clean outcomes
 g win = .
 replace win = 0 if outcome == "I01 - Insufficient evidence - adjusted"
 replace win = 0 if outcome == "I02 - Insufficient evidence"
+replace win = 1 if outcome == "I17 - Decided by Court- w/adjustment"
+replace win = 1 if outcome == "P02 - Post-Charge Settlement Agreement"
+replace win = 1 if outcome == "P03 - Decided by MCRC Order - w/adjustment"
 
 // Court
 g court = 0
@@ -66,6 +69,9 @@ replace settle = 1 if outcome == "I03 - Settlement Agreement"
 replace settle = 1 if outcome == "L02 - Post-Investigation Settlement Agreement"
 replace settle = 1 if outcome == "M01 - Settlement Agreement"
 replace settle = 1 if outcome == "P02 - Post-Charge Settlement Agreement"
+replace settle = 1 if outcome == "I01 - Insufficient evidence - adjusted" & relief != .
+replace settle = 1 if outcome == "I11 - Withdrawn adjusted" & relief != .
+replace settle = 1 if outcome == "M02 - Withdrawn adjusted" & relief != .
 
 // Duration 
 g duration = charge_res_date - charge_file_date

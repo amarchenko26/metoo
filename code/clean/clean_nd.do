@@ -108,9 +108,7 @@ replace settle = 1 if outcome == "Successful Conciliation"
 replace settle = 1 if outcome == "Withdrawn With Resolution"
 
 // Court
-g court = 0
-replace court = 1 if outcome == "Charge Issued"
-replace court = 1 if outcome == "Settled after Charge Issued"
+g court = . // currently have this marked as missing bc North Dakota doesn't track this
 
 
 /*******************************************************************************
