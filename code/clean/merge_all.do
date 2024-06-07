@@ -16,6 +16,7 @@ Already merged:
 	- HI
 	- MI
 	- IL
+	- WA
 
 
 *******************************************************************************/
@@ -76,8 +77,7 @@ Append to ND
 Append to WA
 *******************************************************************************/
 
-//append using "$clean_data/clean_wa.dta"
-//waiting on WA to respond to identification of sh cases filed
+append using "$clean_data/clean_wa.dta"
 
 
 /*******************************************************************************

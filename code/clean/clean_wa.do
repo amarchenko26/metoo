@@ -10,6 +10,9 @@ import delimited "$raw_data/WA/PFS 20190101 to present.csv", varnames(1) clear
 save "$raw_data/WA/wa_raw_cases.dta", replace
 import delimited "$raw_data/WA/data_2.csv", varnames(1) clear
 save "$raw_data/WA/wa_raw_cases.dta", replace
+import delimited "$raw_data/WA/cases with sex basis, sexual harassment issue.csv", varnames(1) clear
+merge 1:1 wshrc using "$raw_data/WA/wa_raw_cases.dta"
+save "$raw_data/WA/wa_raw_cases.dta", replace
 
 
 /*******************************************************************************
@@ -53,10 +56,13 @@ replace basis = "Disability"    if basis_raw1 == "Disability"
 replace basis = "Age" 		    if basis_raw1 == "Age"
 replace basis = "Retaliation"   if strpos(basis_raw1, "Retaliation") > 0
 replace basis = "Other" 		if inlist(basis_raw1, "Familial Status", "Marital Status", "Veteran/Military Status", "")
+replace basis = "Sex" if _merge == 3
 drop basis_raw?
 
 // SH
-g sh = . //currently have this marked as missing bc waiting on Washington clarification
+g sh = 0
+replace sh = 1 if _merge == 3
+drop _merge
 
 // Sex
 g sex_cases = 0 

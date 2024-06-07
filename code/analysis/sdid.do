@@ -36,7 +36,7 @@ if `run_sdid' == 1 {
 	preserve
 		loc y 	 settle
 		loc time months_to_treat_12
-		loc unit basis_clean
+		loc unit basis
 
 		collapse (mean) `y', by(`time' `unit')
 		drop if `time' == .
@@ -58,7 +58,7 @@ if `run_sdid' == 1 {
 	preserve 
 		loc y 	 win
 		loc time months_to_treat_12
-		loc unit basis_clean
+		loc unit basis
 
 		collapse (mean) `y', by(`time' `unit')
 		drop if `time' == .
@@ -93,7 +93,7 @@ if `run_robust' == 1 {
 	foreach y of local outcome_vars {
 		
 		// Outcome `y'
-		reghdfe ``y'' treat c.ym#i.basis_cat, absorb(basis_clean ym) vce(cluster basis_clean)
+		reghdfe ``y'' treat c.ym#i.basis_cat, absorb(basis ym) vce(cluster basis)
 		eststo u`i'
 		qui estadd loc feunit "Yes", replace
 		qui estadd loc fetime "Yes", replace
@@ -126,7 +126,7 @@ We can run this when new data gets added.
 preserve 
 	loc y 	 relief_scale
 	loc time months_to_treat_12
-	loc unit basis_clean
+	loc unit basis
 
 	collapse (mean) `y', by(`time' `unit')
 	drop if `time' == .
