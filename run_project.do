@@ -85,3 +85,4 @@ do "$droot/code/clean/merge_all.do"
 // analysis files
 do "$droot/code/analysis/tables.do"
 do "$droot/code/analysis/figures.do"
+do "$droot/code/analysis/sdid.do"
