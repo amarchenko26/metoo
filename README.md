@@ -7,7 +7,7 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 **$raw_data/WA/wa_raw_cases.dta**  
 These data contain all employment, housing, public accommodation/public service, and education cases filed in Washington from June 1, 2010 to June 1, 2023.
 - N: 9949
-- SH:
+- SH: 470
 - wshrc: unique identifier for each case
 - respondent: respondent name
 - date filed: date case was filed
