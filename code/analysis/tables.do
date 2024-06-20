@@ -4,9 +4,9 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 = 1
-loc run_did_all  = 1
-loc run_overlap  = 1
+loc	run_did 	 = 0
+loc run_did_all  = 0
+loc run_overlap  = 0
 
 loc run_summary  = 1
 loc run_balance  = 1
@@ -269,14 +269,13 @@ if `run_summary' == 1 {
 	preserve
 	keep if eeoc_filed == 0
 	
-	tabstat post `summary', c(stat) stat(mean sd min max n)
+	estpost tabstat post `summary', c(stat) stat(mean sd min max n)
 
 	esttab using "$tables/summary.tex", replace ///
 		nomtitle nonote noobs label booktabs f ///
 		cells("mean(fmt(%13.2fc)) sd(fmt(%13.2fc)) min(fmt(a2)) max(fmt(a2)) count(fmt(a2))") ///
 		collabels("Mean" "SD" "Min" "Max" "N")
 	restore
-	eststo clear
 
 }
 
