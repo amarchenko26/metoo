@@ -7,8 +7,7 @@ Clean North Dakota cases
 // Append files
 
 drop _all
-tempfile cumulator
-quietly save `cumulator', emptyok
+quietly save "$raw_data/ND/nd_raw_cases.dta", emptyok replace
 local var Employment Housing PA
 foreach i of local var {
     import excel using "$raw_data/ND/OR response `i'.xlsx", firstrow case(lower) clear
@@ -20,8 +19,8 @@ foreach i of local var {
 		tostring discriminationtype, replace
 		replace discriminationtype = "" if discriminationtype == "."
 	}
-    append using `cumulator'
-    quietly save `cumulator', replace
+    append using "$raw_data/ND/nd_raw_cases.dta"
+    quietly save "$raw_data/ND/nd_raw_cases.dta", replace
 }
 
 
@@ -96,7 +95,7 @@ drop closure*
 
 // Probable cause
 g win = .
-replace win = 1 if inlist(outcome, "Probable Cause", "Notice of Right to Sue")
+replace win = 1 if outcome == "Probable Cause"
 replace win = 0 if inlist(outcome, "No Probable Cause", "No Reasonable Cause")
 
 // Settle
