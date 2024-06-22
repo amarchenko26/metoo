@@ -34,7 +34,7 @@ These data contain all employment, housing, public accommodation/public service,
 **$raw_data/ND/nd_raw_cases.dta**  
 These data contain all employment, housing, and public accommodation/public service cases filed in North Dakota from June 1, 2010 to June 1, 2023.
 - N: 2977
-- SH:
+- SH: 322
 - Entity: respondent name
 - Case Type: identifies whether the case is employment, housing, or public accommodations
 - Date Opened: date case was filed
