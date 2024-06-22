@@ -4,6 +4,19 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 
 ## Description of datasets
 
+**$raw_data/MN/mn_raw_cases.xlsx**  
+These data contain all employment, housing, public accommodation/public service, and education cases filed in Washington from June 1, 2010 to June 1, 2023.
+- N: 539
+- SH: 14
+- caseid: unique identifier for each case
+- filedate: date case was filed
+- basis: basis of discrimination
+- allegation: adverse action alleged by complainant
+- determination: how case was closed
+- determinationdate: date case was determined
+- closuredate: date case was closed
+- respondentcompanyname: respondent name
+
 **$raw_data/WA/wa_raw_cases.dta**  
 These data contain all employment, housing, public accommodation/public service, and education cases filed in Washington from June 1, 2010 to June 1, 2023.
 - N: 9949
