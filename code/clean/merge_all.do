@@ -17,6 +17,8 @@ Already merged:
 	- MI
 	- IL
 	- WA
+	- ND
+	- MN
 
 
 *******************************************************************************/
@@ -27,7 +29,6 @@ Pull cleaned EEOC court case data
 *******************************************************************************/
 
 use "$clean_data/clean_eeoc.dta", clear
-
 
 /*******************************************************************************
 Append to EEOC filed data (2010-2017)
@@ -70,14 +71,19 @@ Append to TX
 Append to ND
 *******************************************************************************/
 
-//append using "$clean_data/clean_nd.dta"
-//waiting on ND to respond to identification of primary basis
+append using "$clean_data/clean_nd.dta"
 
 /*******************************************************************************
 Append to WA
 *******************************************************************************/
 
 append using "$clean_data/clean_wa.dta"
+
+/*******************************************************************************
+Append to MN
+*******************************************************************************/
+
+append using "$clean_data/clean_mn.dta"
 
 
 /*******************************************************************************
@@ -206,7 +212,7 @@ la var sh "Sexual harassment"
 la var sex_cases "Sex-related charge" // Title VII / Sex‐Female or Title VII / Sex‐Female / Sexual-Harassment for EEOC
 la var post "Filed after MeToo"
 la var treat "Post = 1 and case is SH or overlap"
-la var juris "Employment, public housing, or education"
+la var juris "Employment, housing, public accommodations, or education"
 la var duration "Duration (days)"
 la var overlap_2 "Overlaps with MeToo"
 la var court "Went to court"
