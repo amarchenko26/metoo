@@ -30,6 +30,9 @@ Define new vars
 // Drops 200 empty observations
 drop if charge_file_date == . & charge_res_date == .
 
+// Jurisdiction
+replace juris = "Housing" if juris != "Employment"
+
 // Clean basis 
 g basis = "Sex" if regexm(basis_raw, "Sex|Female|Male")
 replace basis = "LGBTQ" if regexm(basis_raw, "Sexual orientation|Gender")

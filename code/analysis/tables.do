@@ -4,9 +4,9 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 = 0
-loc run_did_all  = 0
-loc run_overlap  = 0
+loc	run_did 	 = 1
+loc run_did_all  = 1
+loc run_overlap  = 1
 
 loc run_summary  = 1
 loc run_balance  = 1
@@ -16,9 +16,10 @@ loc run_duration = 1
 Prep vars for tables
 *******************************************************************************/
 tab juris, gen(juris_dummy)
-la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Employment"
-la var juris_dummy2 "\hspace{5mm} Private housing"
-la var juris_dummy3 "\hspace{5mm} Public housing"
+la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Education"
+la var juris_dummy2 "\hspace{5mm} Employment"
+la var juris_dummy3 "\hspace{5mm} Housing"
+la var juris_dummy4 "\hspace{5mm} Public Accommodation"
 
 tab basis, gen(basis_dummy)
 la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
@@ -41,6 +42,7 @@ loc summary ///
 	juris_dummy1 ///
 	juris_dummy2 ///
 	juris_dummy3 ///
+	juris_dummy4 ///
 	basis_dummy1 ///
 	basis_dummy2 ///
 	basis_dummy3 ///
@@ -77,6 +79,7 @@ loc balance ///
 	juris_dummy1 ///
 	juris_dummy2 ///
 	juris_dummy3 ///
+	juris_dummy4 ///
     settle ///
 	court ///
 	duration ///
