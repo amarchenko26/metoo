@@ -222,7 +222,7 @@ This is determined using regexm, which searches for string matches to "Sex". `se
 `relief = 0` never  
 `relief = .` when the plantiff lost or when we don't have information on relief.  
 
-We should not have `relief = 0` if the plaintiff lost. If the plaintiff lost, `relief == .` and `missing_relief == 1`.  
+We should not have `relief = 0` if the plaintiff lost. If the plaintiff lost, `relief == .` and `missing_relief == 1`. If `settle == 1` most often `relief` is missing, unless the case was resolved by conciliation, in which case `relief` may be provided. 
 
 ### Win
 `win == 1` if outcome explicitly says discrimination was found at hearing (this may be called probable cause); or if case went to court and plaintiff won the case.  
@@ -232,7 +232,7 @@ We should not have `relief = 0` if the plaintiff lost. If the plaintiff lost, `r
 If case went to court and plaintiff won compensation, we do not always make this variable equal 1 because receiving $ may not be an admission of discrimination being found. 
 
 ### Settle
-`settle == 1` if outcome says case was settled or case was withdrawn with benefits  
+`settle == 1` if outcome says case was settled, case was withdrawn with benefits, or case was resolved by conciliation (an administrative process by which two parties resolve their dispute without involving a hearing or court, we can often observe the relief for these cases).  
 `settle == 0` if otherwise  
 `settle == .` never  
 
