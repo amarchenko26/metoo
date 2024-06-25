@@ -4,6 +4,21 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 
 ## Description of datasets
 
+**$raw_data/RI/ri_raw_cases.csv**  
+These data were extracted from PDF files of copies of all decision and orders issued by the Commission based on charges of employment discrimination which were filed during the period between June 1,2010 to December 31, 2022.
+- N: 12
+- SH: 3
+- resp_org: respondent name
+- case_id: unique identifier for each case
+- file_date: date case was filed
+- res_date: date case was closed
+- basis: basis of discrimination
+- jurisdiction
+- win
+- settle
+- court
+- victim_f: whether the complainant was female
+
 **$raw_data/MN/mn_raw_cases.xlsx**  
 These data contain all employment, housing, public accommodation/public service, and education cases filed in Minnesota from June 1, 2010 to June 1, 2023 (document seems to contain only up to 2019).
 - N: 539
