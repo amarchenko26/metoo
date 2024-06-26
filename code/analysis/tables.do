@@ -20,6 +20,7 @@ la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Education"
 la var juris_dummy2 "\hspace{5mm} Employment"
 la var juris_dummy3 "\hspace{5mm} Housing"
 la var juris_dummy4 "\hspace{5mm} Public Accommodation"
+la var juris_dummy5 "\hspace{5mm} Unspecified"
 
 tab basis, gen(basis_dummy)
 la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
@@ -43,6 +44,7 @@ loc summary ///
 	juris_dummy2 ///
 	juris_dummy3 ///
 	juris_dummy4 ///
+	juris_dummy5 ///
 	basis_dummy1 ///
 	basis_dummy2 ///
 	basis_dummy3 ///
@@ -60,8 +62,8 @@ loc summary ///
     court_res_year ///
     duration ///
     overlap_2 ///
-	missing_relief ///
     relief ///
+	missing_relief ///
     win
 
 
@@ -80,11 +82,13 @@ loc balance ///
 	juris_dummy2 ///
 	juris_dummy3 ///
 	juris_dummy4 ///
+	juris_dummy5 ///
     settle ///
 	court ///
 	duration ///
     overlap_2 ///
     relief ///
+	missing_relief ///
     win
 
 

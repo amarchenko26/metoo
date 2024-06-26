@@ -55,10 +55,6 @@ replace juris = "Employment"
 // Basis
 replace basis = "Other" if id == "12BAG054"
 
-// SH
-g sh = 0
-replace sh = 1 if inlist(id, "11ESH080", "12ESH150", "15ESO089")
-
 // Sex
 g sex_cases = 0 
 replace sex_cases = 1 if basis == "Sex"

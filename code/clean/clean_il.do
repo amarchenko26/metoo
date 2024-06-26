@@ -42,6 +42,9 @@ drop charge_res_date
 rename *2 *
 g duration = charge_res_date - charge_file_date
 
+// Jurisdiction
+g juris = "Unspecified"
+
 // Basis
 g basis = "Sex" 				if strpos(basis_raw, "SEX") > 0
 replace basis = "LGBTQ"         if inlist(basis_raw, "BISEXUAL", "GEN/IDENTITY", "HETEROSEXUAL", "HOMOSEXUAL", "PERCEIVED SEX", "TRANSGENDER")
