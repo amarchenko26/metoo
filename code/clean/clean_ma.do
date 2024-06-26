@@ -74,6 +74,9 @@ replace settle = 1 if outcome == "Closed - Withdrawn With Settlement"
 g court = 1 if outcome == "Closed - Chapter 478 (removed to court)" 
 replace court = 0 if outcome != "Closed - Chapter 478 (removed to court)" 
 
+// Relief
+g relief = .
+g missing_relief = (relief == .)
 
 /*******************************************************************************
 Export data

@@ -19,6 +19,7 @@ Already merged:
 	- WA
 	- ND
 	- MN
+	- RI
 
 
 *******************************************************************************/
@@ -84,6 +85,12 @@ Append to MN
 *******************************************************************************/
 
 append using "$clean_data/clean_mn.dta"
+
+/*******************************************************************************
+Append to RI
+*******************************************************************************/
+
+append using "$clean_data/clean_ri.dta"
 
 
 /*******************************************************************************
@@ -192,7 +199,7 @@ la var court_file_year "Year court case filed"
 la var court_res_year "Year court case resolved"
 la var relief "Compensation to plaintiff"
 la var relief_scale "Compensation"
-la var missing_relief "Plaintiff lost EEOC case"
+la var missing_relief "Missing compensation amount"
 la var victim_f "Complainant is female"
 la var eeoc_filed "Indicator for if data from ProPublica request"
 

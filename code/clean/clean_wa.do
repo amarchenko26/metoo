@@ -59,6 +59,9 @@ replace basis = "Other" 		if inlist(basis_raw1, "Familial Status", "Marital Stat
 replace basis = "Sex" if _merge == 3
 drop basis_raw?
 
+// Jurisdiction
+g juris = "Unspecified"
+
 // SH
 g sh = 0
 replace sh = 1 if _merge == 3
