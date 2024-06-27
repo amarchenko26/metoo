@@ -3,7 +3,8 @@ import getpass
 import io
 import re
 from rapidfuzz import process, fuzz
-from textblob import TextBlob
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 # Get current user ID
@@ -15,9 +16,14 @@ elif userid == "maggie":
 elif userid == "jacobhirschhorn":
     root = "/Users/jacobhirschhorn/Dropbox (Brown)/metoo_data"
 
+# Download the VADER lexicon
+nltk.download('vader_lexicon')
+
+# Initialize the VADER sentiment analyzer
+sia = SentimentIntensityAnalyzer()
 
 
-state = "RI"
+state = "PA"
 
 # Directory containing the .txt files
 txt_directory = root + "/raw/" + state + "/" + state + "_extracted"
@@ -123,17 +129,13 @@ def novel_sev_ranking_list(ranking_list : list, name_list: list):
     return return_list
 
 
-# TextBlob sentiment analysis
+# VADER sentiment analysis
 # On a scale of [1, -1] - larger values in either direction are more severe/intense
 # Positive values are positive sentiment, negative values are negative sentiment
 def sentiment_analysis(text : str):
-    # get the text in TextBlob formatting
-    blob = TextBlob(text)
-    sentences = blob.sentences
-    # get the polarity of the text
-    total_polarity = sum(sentence.sentiment.polarity for sentence in sentences)
-    avg_polarity = total_polarity / len(sentences)
-    return avg_polarity
+    # Get sentiment scores
+    sentiment = sia.polarity_scores(text)
+    return sentiment
 
 
 
@@ -169,8 +171,8 @@ for filename in os.listdir(txt_directory):
             sev_normalized_list.append(severity_ranking_normalized)
 
             # get the severity ranking using sentiment analysis
-            avg_polarity = sentiment_analysis(text)
-            sentiment_analysis_list.append(avg_polarity)
+            polarity = sentiment_analysis(text)["compound"]
+            sentiment_analysis_list.append(polarity)
 
 # get the novel severity ranking
 sev_ranking_list = novel_sev_ranking_list(sev_normalized_list, name_list)
@@ -187,7 +189,7 @@ for num in range(len(sev_ranking_list)):
 return_csv = "".join(csv_format_list)
 
 
-output_path = "/Users/jacobhirschhorn/Desktop/RI_sevrankings.csv"
+output_path = "/Users/" + userid + "/Desktop/" + state + "_sevrankings.csv"
 
 # # Write the CSV to a new file
 with open(output_path, "w") as text_file:
