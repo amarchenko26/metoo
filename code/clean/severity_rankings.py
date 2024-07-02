@@ -53,7 +53,7 @@ def txt_to_severity_list(text : str) -> tuple[list, int]:
     # Get the total number of words in the document
     total_words = text.split()
 
-    # List of relevant words in ascending order of severity
+    # List of sexual harassment-related words in ascending order of severity
     word_list = ["Inappropriate behavior", "Lewd comments", "Unwelcome behavior",
                 "Unwanted attention", "Disrespect", "Catcalling", 
                 "Unwanted contact", "Legal action",
@@ -144,6 +144,9 @@ sev_normalized_list = []
 name_list = []
 sentiment_analysis_list = []
 
+PA_appeals = ["Goetz v Norristown Area School District", "PHRC", "Henley v CWOPA SCSC", 
+              "Jones v City of Philadelphia et al", "Lee & Yokely v Walnut Garden Apartments Inc"]
+
 for filename in os.listdir(txt_directory):
     if filename.endswith(".txt"):
         txt_path = os.path.join(txt_directory, filename)
@@ -153,7 +156,14 @@ for filename in os.listdir(txt_directory):
 
         head, tail = os.path.split(txt_path)
 
-        if not ("RICHR Response to APRA Request" in tail):
+        marker = 0
+        if ("RICHR Response to APRA Request" in tail) or ("pa_raw_cases" in tail):
+            marker = 1
+        for case in PA_appeals:
+            if (case in tail):
+                marker = 1
+
+        if marker != 1:
             # get the text of the file
             text = extract_text(txt_path)
             # get the severity ranking using novel 
@@ -161,9 +171,9 @@ for filename in os.listdir(txt_directory):
             sev_number, total_matches = get_sev_ranking(sev_list)
             # If there is one or more match
             if total_matches != 0:
-                # calculate the severity two ways
-                # 1. normalized by the number of words in the txt file and by the number of matches found
-                severity_ranking_normalized = (sev_number / total_matches) / total_txt_words
+                # calculate severity
+                # normalized by the number of words in the txt file and by the number of matches found
+                severity_ranking_normalized = (sev_number / total_matches)
             # if zero matches, set the severity score to 0
             else:
                 severity_ranking_normalized = 0
@@ -189,10 +199,9 @@ for num in range(len(sev_ranking_list)):
 return_csv = "".join(csv_format_list)
 
 
-output_path = "/Users/" + userid + "/Desktop/" + state + "_sevrankings.csv"
+output_path = "/Users/" + userid + "/Desktop/" + state + "_sevrankings1.csv"
 
 # # Write the CSV to a new file
 with open(output_path, "w") as text_file:
         text_file.write(return_csv)
-
 
