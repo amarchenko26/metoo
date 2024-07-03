@@ -3,7 +3,8 @@ import getpass
 import io
 import re
 from rapidfuzz import process, fuzz
-from textblob import TextBlob
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 # Get current user ID
@@ -15,9 +16,14 @@ elif userid == "maggie":
 elif userid == "jacobhirschhorn":
     root = "/Users/jacobhirschhorn/Dropbox (Brown)/metoo_data"
 
+# Download the VADER lexicon
+nltk.download('vader_lexicon')
+
+# Initialize the VADER sentiment analyzer
+sia = SentimentIntensityAnalyzer()
 
 
-state = "RI"
+state = "PA"
 
 # Directory containing the .txt files
 txt_directory = root + "/raw/" + state + "/" + state + "_extracted"
@@ -47,7 +53,7 @@ def txt_to_severity_list(text : str) -> tuple[list, int]:
     # Get the total number of words in the document
     total_words = text.split()
 
-    # List of relevant words in ascending order of severity
+    # List of sexual harassment-related words in ascending order of severity
     word_list = ["Inappropriate behavior", "Lewd comments", "Unwelcome behavior",
                 "Unwanted attention", "Disrespect", "Catcalling", 
                 "Unwanted contact", "Legal action",
@@ -123,17 +129,13 @@ def novel_sev_ranking_list(ranking_list : list, name_list: list):
     return return_list
 
 
-# TextBlob sentiment analysis
+# VADER sentiment analysis
 # On a scale of [1, -1] - larger values in either direction are more severe/intense
 # Positive values are positive sentiment, negative values are negative sentiment
 def sentiment_analysis(text : str):
-    # get the text in TextBlob formatting
-    blob = TextBlob(text)
-    sentences = blob.sentences
-    # get the polarity of the text
-    total_polarity = sum(sentence.sentiment.polarity for sentence in sentences)
-    avg_polarity = total_polarity / len(sentences)
-    return avg_polarity
+    # Get sentiment scores
+    sentiment = sia.polarity_scores(text)
+    return sentiment
 
 
 
@@ -141,6 +143,9 @@ def sentiment_analysis(text : str):
 sev_normalized_list = []
 name_list = []
 sentiment_analysis_list = []
+
+PA_appeals = ["Goetz v Norristown Area School District", "PHRC", "Henley v CWOPA SCSC", 
+              "Jones v City of Philadelphia et al", "Lee & Yokely v Walnut Garden Apartments Inc"]
 
 for filename in os.listdir(txt_directory):
     if filename.endswith(".txt"):
@@ -151,7 +156,14 @@ for filename in os.listdir(txt_directory):
 
         head, tail = os.path.split(txt_path)
 
-        if not ("RICHR Response to APRA Request" in tail):
+        marker = 0
+        if ("RICHR Response to APRA Request" in tail) or ("pa_raw_cases" in tail):
+            marker = 1
+        for case in PA_appeals:
+            if (case in tail):
+                marker = 1
+
+        if marker != 1:
             # get the text of the file
             text = extract_text(txt_path)
             # get the severity ranking using novel 
@@ -159,9 +171,9 @@ for filename in os.listdir(txt_directory):
             sev_number, total_matches = get_sev_ranking(sev_list)
             # If there is one or more match
             if total_matches != 0:
-                # calculate the severity two ways
-                # 1. normalized by the number of words in the txt file and by the number of matches found
-                severity_ranking_normalized = (sev_number / total_matches) / total_txt_words
+                # calculate severity
+                # normalized by the number of words in the txt file and by the number of matches found
+                severity_ranking_normalized = (sev_number / total_matches)
             # if zero matches, set the severity score to 0
             else:
                 severity_ranking_normalized = 0
@@ -169,8 +181,8 @@ for filename in os.listdir(txt_directory):
             sev_normalized_list.append(severity_ranking_normalized)
 
             # get the severity ranking using sentiment analysis
-            avg_polarity = sentiment_analysis(text)
-            sentiment_analysis_list.append(avg_polarity)
+            polarity = sentiment_analysis(text)["compound"]
+            sentiment_analysis_list.append(polarity)
 
 # get the novel severity ranking
 sev_ranking_list = novel_sev_ranking_list(sev_normalized_list, name_list)
@@ -187,10 +199,9 @@ for num in range(len(sev_ranking_list)):
 return_csv = "".join(csv_format_list)
 
 
-output_path = "/Users/jacobhirschhorn/Desktop/RI_sevrankings.csv"
+output_path = "/Users/" + userid + "/Desktop/" + state + "_sevrankings1.csv"
 
 # # Write the CSV to a new file
 with open(output_path, "w") as text_file:
         text_file.write(return_csv)
-
 
