@@ -140,8 +140,12 @@ The following variables are cleaned separately for each city.
 `sh == 0` otherwise  
 
 ### Sex-based cases
-`sex_cases` == 1 if `crime_type` is Sexual harassment or Sexual assault.  
-`sex_cases` == 0 otherwise.  
+`sex_cases == 1` if `crime_type` is Sexual harassment or Sexual assault.  
+`sex_cases == 0` otherwise.  
+
+### Clearance
+`clearance == 1` if the case was cleared by arrest or exception  
+`clearance == 0` if the case was not cleared  
 
 The following variables are cleaned altogether, after city data is appended together. 
 
