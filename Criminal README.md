@@ -1,4 +1,4 @@
-# MeToo Criminal City Data
+![image](https://github.com/amarchenko26/metoo/assets/126733458/7596e784-aa5b-4cde-89b7-2cd68c822499)![image](https://github.com/amarchenko26/metoo/assets/126733458/fdb30aeb-47c1-4d02-a516-b4105663fc87)![image](https://github.com/amarchenko26/metoo/assets/126733458/deb4bd85-9299-494c-9885-5d9b428e5c88)# MeToo Criminal City Data
 
 ## Description of datasets
 
@@ -86,18 +86,50 @@ These data contain all police cases reported in Los Angeles from 2005 to 2024 (d
 These data contain all police cases reported in Louisville from 2010 to 2024 (downloaded 7/2/2024).
 - N:
 - SH:
-- 
 
 **$raw_data/Criminal/New York City.csv**  
 These data contain all police cases reported in New York City from 2006 to 2024 (downloaded 7/2/2024).
-- N:
-- SH:
-- 
+- N: 6,804,659 (years 2010+); 8,914,838 (raw)
+- SH: 12,803 (years 2010+)
+- CMPLNT_NUM: Randomly generated persistent ID for each complaint
+- ADDR_PCT_CD: The precinct in which the incident occurred
+- BORO: The name of the borough in which the incident occurred
+- COMPLNT_FR_DT: Exact date of occurrence for the reported event
+- COMPLNT_FR_TM: Exact time of occurrence for the reported event
+- COMPLNT_TO_DT: Ending date of occurrence for the reported event, if exact time of occurrence is unknown
+- COMPLNT_TO_TM: Ending time of occurrence for the reported event, if exact time of occurrence is unknown
+- CRM_ATPT_CPTD_CD: Indicator of whether crime was successfully completed or attempted, but failed or was interrupted prematurely
+- HADEVELOPT: Name of NYCHA housing development of occurrence, if applicable
+- HOUSING_PSA: Development Level Code
+- JURISDICTION_CODE: Jurisdiction responsible for incident. Either internal, like Police(0), Transit(1), and Housing(2); or external(3), like Correction, Port Authority, etc.
+- JURIS_DESC: Description of the jurisdiction code
+- KY_CD: Three digit offense classification code
+- LAW_CAT_CD: Level of offense: felony, misdemeanor, violation 
+- LOC_OF_OCCUR_DESC: Specific location of occurrence in or around the premises; inside, opposite of, front of, rear of
+- OFNS_DESC: Description of offense corresponding with key code
+- PARKS_NM: Name of NYC park, playground or greenspace of occurrence, if applicable (state parks are not included)
+- PATROL_BORO: The name of the patrol borough in which the incident occurred
+- PD_CD: Three digit internal classification code (more granular than Key Code)
+- PD_DESC: Description of internal classification corresponding with PD code (more granular than Offense Description)
+- PREM_TYP_DESC: Specific description of premises; grocery store, residence, street, etc.
+- RPT_DT: Date event was reported to police 
+- STATION_NAME: Transit station name
+- SUSP_AGE_GROUP: Suspect’s Age Group
+- SUSP_RACE: Suspect’s Race Description
+- SUSP_SEX: Suspect’s Sex Description
+- TRANSIT_DISTRICT: Transit district in which the offense occurred
+- VIC_AGE_GROUP: Victim’s Age Group
+- VIC_RACE: Victim’s Race Description
+- VIC_SEX: Victim’s Sex Description
+- X_COORD_CD: X-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104)
+- Y_COORD_CD: Y-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104)
+- Latitude: Midblock Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326) 
+- Longitude: Midblock Longitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 
 **$raw_data/Criminal/Seattle.csv**  
 These data contain all police cases reported in Seattle from 2008 to 2024 (downloaded 7/1/2024).
-- N: (years 2010+); 1,128,357 (raw)
-- SH: (years 2010+)
+- N: 998,545 (years 2010+); 1,128,357 (raw)
+- SH: 183 (years 2010+)
 - Report Number: Primary key/UID for the overall report; one report can contain multiple offenses, as denoted by the Offense ID
 - Offense ID: Distinct identifier to denote when there are multiple offenses associated with a single report
 - Offense Start DateTime: Start date and time the offense(s) occurred
