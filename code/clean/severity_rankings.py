@@ -5,6 +5,9 @@ import re
 from rapidfuzz import process, fuzz
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import pandas as pd
+import pyreadstat
+import numpy as np
 
 
 # Get current user ID
@@ -23,22 +26,20 @@ nltk.download('vader_lexicon')
 sia = SentimentIntensityAnalyzer()
 
 
-state = "PA"
-
-# Directory containing the .txt files
-txt_directory = root + "/raw/" + state + "/" + state + "_extracted"
 
 
-def extract_text(input_path : str) -> str:
+# Extract the text from the text file
+def extract_text(input_path : str) -> tuple[str, list[str]]:
     with open(input_path, "r") as text_file:
         file = text_file.readlines()
         
         file = [element for element in file if element != "\n"]
-             
+        # Do some light cleaning of the text file
         for i in range(len(file)):
             file[i] = file[i].replace('‘', "'")
             file[i] = file[i].replace('’', "'")
             file[i] = file[i].replace("£", "E")
+            file[i] = file[i].replace("€", "E")
             if file[i][0] == "'":
                 file[i] = file[i].replace("'", '')
 
@@ -46,9 +47,45 @@ def extract_text(input_path : str) -> str:
 
     file_str = file_str.replace("\n", "")
 
-    return file_str
+    return file_str, file
 
+# Get the case ID for RI files
+def get_RI_case_id(file : list[str]):
+    case_id = ""
+    for line in file:
+        # Get the right line
+        if line[:4] == "RICH":
+            split_line = line.split()
+            # Find the ID within that line
+            for i in range(len(split_line)):
+                numbers = r'[0-9]'
+                if re.search(numbers, split_line[i][0]):
+                    case_id += split_line[i]
+                    if re.search(numbers, split_line[i+1][0]):
+                        case_id += split_line[i+1]
+                    elif re.search(numbers, split_line[i+2][0]):
+                        case_id += split_line[i+1]
+                        case_id += split_line[i+2]
+                    # Remove any commas
+                    case_id = case_id.replace(',', '')
+                    break
+    return case_id
 
+# Get the respondent for PA files
+def get_PA_resp_org(tail: str):
+    resp_org = '"'
+    tail = tail.replace(".txt", "")
+    split_tail = tail.split()
+    trigger = 0
+    for word in split_tail:
+        if word == "v":
+            trigger = 1
+        if trigger == 1:
+            resp_org += word
+    resp_org += '"'
+    return resp_org
+
+# Extract severity rankings from the text file
 def txt_to_severity_list(text : str) -> tuple[list, int]:
     # Get the total number of words in the document
     total_words = text.split()
@@ -116,7 +153,7 @@ def get_sev_ranking(match_list) -> tuple[float, float]:
     return severity_ranking, total_ranking_words
 
 # normalize severity score
-def novel_sev_ranking_list(ranking_list : list, name_list: list):
+def novel_sev_ranking_list(ranking_list : list):
     return_list = []
     max_num = max(ranking_list)
     # for each case
@@ -138,70 +175,134 @@ def sentiment_analysis(text : str):
     return sentiment
 
 
+# Create the severity rankings, based on what state is passed in
+def create_csv_severity(state : str):
+    # Directory containing the .txt files
+    txt_directory = root + "/raw/" + state + "/" + state + "_extracted"
 
-# output csv
-sev_normalized_list = []
-name_list = []
-sentiment_analysis_list = []
+    # output csv
+    sev_normalized_list = []
+    # ID list - file_date for RI, respondent for PA
+    id_list = []
+    name_list = []
+    sentiment_analysis_list = []
 
-PA_appeals = ["Goetz v Norristown Area School District", "PHRC", "Henley v CWOPA SCSC", 
-              "Jones v City of Philadelphia et al", "Lee & Yokely v Walnut Garden Apartments Inc"]
+    PA_extras = ["Goetz v Norristown Area School District", "PHRC", "Henley v CWOPA SCSC", 
+                "Jones v City of Philadelphia et al", "Lee & Yokely v Walnut Garden Apartments Inc"]
+    RI_extras = ["WASHINGTON DAMAGES", "JOBE DAMAGES", "ZABALA CORRECTION"]
+    combined_extras = PA_extras + RI_extras
 
-for filename in os.listdir(txt_directory):
-    if filename.endswith(".txt"):
-        txt_path = os.path.join(txt_directory, filename)
+    for filename in os.listdir(txt_directory):
+        if filename.endswith(".txt"):
+            txt_path = os.path.join(txt_directory, filename)
 
-        # Get the CSV data from the txt
-        print("Processing", txt_path)
+            head, tail = os.path.split(txt_path)
 
-        head, tail = os.path.split(txt_path)
-
-        marker = 0
-        if ("RICHR Response to APRA Request" in tail) or ("pa_raw_cases" in tail):
-            marker = 1
-        for case in PA_appeals:
-            if (case in tail):
+            marker = 0
+            if ("RICHR Response to APRA Request" in tail) or ("pa_raw_cases" in tail):
                 marker = 1
+            for case in combined_extras:
+                if (case in tail):
+                    marker = 1
 
-        if marker != 1:
-            # get the text of the file
-            text = extract_text(txt_path)
-            # get the severity ranking using novel 
-            sev_list, total_txt_words = txt_to_severity_list(text)
-            sev_number, total_matches = get_sev_ranking(sev_list)
-            # If there is one or more match
-            if total_matches != 0:
-                # calculate severity
-                # normalized by the number of words in the txt file and by the number of matches found
-                severity_ranking_normalized = (sev_number / total_matches)
-            # if zero matches, set the severity score to 0
-            else:
-                severity_ranking_normalized = 0
-            name_list.append(tail)
-            sev_normalized_list.append(severity_ranking_normalized)
+            if marker != 1:
+                # Get the CSV data from the txt
+                print("Processing", txt_path)
+                # get the text of the file
+                text, text_list = extract_text(txt_path)
 
-            # get the severity ranking using sentiment analysis
-            polarity = sentiment_analysis(text)["compound"]
-            sentiment_analysis_list.append(polarity)
-
-# get the novel severity ranking
-sev_ranking_list = novel_sev_ranking_list(sev_normalized_list, name_list)
+                # If state is RI, get the case ID
+                if state == "RI":
+                    file_date = get_RI_case_id(text_list)
+                    id_list.append(file_date)
+                # Else if state is PA, get the respondent
+                elif state == "PA":
+                    resp_org = get_PA_resp_org(tail)
+                    id_list.append(resp_org)
 
 
-# combine all parts together
-csv_format_list = ["name,severity_1,severity_2\n"]
-for num in range(len(sev_ranking_list)):
-    row = '"' + name_list[num] + '"' + "," + sev_ranking_list[num] + "," + str(sentiment_analysis_list[num]) + "\n"
-    csv_format_list.append(row)
+                # get the severity ranking using novel 
+                sev_list, total_txt_words = txt_to_severity_list(text)
+                sev_number, total_matches = get_sev_ranking(sev_list)
+                # If there is one or more match
+                if total_matches != 0:
+                    # calculate severity
+                    # normalized by the number of words in the txt file and by the number of matches found
+                    severity_ranking_normalized = (sev_number / total_matches)
+                # if zero matches, set the severity score to 0
+                else:
+                    severity_ranking_normalized = 0
+                name_list.append(tail)
+                sev_normalized_list.append(severity_ranking_normalized)
+
+                # get the severity ranking using sentiment analysis
+                polarity = sentiment_analysis(text)["compound"]
+                sentiment_analysis_list.append(polarity)
+
+    # get the manual severity ranking
+    sev_ranking_list = novel_sev_ranking_list(sev_normalized_list)
 
 
-# join into a string
-return_csv = "".join(csv_format_list)
+    # combine all parts together
+    if state == "RI":
+        csv_format_list = ["case_id,severity_manual,severity_sentiment\n"]
+    elif state == "PA":
+        csv_format_list = ["resp_org,severity_manual,severity_sentiment\n"]
 
 
-output_path = "/Users/" + userid + "/Desktop/" + state + "_sevrankings1.csv"
+    for num in range(len(sev_ranking_list)):
+        row = id_list[num] + "," + str(sev_ranking_list[num]) + "," + str(sentiment_analysis_list[num]) + "\n"
+        csv_format_list.append(row)
 
-# # Write the CSV to a new file
-with open(output_path, "w") as text_file:
-        text_file.write(return_csv)
+    # join into a string
+    return_data = "".join(csv_format_list)
 
+    # combine the data with the raw CSV file
+
+    # Read the raw state CSV
+    df1 = pd.read_csv(root + "/raw/" + state + "/" + state + "_raw_cases.csv")
+
+    # convert the return_data into a pandas dataframe
+    # Use StringIO to convert the string to a file-like object
+    csv_file = io.StringIO(return_data)
+
+    # Read the CSV string into a DataFrame
+    df2 = pd.read_csv(csv_file)
+
+    # Merge the data frames on a common column: id for RI, resp_org for PA
+    if state == "RI":
+        merged_df = pd.merge(df1, df2, on='case_id', how='left')
+    elif state == "PA":
+        merged_df = pd.merge(df1, df2, on='resp_org', how='left')
+
+    # convert all non-Numpy NaN values to Numpy NaN - in the relief column
+    merged_df = merged_df.replace(['NaN'], np.nan)
+
+    # convert the rest of the columns to the proper data types
+    merged_df['win'] = merged_df['win'].astype('int8')
+    merged_df['settle'] = merged_df['settle'].astype('int8')
+    merged_df['court'] = merged_df['court'].astype('int8')
+    merged_df['victim_f'] = merged_df['victim_f'].astype('int8')
+
+    # Save the merged data frame to a new CSV file
+    output_path = root + "/raw/" + state + "/" + state + "_raw_cases_severity.csv"
+
+    merged_df.to_csv(output_path, 
+                     index=False,        # Do not write row names (index)
+                     header=True,        # Write out the column names
+                     na_rep='NA',        # Missing data representation
+    )
+
+    # convert all NA values into missing values
+    with open(output_path, "r") as csv_file:
+        severity_file = csv_file.read()
+        severity_file = severity_file.replace("NA","")
+
+    # Write the CSV to a new file
+    with open(output_path, "w") as text_file:
+            text_file.write(severity_file)
+
+
+
+# create_rankings("PA")
+create_csv_severity("RI")
