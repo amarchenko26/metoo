@@ -4,8 +4,8 @@
 
 **$raw_data/Criminal/Austin.csv**  
 These data contain all police cases reported in Austin from 2003 to 2024 (downloaded 7/1/2024).
-- N:
-- SH:
+- N: 1,558,273 (years 2010+); 2,477,359 (raw)
+- SH: 5,601 (years 2010+)
 - Incident number: Incident report number
 - Highest Offense Description: Description of crime
 - Highest Offense Code: Code for crime
@@ -38,19 +38,19 @@ These data contain all police cases reported in Austin from 2003 to 2024 (downlo
 - Location: 3rd party generated spatial column
 
 **$raw_data/Criminal/Chicago.csv**  
-These data contain all police cases reported in Chicago from 2001 to 2024 (downloaded 7/1/2024).
-- N:
-- SH:
+These data contain all police cases reported in Chicago from 2001 to 2024 (downloaded 7/9/2024).
+- N: 4,024,193 (years 2010+); 8,101,448 (raw)
+- SH: 7,974 (years 2010+)
 - ID: Unique identifier for the record
-- Case Number: The Chicago Police Department RD Number (Records Division Number), which is unique to the inciden
+- Case Number: The Chicago Police Department RD Number (Records Division Number), which is unique to the incident
 - Date: Date when the incident occurred (best estimate)
 - Block: The partially redacted address where the incident occurred, placing it on the same block as the actual address
 - IUCR: The Illinois Uniform Crime Reporting code
 - Priamry Type: The primary description of the IUCR code
 - Description: The secondary description of the IUCR code, a subcategory of the primary description
 - Location Description: Description of the location where the incident occurred
-- Arrest: Indicates whether an arrest was made (Y/N)
-- Domestic: Indicates whether the incident was domestic-related as defined by the Illinois Domestic Violence Act (Y/N)
+- Arrest: Indicates whether an arrest was made (true/false)
+- Domestic: Indicates whether the incident was domestic-related as defined by the Illinois Domestic Violence Act (true/false)
 - Beat: Indicates the beat where the incident occurred
 - District: Indicates the police district where the incident occurred
 - Ward: The ward (City Council district) where the incident occurred
@@ -96,9 +96,25 @@ These data contain all police cases reported in New York City from 2006 to 2024 
 
 **$raw_data/Criminal/Seattle.csv**  
 These data contain all police cases reported in Seattle from 2008 to 2024 (downloaded 7/1/2024).
-- N:
-- SH:
-- 
+- N: (years 2010+); 1,128,357 (raw)
+- SH: (years 2010+)
+- Report Number: Primary key/UID for the overall report; one report can contain multiple offenses, as denoted by the Offense ID
+- Offense ID: Distinct identifier to denote when there are multiple offenses associated with a single report
+- Offense Start DateTime: Start date and time the offense(s) occurred
+- Offense End DateTime: End date and time the offense(s) occurred, when applicable
+- Report DateTime: Date and time the offense(s) was reported. (Can differ from date of occurrence)
+- Group A B: Corresponding offense group
+- Crime Against Category: Corresponding offense crime against category
+- Offense Parent Group: Corresponding offense parent group
+- Offense: Corresponding offense
+- Offense Code: Corresponding offense code
+- Precinct: Designated police precinct boundary where offense(s) occurred
+- Sector: Designated police sector boundary where offense(s) occurred
+- Beat: Designated police beat boundary where offense(s) occurred
+- MCPP Neighborhood: Designated Micro-Community Policing Plans (MCPP) boundary where offense(s) occurred
+- Blurred Address: Offense(s) address location blurred to the one hundred block
+- Blurred Longitude Coordinate: Offense(s) spatial coordinate blurred to the one hundred block
+- Blurred Latitude Coordinate: Offense(s) spatial coordinate blurred to the one hundred block
 
 **$raw_data/Criminal/Tucson `year`.csv**  
 These data contain all police cases reported in Tucson from 2009 to 2024 (downloaded 7/2/2024).
