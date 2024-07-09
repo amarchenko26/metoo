@@ -1,4 +1,4 @@
-![image](https://github.com/amarchenko26/metoo/assets/126733458/7596e784-aa5b-4cde-89b7-2cd68c822499)![image](https://github.com/amarchenko26/metoo/assets/126733458/fdb30aeb-47c1-4d02-a516-b4105663fc87)![image](https://github.com/amarchenko26/metoo/assets/126733458/deb4bd85-9299-494c-9885-5d9b428e5c88)# MeToo Criminal City Data
+# MeToo Criminal City Data
 
 ## Description of datasets
 
