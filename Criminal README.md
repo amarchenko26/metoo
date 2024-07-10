@@ -6,6 +6,7 @@
 These data contain all police cases reported in Austin from 2003 to 2024 (downloaded 7/1/2024).
 - N: 1,558,273 (years 2010+); 2,477,359 (raw)
 - SH: 5,601 (years 2010+)
+- SA: 
 - Incident number: Incident report number
 - Highest Offense Description: Description of crime
 - Highest Offense Code: Code for crime
@@ -41,6 +42,7 @@ These data contain all police cases reported in Austin from 2003 to 2024 (downlo
 These data contain all police cases reported in Chicago from 2001 to 2024 (downloaded 7/9/2024).
 - N: 4,024,193 (years 2010+); 8,101,448 (raw)
 - SH: 7,974 (years 2010+)
+- SA: 
 - ID: Unique identifier for the record
 - Case Number: The Chicago Police Department RD Number (Records Division Number), which is unique to the incident
 - Date: Date when the incident occurred (best estimate)
@@ -66,31 +68,146 @@ These data contain all police cases reported in Chicago from 2001 to 2024 (downl
 
 **$raw_data/Criminal/Denver.csv**  
 These data contain all police cases reported in Denver from 2019 to 2024 (downloaded 7/2/2024). (not currently used)
-- N:
-- SH:
-- 
 
 **$raw_data/Criminal/Kansas City `year`.csv**  
 These data contain all police cases reported in Kansas City from 2015 to 2024 (downloaded 7/2/2024).
-- N:
-- SH:
-- 
+- N: 1,061,787 (dropping cases not in Kansas City); 1,068,111 (raw)
+- SH: 2,296 (dropping cases not in Kansas City)
+- SA: 11,017 (dropping cases not in Kansas City)
+- Report_No: Unique number assigned to a case, throughout the life of a case numerous reports can be written
+- Reported_Date: Date the offense was reported
+- Reported_Time: Time the offense was reported
+- From_Date: Earliest date the incident could have occurred
+- From_Time: Earliest time the incident could have occurred
+- To_Date: Latest date the incident could have occurred
+- To_Time: Latest time the incident could have occurred
+- Offense
+  - 2015-2018: Offense code
+  - 2019-2024: Offense description
+- IBRS: National Incident Based Reporting System offense code
+- Decription: Short description of the offense
+- Beat: Area where offense occurred
+- Address: Cross streets of address where offense occurred
+- City
+- Zip Code
+- Rep_Dist: Area where offense occurred
+- Area:	Division the offense occurred in (Central, East, Metro, South, North, and Shoal Creek)
+- DVFlag: Indicates if it was a domestic violence offense
+  - 2015-2020:
+    - N: No
+    - U: Unknown
+    - Y: Yes
+  - 2021-2024: true/false
+- Invl_No: On the report the involvement number of the persons listed
+- Involvement: Person’s involvement in the case
+  - sus: suspect
+  - vic: victim
+  - arr: arrestee
+- Race:
+  - A: Asian
+  - B: Black or African American
+  - I: American Indian or Alaska Native
+  - P: Native Hawaiian or Other Pacific Islander
+  - U: Unknown
+  - W: White
+- Sex:
+  - M: Male
+  - F: Female
+  - U: Unknown
+- Age: Age of victim/suspect/arrestee. If the victim/suspect/arrestee is a juvenile, the age is left blank
+- Firearm Used Flag: Indicates if a firearm was used in the offense
+  - 2015-2018: Y/N
+  - 2019-2024: true/false
+- Latitude
+- Longtitude
+- Location 1
 
-**$raw_data/Criminal/Los Angeles.csv**  
+**$raw_data/Criminal/Los Angeles 1.csv** (2010-2019) & **$raw_data/Criminal/Los Angeles 2.csv** (2020-2024) 
 These data contain all police cases reported in Los Angeles from 2005 to 2024 (downloaded 7/2/2024).
-- N:
-- SH:
-- 
+- N: 3,078,199
+- SH: 46,571
+- SA: 40,989
+- DR_NO: Division of Records Number: Official file number made up of a 2 digit year, area ID, and 5 digits
+- Date Rptd: MM/DD/YYYY
+- DATE OCC: MM/DD/YYYY
+- TIME OCC: In 24 hour military time
+- AREA: The LAPD has 21 Community Police Stations referred to as Geographic Areas within the department
+- AREA NAME: The 21 Geographic Areas or Patrol Divisions are also given a name designation that references a landmark or the surrounding community that it is responsible for
+- Rpt Dist No: A four-digit code that represents a sub-area within a Geographic Area. All crime records reference the "RD" that it occurred in for statistical comparisons
+- Part 1-2
+- Crm Cd: Indicates the crime committed
+- Crm Cd Desc: Defines the Crime Code provided
+- Mocodes: Modus Operandi; activities associated with the suspect in commission of the crime
+- Vict Age: Two character numeric
+- Vict Sex:
+  - F: Female
+  - M:Male
+  - X: Unknown
+- Vict Descent:	Descent Code
+  - A: Other Asian
+  - B: Black
+  - C: Chinese
+  - D: Cambodian
+  - F: Filipino
+  - G: Guamanian
+  - H: Hispanic/Latin/Mexican
+  - I: American Indian/Alaskan Native
+  - J: Japanese
+  - K: Korean
+  - L: Laotian
+  - O: Other
+  - P: Pacific Islander
+  - S: Samoan
+  - U: Hawaiian
+  - V: Vietnamese
+  - W: White
+  - X: Unknown
+  - Z: Asian Indian
+- Premis Cd: The type of structure, vehicle, or location where the crime took place
+- Premis Desc: Defines the Premise Code provided
+- Weapon Used Cd: The type of weapon used in the crime
+- Weapon Desc: Defines the Weapon Used Code provided
+- Status: Status of the case (IC is the default)
+- Status Desc: Defines the Status Code provided
+- Crm Cd 1: Indicates the primary and most serious crime committed
+- Crm Cd 2: May contain a code for an additional crime, less serious than Crime Code 1
+- Crm Cd 3: May contain a code for an additional crime, less serious than Crime Code 1
+- Crm Cd 4: May contain a code for an additional crime, less serious than Crime Code 1
+- LOCATION: Street address of crime incident rounded to the nearest hundred block to maintain anonymity
+- Cross Street: Cross Street of rounded Address
+- LAT: Latitude
+- LON: Longitude
 
 **$raw_data/Criminal/Louisville `year`.csv**  
 These data contain all police cases reported in Louisville from 2010 to 2024 (downloaded 7/2/2024).
-- N:
-- SH:
+- N: 1,057,124 (dropping cases not in Louisville); 1,123,144 (raw)
+- SH: 1,463 (dropping cases not in Louisville)
+- SA: 5,260 (dropping cases not in Louisville)
+- INCIDENT_NUMBER: the number associated with either the incident or used as reference to store the items in evidence rooms
+- DATE_REPORTED: the date the incident was reported to LMPD
+- DATE_OCCURED (2023 Date Occurred): the date the incident actually occurred
+- BADGE_ID (2021+): Badge ID of responding Officer
+- UOR_DESC: Uniform Offense Reporting code for the criminal act committed
+  - 2023 Offense Code Name: NIBRS Reporting code for the criminal act committed
+- CRIME_TYPE: the crime type category
+  - 2023 Offense Classification: NIBRS Reporting category for the criminal act committed
+- NIBRS_CODE: the code that follows the guidelines of the National Incident Based Reporting System
+- UCR_HIERARCHY: hierarchy that follows the guidelines of the FBI Uniform Crime Reporting
+  - 2023 NIBRS Group: hierarchy that follows the guidelines of the FBI National Incident Based Reporting System
+- ATT_COMP (2023 Was Offense Completed): Status indicating whether the incident was an attempted crime or a completed crime
+- LMPD_DIVISION: the LMPD division in which the incident actually occurred
+- LMPD_BEAT: the LMPD beat in which the incident actually occurred
+- PREMISE_TYPE (2023 Location Category): the type of location in which the incident occurred
+- BLOCK_ADDRESS: the location the incident occurred
+- CITY: the city associated to the incident block location
+- ZIP_CODE: the zip code associated to the incident block location
+- ID: Unique identifier for internal database
 
 **$raw_data/Criminal/New York City.csv**  
-These data contain all police cases reported in New York City from 2006 to 2024 (downloaded 7/2/2024).
+These data contain all police cases reported in New York City from 2006 to 2023 (downloaded 7/2/2024).
 - N: 6,804,659 (years 2010+); 8,914,838 (raw)
 - SH: 12,803 (years 2010+)
+- SA: 
 - CMPLNT_NUM: Randomly generated persistent ID for each complaint
 - ADDR_PCT_CD: The precinct in which the incident occurred
 - BORO: The name of the borough in which the incident occurred
@@ -130,6 +247,7 @@ These data contain all police cases reported in New York City from 2006 to 2024 
 These data contain all police cases reported in Seattle from 2008 to 2024 (downloaded 7/1/2024).
 - N: 998,545 (years 2010+); 1,128,357 (raw)
 - SH: 183 (years 2010+)
+- SA: 
 - Report Number: Primary key/UID for the overall report; one report can contain multiple offenses, as denoted by the Offense ID
 - Offense ID: Distinct identifier to denote when there are multiple offenses associated with a single report
 - Offense Start DateTime: Start date and time the offense(s) occurred
@@ -152,7 +270,7 @@ These data contain all police cases reported in Seattle from 2008 to 2024 (downl
 These data contain all police cases reported in Tucson from 2009 to 2024 (downloaded 7/2/2024).
 - N:
 - SH:
-- 
+- SA: 
 
 ## Variable Definitions Guide
 
