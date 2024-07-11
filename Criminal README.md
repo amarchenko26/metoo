@@ -270,7 +270,51 @@ These data contain all police cases reported in Seattle from 2008 to 2024 (downl
 These data contain all police cases reported in Tucson from 2009 to 2024 (downloaded 7/2/2024).
 - N:
 - SH:
-- SA: 
+- SA:
+- X:
+- Y:
+- INCI_ID:
+- agency:
+- ADDRESS_PUBLIC:
+- DATE_REPT:
+- HOUR_REPT:
+- DATETIME_REPT:
+- MONTH_REPT:
+- YEAR_REPT:
+- DOW_REPT:
+- TIME_REPT:
+- DATETIME_OCCU:
+- DATE_OCCU:
+- HOUR_OCCU:
+- DATE_FND:
+- HOUR_FND:
+- city:
+- state:
+- zip:
+- reportedas:
+- NEIHGBORHD:
+- emdevision:
+- csstatus:
+- UCRsummary:
+- UCRsummarydesc:
+- OFFENSE:
+- STATUSDESC:
+- WEAPON1DESC:
+- WEAPON2DESC:
+- CLEARANCE_DATE:
+- Method:
+- MethodDesc:
+- LOC_STATUS:
+- WARD:
+- NHA_NAME:
+- DIVISION:
+- DIVISION_NO:
+- DIVSECT:
+- TRSQ:
+- LAT:
+- LONG:
+- City_geo:
+- 
 
 ## Variable Definitions Guide
 
