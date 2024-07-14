@@ -27,6 +27,9 @@ forval n = 2015/2024 {
 Clean vars
 *******************************************************************************/
 
+// Keeping only relevant vars
+keep report_no reported_date from_date offense ibrs description city dvflag year
+
 // Rename vars
 ren report_no id
 ren reported_date report_date
@@ -52,16 +55,9 @@ format incident_date2 %td
 drop incident_date
 rename *2 *
 
-replace reported_time = reportedtime if reported_time == ""
-replace from_time = fromtime if from_time == ""
-replace to_time = totime if to_time == ""
-drop reportedtime-totime
-
 // Crime type
 replace dvflag = "Y" if dvflag == "true"
 replace dvflag = "N" if dvflag == "false"
-replace firearmusedflag = "Y" if firearmusedflag == "true"
-replace firearmusedflag = "N" if firearmusedflag == "false"
 
 replace crime = offense if crime == ""
 g crime_type = "Non-sex crime"
@@ -84,6 +80,7 @@ replace crime_type = "Excluded crime"        if strpos(crime, "Pornography") > 0
 replace crime_type = "Excluded crime"        if strpos(crime, "Statutory") > 0
 replace crime_type = "Excluded crime"        if strpos(crime, "Incest") > 0
 replace crime_type = "Excluded crime"        if inlist(crime, "Commercial Sex Acts", "Molestation", "Non Agg Assault Dome", "Unregistered Sex Offender", "agg dv assault")
+drop offense dvflag
 
 // SH
 g sh = 0

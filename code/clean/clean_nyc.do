@@ -11,15 +11,16 @@ import delimited "$raw_data/Criminal/New York City.csv", clear
 Clean vars
 *******************************************************************************/
 
-// Dropping location vars
-drop boro_nm-vic_sex
+// Keeping only relevant vars
+keep cmplnt_num cmplnt_fr_dt rpt_dt ky_cd ofns_desc pd_desc
 
 // Rename vars
 ren cmplnt_num id
 ren cmplnt_fr_dt incident_date
 ren rpt_dt report_date
 ren ky_cd crime_code
-ren ofns_desc crime
+ren ofns_desc crime_category
+ren pd_desc crime
 
 // Keeping only cases in years 2010+
 gen year = substr(report_date, -4, 4)
@@ -45,16 +46,16 @@ rename *2 *
 // Crime type
 g crime_type = "Non-sex crime"
 
-replace crime_type = "Sexual assault"        if inlist(crime, "RAPE", "SEX CRIMES", "RAPE 1", "FELONY SEX CRIMES")
-replace crime_type = "Sexual assault"		 if inlist(pd_desc, "RAPE", "SEX CRIMES", "SEXUAL ABUSE", "SEXUAL ABUSE 3,2")
+replace crime_type = "Sexual assault"        if inlist(crime_category, "RAPE", "SEX CRIMES", "FELONY SEX CRIMES")
+replace crime_type = "Sexual assault"		 if inlist(crime, "RAPE 1", "SEX CRIMES", "SEXUAL ABUSE", "SEXUAL ABUSE 3,2")
 
-replace crime_type = "Sexual harassment"	 if crime == "LEWDNESS,PUBLIC"
-replace crime_type = "Sexual harassment"	 if inlist(pd_desc, "EXPOSURE OF A PERSON", "LEWDNESS,PUBLIC", "MATERIAL              OFFENSIV")
+replace crime_type = "Sexual harassment"	 if crime_category == "LEWDNESS,PUBLIC"
+replace crime_type = "Sexual harassment"	 if inlist(crime, "EXPOSURE OF A PERSON", "LEWDNESS,PUBLIC", "UNLAWFUL DISCLOSURE OF AN INTIMATE IMAGE")
 
-replace crime_type = "Excluded crime"		 if crime == "SEX CRIMES" & (strpos(pd_desc, "INCEST") > 0 | pd_desc == "CHILD, ENDANGERING WELFARE" | pd_desc == "COURSE OF SEXUAL CONDUCT AGAIN")
-replace crime_type = "Excluded crime"		 if strpos(pd_desc, "PROSTI") > 0
-replace crime_type = "Excluded crime"		 if strpos(pd_desc, "OBSCEN") > 0
-replace crime_type = "Excluded crime"		 if inlist(pd_desc, "BIGAMY", "PROMOTING A SEXUAL PERFORMANCE", "SEX TRAFFICKING", "USE OF A CHILD IN A SEXUAL PER")
+replace crime_type = "Excluded crime"		 if crime_category == "SEX CRIMES" & (strpos(crime, "INCEST") > 0 | crime == "CHILD, ENDANGERING WELFARE" | crime == "COURSE OF SEXUAL CONDUCT AGAIN")
+replace crime_type = "Excluded crime"		 if strpos(crime, "PROSTI") > 0
+replace crime_type = "Excluded crime"		 if strpos(crime, "OBSCEN") > 0
+replace crime_type = "Excluded crime"		 if inlist(crime, "BIGAMY", "PROMOTING A SEXUAL PERFORMANCE", "SEX TRAFFICKING", "USE OF A CHILD IN A SEXUAL PER")
 
 // SH
 g sh = 0

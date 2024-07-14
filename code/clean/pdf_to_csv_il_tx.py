@@ -46,7 +46,7 @@ print(f"Data has been successfully extracted from {file_path} and written to '{o
 
 ## Texas
 
-file_path = root + '/raw/tx/Housing_Discrimination_Cases_from_1_June_2010_-_1_June_2023.pdf'
+file_path = root + '/raw/TX/Housing_Discrimination_Cases_from_1_June_2010_-_1_June_2023.pdf'
 
 # Initialize an empty list to store all tables
 all_tables = []
@@ -77,4 +77,4 @@ try:
     print(f"Data has been successfully extracted from {file_path} and written to '{output_csv_path}'")
 except Exception as e:
     print(f"Error concatenating DataFrames: {e}")
-    
+  

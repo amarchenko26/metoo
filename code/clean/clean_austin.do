@@ -11,12 +11,16 @@ import delimited "$raw_data/Criminal/Austin.csv", clear
 Clean vars
 *******************************************************************************/
 
+// Keeping only relevant vars
+keep incidentnumber highestoffensedescription highestoffensecode familyviolence occurreddate reportdate clearancestatus clearancedate
+
 // Rename vars
 ren incidentnumber id
 ren highestoffensedescription crime
 ren highestoffensecode crime_code
 ren occurreddate incident_date
 ren reportdate report_date
+ren clearancestatus clear_status
 ren clearancedate clear_date
 
 // Keeping only cases in years 2010+
@@ -52,7 +56,7 @@ replace crime_type = "Sexual assault"        if inlist(crime, "AGG FORCED SODOMY
 replace crime_type = "Sexual assault"        if inlist(crime, "AGG SEXUAL ASSAULT W OBJECT", "ASSAULT  CONTACT-SEXUAL NATURE", "BURG OF RES - SEXUAL NATURE", "EXPIRED-ATT AGG SEXUAL ASSAULT", "EXPIRED-ATT SEXUAL ASSAULT", "SEXUAL ASSAULT W/ OBJECT", "IMPROPER CONTACT-SEX ASLT VICT")
 
 replace crime_type = "Sexual harassment" 	 if inlist(crime, "INDECENT EXPOSURE", "STALKING", "DOC WINDOW PEEPING - HOTEL", "PUBLIC LEWDNESS", "DOC EXPOSURE")
-replace crime_type = "Sexual harassment"	 if inlist(crime, "DISCLOSE/PROMO INTIMATE VISUAL", "SEXTING/TRANSMIT SEXUAL PHOTOS", "SEXUAL COERCION") //not in Levy & Mattson (2023)
+replace crime_type = "Sexual harassment"	 if inlist(crime, "DISCLOSE/PROMO INTIMATE VISUAL", "SEXTING/TRANSMIT SEXUAL PHOTOS", "SEXUAL COERCION")
 
 replace crime_type = "Excluded crime"		 if familyviolence == "Y"
 replace crime_type = "Excluded crime"		 if inlist(crime, "AGG FORCED SODOMY OF CHILD", "AGG RAPE OF A CHILD", "AGG SEXUAL ASSAULT CHILD/OBJEC", "AGG SEXUAL ASSAULT CHILD/OBJECT-SUPER", "CHILD GROOMING")
@@ -63,6 +67,7 @@ replace crime_type = "Excluded crime"		 if strpos(crime, "FAM/DAT") > 0 | strpos
 replace crime_type = "Excluded crime"		 if strpos(crime, "HARASSMENT") > 0
 replace crime_type = "Excluded crime"		 if strpos(crime, "PROSTITUTION") > 0
 replace crime_type = "Excluded crime"		 if inlist(crime,"FAILURE TO REG AS SEX OFFENDER", "BESTIALITY", "DATING DISTURBANCE", "DOMESTIC VIOLENCE/ALARM", "INCEST-PROHIBITED SEX CONDUCT")
+drop familyviolence
 
 // SH
 g sh = 0
@@ -74,13 +79,13 @@ replace sex_cases = 1 if crime_type == "Sexual harassment" | crime_type == "Sexu
 
 // Clearance
 g clearance = .
-replace clearance = 1 if inlist(clearancestatus, "C", "O")
-replace clearance = 0 if clearancestatus == "N"
+replace clearance = 1 if inlist(clear_status, "C", "O")
+replace clearance = 0 if clear_status == "N"
 
 // Court
 g court = .
-replace court = 1 if clearancestatus == "C"
-replace court = 0 if inlist(clearancestatus, "O", "N")
+replace court = 1 if clear_status == "C"
+replace court = 0 if inlist(clear_status, "O", "N")
 
 
 /*******************************************************************************

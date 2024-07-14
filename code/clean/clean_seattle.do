@@ -11,9 +11,13 @@ import delimited "$raw_data/Criminal/Seattle.csv", clear
 Clean var
 *******************************************************************************/
 
+// Keeping only relevant vars
+keep offenseid offensestartdatetime reportdatetime offenseparentgroup offense offensecode
+
 // Rename vars
 ren offenseid id
-ren offenseparentgroup crime
+ren offenseparentgroup crime_category
+ren offense crime
 ren offensecode crime_code
 
 // Keeping only cases in years 2010+
@@ -36,16 +40,17 @@ gen incident_date = date(substr(offensestartdatetime, 1, 10), "MD20Y")
 format incident_date %td
 gen report_date = date(substr(reportdatetime, 1, 10), "MD20Y")
 format report_date %td
+drop reportdatetime offensestartdatetime
 
 // Crime type
 g crime_type = "Non-sex crime"
 
-replace crime_type = "Sexual assault"        if crime == "SEX OFFENSES"
+replace crime_type = "Sexual assault"        if crime_category == "SEX OFFENSES"
 
-replace crime_type = "Sexual harassment" 	 if inlist(crime, "PEEPING TOM")
+replace crime_type = "Sexual harassment" 	 if inlist(crime_category, "PEEPING TOM")
 
-replace crime_type = "Excluded crime"		 if inlist(crime, "SEX OFFENSES, CONSENSUAL", "PROSTITUTION OFFENSES", "PORNOGRAPHY/OBSCENE MATERIAL", "FAMILY OFFENSES, NONVIOLENT")
-replace crime_type = "Excluded crime"		 if crime == "HUMAN TRAFFICKING" & offense == "Human Trafficking, Commercial Sex Acts"
+replace crime_type = "Excluded crime"		 if inlist(crime_category, "SEX OFFENSES, CONSENSUAL", "PROSTITUTION OFFENSES", "PORNOGRAPHY/OBSCENE MATERIAL", "FAMILY OFFENSES, NONVIOLENT")
+replace crime_type = "Excluded crime"		 if crime_category == "HUMAN TRAFFICKING" & crime == "Human Trafficking, Commercial Sex Acts"
 
 // SH
 g sh = 0

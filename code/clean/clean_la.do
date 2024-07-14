@@ -19,13 +19,16 @@ save "`temp'", replace
 Clean vars
 *******************************************************************************/
 
+// Keeping only relevant vars
+keep dr_no daterptd dateocc crmcd crmcddesc statusdesc
+
 // Rename vars
 ren dr_no id
 ren daterptd report_date
 ren dateocc incident_date
 ren crmcd crime_code
 ren crmcddesc crime
-ren statusdesc clearancestatus
+ren statusdesc clear_status
 
 
 /*******************************************************************************
@@ -65,13 +68,13 @@ replace sex_cases = 1 if crime_type == "Sexual harassment" | crime_type == "Sexu
 
 // Clearance
 g clearance = .
-replace clearance = 1 if inlist(clearancestatus, "Adult Arrest", "Adult Other", "Juv Arrest", "Juv Other")
-replace clearance = 0 if clearancestatus == "Invest Cont"
+replace clearance = 1 if inlist(clear_status, "Adult Arrest", "Adult Other", "Juv Arrest", "Juv Other")
+replace clearance = 0 if clear_status == "Invest Cont"
 
 // Court
 g court = .
-replace court = 1 if inlist(clearancestatus, "Adult Arrest", "Juv Arrest")
-replace court = 0 if inlist(clearancestatus, "Adult Other", "Juv Other", "Invest Cont")
+replace court = 1 if inlist(clear_status, "Adult Arrest", "Juv Arrest")
+replace court = 0 if inlist(clear_status, "Adult Other", "Juv Other", "Invest Cont")
 
 
 /*******************************************************************************

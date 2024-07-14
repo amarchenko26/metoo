@@ -3,6 +3,7 @@
 Clean Louisville cases
 
 *******************************************************************************/
+
 clear
 tempfile temp
 save "`temp'", replace emptyok
@@ -19,14 +20,14 @@ forval n = 2010/2024 {
 		destring badge_id, replace
 	}
 	if `n' < 2023 {
-		ren crime_type crime
-		ren uor_desc crime_desc
+		ren crime_type crime_category
+		ren uor_desc crime
 		ren ucr_hierarchy crime_hierarchy
 	}
 	if `n' >= 2023 {
 		ren date_occurred date_occured
-		ren offense_classification crime
-		ren offense_code_name crime_desc
+		ren offense_classification crime_category
+		ren offense_code_name crime
 		ren nibrs_group crime_hierarchy
 		ren was_offense_completed att_comp
 		ren location_category premise_type
@@ -42,9 +43,8 @@ forval n = 2010/2024 {
 Clean vars
 *******************************************************************************/
 
-// Dropping vars
-drop id
-drop objectid
+// Keeping only relevant vars
+keep incident_number date_reported date_occured crime_category crime nibrs_code city year
 
 // Rename vars
 ren incident_number id
@@ -74,31 +74,31 @@ drop *1 *2 *3
 // Crime type
 g crime_type = "Non-sex crime"
 
-replace crime_type = "Sexual assault"        if inlist(crime, "4 FORCIBLE RAPE", "5 SODOMY FORCE", "7 FORCIBLE FONDLING")
-replace crime_type = "Sexual assault"        if crime == "SEX CRIMES"
-replace crime_type = "Sexual assault"		 if strpos(crime_desc, "SEXUAL MISCONDUCT") > 0
+replace crime_type = "Sexual assault"        if inlist(crime_category, "4 FORCIBLE RAPE", "5 SODOMY FORCE", "7 FORCIBLE FONDLING")
+replace crime_type = "Sexual assault"        if crime_category == "SEX CRIMES"
+replace crime_type = "Sexual assault"		 if strpos(crime, "SEXUAL MISCONDUCT") > 0
 
 
-replace crime_type = "Sexual harassment"     if inlist(crime, "54 VOYEURISM")
-replace crime_type = "Sexual harassment"     if crime == "SEX CRIMES" & strpos(crime_desc, "VOYEURISM") > 0
-replace crime_type = "Sexual harassment"     if crime == "12 INTIMIDATION" & strpos(crime_desc, "STALKING") > 0
-replace crime_type = "Sexual harassment"	 if strpos(crime_desc, "INDECENT EXPOSURE") > 0
-replace crime_type = "Sexual harassment"	 if strpos(crime_desc, "STALKING") > 0
-replace crime_type = "Sexual harassment"	 if strpos(crime_desc, "W/OUT CONSENT") > 0
+replace crime_type = "Sexual harassment"     if inlist(crime_category, "54 VOYEURISM")
+replace crime_type = "Sexual harassment"     if crime_category == "SEX CRIMES" & strpos(crime, "VOYEURISM") > 0
+replace crime_type = "Sexual harassment"     if crime_category == "12 INTIMIDATION" & strpos(crime, "STALKING") > 0
+replace crime_type = "Sexual harassment"	 if strpos(crime, "INDECENT EXPOSURE") > 0
+replace crime_type = "Sexual harassment"	 if strpos(crime, "STALKING") > 0
+replace crime_type = "Sexual harassment"	 if strpos(crime, "W/OUT CONSENT") > 0
 
 
-replace crime_type = "Excluded crime"        if inlist(crime, "36 INCEST", "37 STAT RAPE", "43 PROSTITUTION", "44 PROMOTING PROSTITUTION")
-replace crime_type = "Excluded crime"        if strpos(crime_desc, "INCEST") > 0
-replace crime_type = "Excluded crime"        if strpos(crime_desc, "SPOUSE") > 0
-replace crime_type = "Excluded crime"        if strpos(crime_desc, "MINOR") > 0 & strpos(crime_desc, "MINOR INJURY") == 0
-replace crime_type = "Excluded crime"        if strpos(crime_desc, "U/") > 0
-replace crime_type = "Excluded crime"		 if strpos(crime_desc, "FAILURE TO COMPLY W/SEX OFFENDER") > 0
-replace crime_type = "Excluded crime"		 if strpos(crime_desc, "DOMESTIC VIOLENCE") > 0
-replace crime_type = "Excluded crime"		 if strpos(crime_desc, "DATING") > 0
-replace crime_type = "Excluded crime"		 if strpos(crime_desc, "HUMAN TRAF") > 0
-replace crime_type = "Excluded crime"		 if strpos(crime_desc, "PROSITUTION") > 0
-replace crime_type = "Excluded crime"		 if crime == "DISTURBING THE PEACE" & strpos(crime_desc, "MINOR") > 0
-replace crime_type = "Excluded crime"		 if crime_desc == "BIGAMY"
+replace crime_type = "Excluded crime"        if inlist(crime_category, "36 INCEST", "37 STAT RAPE", "43 PROSTITUTION", "44 PROMOTING PROSTITUTION")
+replace crime_type = "Excluded crime"        if strpos(crime, "INCEST") > 0
+replace crime_type = "Excluded crime"        if strpos(crime, "SPOUSE") > 0
+replace crime_type = "Excluded crime"        if strpos(crime, "MINOR") > 0 & strpos(crime, "MINOR INJURY") == 0
+replace crime_type = "Excluded crime"        if strpos(crime, "U/") > 0
+replace crime_type = "Excluded crime"		 if strpos(crime, "FAILURE TO COMPLY W/SEX OFFENDER") > 0
+replace crime_type = "Excluded crime"		 if strpos(crime, "DOMESTIC VIOLENCE") > 0
+replace crime_type = "Excluded crime"		 if strpos(crime, "DATING") > 0
+replace crime_type = "Excluded crime"		 if strpos(crime, "HUMAN TRAF") > 0
+replace crime_type = "Excluded crime"		 if strpos(crime, "PROSITUTION") > 0
+replace crime_type = "Excluded crime"		 if crime_category == "DISTURBING THE PEACE" & strpos(crime, "MINOR") > 0
+replace crime_type = "Excluded crime"		 if crime == "BIGAMY"
 
 // SH
 g sh = 0
