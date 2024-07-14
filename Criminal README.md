@@ -4,9 +4,9 @@
 
 **$raw_data/Criminal/Austin.csv**  
 These data contain all police cases reported in Austin from 2003 to 2024 (downloaded 7/1/2024).
-- N: 1,558,273 (years 2010+); 2,477,359 (raw)
-- SH: 5,601 (years 2010+)
-- SA: 
+- N: 1,561,674 (years 2010+); 2,477,359 (raw)
+- SH: 5,608 (years 2010+)
+- SA: 6,324 (years 2010+)
 - **Incident number**: Incident report number
 - **Highest Offense Description**: Description of crime
 - **Highest Offense Code**: Code for crime
@@ -40,9 +40,9 @@ These data contain all police cases reported in Austin from 2003 to 2024 (downlo
 
 **$raw_data/Criminal/Chicago.csv**  
 These data contain all police cases reported in Chicago from 2001 to 2024 (downloaded 7/9/2024).
-- N: 4,024,193 (years 2010+); 8,101,448 (raw)
+- N: 4,023,799d (years 2010+); 8,101,448 (raw)
 - SH: 7,974 (years 2010+)
-- SA: 
+- SA: 25,725 (years 2010+)
 - ID: Unique identifier for the record
 - **Case Number**: The Chicago Police Department RD Number (Records Division Number), which is unique to the incident
 - **Date**: Date when the incident occurred (best estimate)
@@ -268,9 +268,9 @@ These data contain all police cases reported in Seattle from 2008 to 2024 (downl
 
 **$raw_data/Criminal/Tucson `year`.csv**  
 These data contain all police cases reported in Tucson from 2010 to 2023 (downloaded 7/2/2024). Currently missing years 2013 and 2017, emailed for data files.
-- N: ; 1,700,820 (raw)
-- SH:
-- SA:
+- N: 1,668,669 (dropping empty cases and cases not in Tucson); 1,700,820 (raw)
+- SH: 4,007 (dropping empty cases and cases not in Tucson)
+- SA: 4,867 (dropping empty cases and cases not in Tucson)
 - OBJECTID: Record identifier
 - PrimaryKey: Record identifier
 - **INCI_ID**: Incident report number
