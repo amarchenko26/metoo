@@ -122,7 +122,7 @@ These data contain all police cases reported in Kansas City from 2015 to 2024 (d
 - Longtitude
 - Location 1
 
-**$raw_data/Criminal/Los Angeles 1.csv** (2010-2019) & **$raw_data/Criminal/Los Angeles 2.csv** (2020-2024) 
+**$raw_data/Criminal/Los Angeles 1.csv** (2010-2019) & **$raw_data/Criminal/Los Angeles 2.csv** (2020-2024)  
 These data contain all police cases reported in Los Angeles from 2010 to 2024 (downloaded 7/2/2024).
 - N: 3,078,199
 - SH: 46,571
