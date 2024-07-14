@@ -306,7 +306,7 @@ These data contain all police cases reported in Tucson from 2010 to 2023 (downlo
 - CENSUSTRACT, CENSUSBLOCK: Census location where the incident occurred
 - DIVISION, INITIALS, EMDIVISION (duplicate), DIVISION_NO, DIV_NO (duplicate), DIVSECT, NEIHGBORHD (duplicate), INITIALS: Police division where the incident occurred
 - UCRsummary: Code for offense (general)
-- OFFENSE: Code for offense (specific)
+- **OFFENSE**: Code for offense (specific)
 - WEAPON1DESC: Description of first weapon
 - WEAPON2DESC: Description of second weapon
 - WEAPON_CATEGORY: Category of first weapon
@@ -318,8 +318,8 @@ These data contain all police cases reported in Tucson from 2010 to 2023 (downlo
 - reportedas: What the incident was reported as
 - **STATUSDESC**, Statute, StatuteDescription (duplicate): Description of offense
 - CLEARANCE_DATE: Date crime was solved
-- **csstatus**, CMStatusDescription, clearance_verbose: Whether crime was solved
-- Method, **MethodDesc**: How crime was solved
+- csstatus, CMStatusDescription, clearance_verbose: Whether crime was solved
+- Method, MethodDesc: How crime was solved
 - loc_status, secure, replace, webreport, datasource, loc_method: Other metadata variables
 
 ## Variable Definitions Guide
