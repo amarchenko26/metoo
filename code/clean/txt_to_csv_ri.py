@@ -84,7 +84,7 @@ def txt_to_csv(input_path : str):
         # Find the right line
         if file[i][:-1] == "INTRODUCTION":
             split_line = file[i+1].split(",")
-            file_date = '"' + split_line[0].split()[1] + ' ' + split_line[0].split()[2] + ' '
+            file_date = '"' + split_line[0].split()[1] + ' ' + split_line[0].split()[2] + ', '
             file_date += split_line[1] + '"'
             break
     csv_line.append(file_date)

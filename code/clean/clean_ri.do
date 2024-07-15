@@ -4,7 +4,7 @@ Clean Rhode Island cases
 
 *******************************************************************************/
 
-import delimited "$raw_data/RI/ri_raw_cases.csv", varnames(1) clear
+import delimited "$raw_data/RI/ri_raw_cases_severity.csv", varnames(1) clear
 
 
 /*******************************************************************************
