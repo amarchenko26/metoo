@@ -40,7 +40,7 @@ These data contain all police cases reported in Austin from 2003 to 2024 (downlo
 
 **$raw_data/Criminal/Chicago.csv**  
 These data contain all police cases reported in Chicago from 2001 to 2024 (downloaded 7/9/2024).
-- N: 4,023,799d (years 2010+); 8,101,448 (raw)
+- N: 4,023,799 (years 2010+); 8,101,448 (raw)
 - SH: 7,974 (years 2010+)
 - SA: 25,725 (years 2010+)
 - ID: Unique identifier for the record
@@ -366,9 +366,9 @@ The following variables are cleaned separately for each city.
 The following variables are cleaned altogether, after city data is appended together. 
 
 ### Overlap
-`overlap == 1` if `sh == 1` and case filed before MeToo and resolved after MeToo  
-`overlap == 0` if `sh == 1` and case filed before MeToo and resolved before MeToo  
-`overlap == .` if `sh == 0`  
+`overlap == 1` if `sex_cases == 1` and case filed before MeToo and resolved after MeToo  
+`overlap == 0` if `sex_cases == 1` and case filed before MeToo and resolved before MeToo  
+`overlap == .` if `sex_cases == 0`  
 `overlap == .` if case filed after MeToo  
 
 ### Treat
@@ -376,6 +376,5 @@ The following variables are cleaned altogether, after city data is appended toge
 `post = 0` if file date before MeToo.    
 `post = .` never  
 
-`treat = post*sh`  
-`treat = .` if `sex_cases == 1 & sh == 0`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
-`treat = 1` if `overlap == 1` since overlap cases are sh AND treated, but definition of post doesn't capture them.  
+`treat = post*sex_cases`  
+`treat = 1` if `overlap == 1` since overlap cases are sex cases AND treated, but definition of post doesn't capture them.  
