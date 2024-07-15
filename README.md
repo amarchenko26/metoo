@@ -4,6 +4,12 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 
 ## Description of datasets
 
+**$raw_data/PA/PA_raw_cases_severity.csv**  
+This file merges PA data from two sources. The first source is a spreadsheet of 21 cases from the public hearing docket (i.e., publicly available cases) of the Pennsylvania Human Relations Commission. We do not have PDFs of these cases. The second source is a set of ~200 PDFs of final orders issued by the Commission based on charges of discrimination which were filed during the period between XXX to XXXX. These PDFs were manually digitized by Jacob Hirschhorn.  
+- N: XXXX - Jake to add
+- SH: XXXX - Jake to add
+
+
 **$raw_data/RI/ri_raw_cases.csv**  
 These data were extracted from PDF files of copies of all decision and orders issued by the Commission based on charges of employment discrimination which were filed during the period between June 1,2010 to December 31, 2022.
 - N: 12
