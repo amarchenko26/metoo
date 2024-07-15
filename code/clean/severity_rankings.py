@@ -78,11 +78,12 @@ def get_PA_resp_org(tail: str):
     split_tail = tail.split()
     trigger = 0
     for word in split_tail:
-        if word == "v":
-            trigger = 1
         if trigger == 1:
             resp_org += word
-    resp_org += '"'
+            resp_org += " "
+        if word == "v":
+            trigger = 1
+    resp_org = resp_org[:-1] + '"'
     return resp_org
 
 # Extract severity rankings from the text file
@@ -275,14 +276,9 @@ def create_csv_severity(state : str):
     elif state == "PA":
         merged_df = pd.merge(df1, df2, on='resp_org', how='left')
 
-    # convert all non-Numpy NaN values to Numpy NaN - in the relief column
+    # convert all non-Numpy NaN values to np NaN; will be replaced later with blank values
     merged_df = merged_df.replace(['NaN'], np.nan)
 
-    # convert the rest of the columns to the proper data types
-    merged_df['win'] = merged_df['win'].astype('int8')
-    merged_df['settle'] = merged_df['settle'].astype('int8')
-    merged_df['court'] = merged_df['court'].astype('int8')
-    merged_df['victim_f'] = merged_df['victim_f'].astype('int8')
 
     # Save the merged data frame to a new CSV file
     output_path = root + "/raw/" + state + "/" + state + "_raw_cases_severity.csv"
@@ -304,5 +300,5 @@ def create_csv_severity(state : str):
 
 
 
-# create_rankings("PA")
+create_csv_severity("PA")
 create_csv_severity("RI")
