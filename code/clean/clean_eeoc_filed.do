@@ -18,11 +18,10 @@ drop number_of_employees_code naics_code institution_type_code statute_code basi
 // drop 6 weird obs w no content
 drop if closure_action == "CLOSURE_ACTION"
 
-// Destring relief 
+// Relief 
 destring total_benefit_amount, replace force
 destring selectsumnvlbackpay0nvlfrontpay0, replace force
 
-// Clean relief 
 egen temp_sum = rowtotal(total_benefit_amount selectsumnvlbackpay0nvlfrontpay0)
 replace total_benefit_amount = temp_sum
 drop temp_sum selectsumnvlbackpay0nvlfrontpay0
@@ -41,8 +40,9 @@ ren closure_action outcome
 ren charge_inquiry_seq id //unique identifier for each case (a case is a collection of related charges)
 ren court court_name
 ren basis basis_raw
+ren state_code state
 
-// Clean time
+// Dates
 foreach var in charge_file_date charge_res_date court_file_date court_res_date {
 	replace `var' = "" if `var' == "null"
     gen temp_`var' = date(`var', "MDY")
@@ -51,8 +51,12 @@ foreach var in charge_file_date charge_res_date court_file_date court_res_date {
     rename temp_`var' `var'
 }
 
-g state = "Federal"
+// State
+replace state = "" if inlist(state, "null", "AP", "FM", "MB", "MH", "MP", "ON", "PW", "WQ") 
+
+// g state = "Federal" // Commenting out so that we can re-run code using real states instead of Federal designation as our state FE
 g juris = "Employment"
+
 
 /*******************************************************************************
 Clean outcomes
@@ -104,6 +108,8 @@ g eeoc_filed = 1
 /*******************************************************************************
 Export data
 *******************************************************************************/
+
+drop sex date_of_birth id case_type statute fiscal_year
 
 save "$clean_data/clean_eeoc_filed.dta", replace
 

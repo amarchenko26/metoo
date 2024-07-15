@@ -102,6 +102,9 @@ drop enfclosurecode
 Export data
 *******************************************************************************/
 
+// Clean up vars before merging
+drop adverseact id eeocno island
+
 save "$clean_data/clean_hi.dta", replace
 
 

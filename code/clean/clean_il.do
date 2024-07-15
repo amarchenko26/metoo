@@ -4,7 +4,7 @@ Clean Illinois cases
 
 *******************************************************************************/
 
-import delimited "$raw_data/IL/il_raw_cases.csv", varnames(3) bindquote(strict) clear
+import delimited "$raw_data/IL/il_raw_cases_gender.csv", varnames(3) bindquote(strict) clear
 
 
 /*******************************************************************************
@@ -12,7 +12,7 @@ Clean vars
 *******************************************************************************/
 
 // Dropping random vars
-drop v1
+drop v1 first_name
 drop if charge == ""
 
 // Rename vars
@@ -25,6 +25,8 @@ ren finding outcome
 ren settle relief
 ren basis basis_raw
 
+// Victim female
+destring victim_f, replace force
 
 /*******************************************************************************
 Clean outcomes
@@ -102,10 +104,14 @@ replace outcome = "Stay" if outcome == "STA"
 replace outcome = "Unknown" if outcome == "UNK"
 replace outcome = "Withdrawn" if strpos(outcome, "WD") > 0
 
+la var comp_name "Complainant name"
 
 /*******************************************************************************
 Export data
 *******************************************************************************/
+
+// Drop variables we don't use 
+drop id issue deptfiledcomplaint prosecomplaint rpaddess rpcity rpstate rpzip requestforreview
 
 save "$clean_data/clean_il.dta", replace
 
