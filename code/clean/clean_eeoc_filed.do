@@ -109,7 +109,7 @@ g eeoc_filed = 1
 Export data
 *******************************************************************************/
 
-drop sex date_of_birth id case_type statute fiscal_year
+drop sex date_of_birth id case_type statute fiscal_year 
 
 save "$clean_data/clean_eeoc_filed.dta", replace
 

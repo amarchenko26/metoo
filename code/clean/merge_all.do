@@ -187,6 +187,7 @@ create_time_to_treat, period(12) period_label("Years relative to MeToo")
 /*******************************************************************************
 Label all variables
 *******************************************************************************/
+drop id 
 
 // EEOC
 la var resp_org "Respondent organization"
@@ -204,7 +205,6 @@ la var victim_f "Complainant is female"
 la var eeoc_filed "Indicator for if data from ProPublica request"
 
 // MA
-la var id "State-given ID"
 la var charge_file_year "Year filed"
 la var charge_res_year "Year resolved"
 la var outcome "Outcome of charge: no cause finding, hearing, settlement, etc"
