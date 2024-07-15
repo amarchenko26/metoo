@@ -37,6 +37,9 @@ Clean outcomes
 
 g city = "Los Angeles"
 
+// Case ID
+tostring id, replace
+
 // Duration
 gen report_date2 = date(substr(report_date, 1, 10), "MD20Y")
 format report_date2 %td
@@ -47,6 +50,7 @@ drop incident_date
 rename *2 *
 
 // Crime type
+tostring crime_code, replace
 g crime_type = "Non-sex crime"
 
 replace crime_type = "Sexual assault"        if inlist(crime, "BATTERY WITH SEXUAL CONTACT", "ORAL COPULATION", "SEXUAL PENETRATION W/FOREIGN OBJECT", "SODOMY/SEXUAL CONTACT B/W PENIS OF ONE PERS TO ANUS OTH")

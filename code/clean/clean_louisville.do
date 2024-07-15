@@ -69,7 +69,7 @@ format incident_date %td
 gen report_date = date(date_reported1, "20YMD") if year >= 2019
 replace report_date = date(date_reported1, "MD20Y") if year < 2019
 format report_date %td
-drop *1 *2 *3
+drop date_occured* date_reported*
 
 // Crime type
 g crime_type = "Non-sex crime"

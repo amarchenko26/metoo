@@ -88,6 +88,7 @@ drop incident_date
 rename *2 *
 
 // Crime type
+tostring crime_code, replace
 g crime_type = "Excluded crime"
 
 replace crime_type = "Non-sex crime"		 if inlist(crime_category, "Agg. Assault", "Arson", "Assault", "Burglary", "Criminal Damage", "DUI", "Disorderly Conduct", "Drug Offense", "Embezzlement")

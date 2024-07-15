@@ -34,6 +34,7 @@ g city = "Seattle"
 
 // Case ID
 format id %20.0g
+tostring id, replace format("%20.0g") force
 
 // Date
 gen incident_date = date(substr(offensestartdatetime, 1, 10), "MD20Y")

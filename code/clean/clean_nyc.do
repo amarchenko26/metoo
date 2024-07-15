@@ -44,6 +44,7 @@ drop report_date
 rename *2 *
 
 // Crime type
+tostring crime_code, replace
 g crime_type = "Non-sex crime"
 
 replace crime_type = "Sexual assault"        if inlist(crime_category, "RAPE", "SEX CRIMES", "FELONY SEX CRIMES")

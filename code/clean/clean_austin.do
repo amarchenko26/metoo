@@ -37,6 +37,7 @@ g city = "Austin"
 
 // Case ID
 format id %20.0g
+tostring id, replace format("%20.0g") force
 
 // Duration
 gen report_date2 = date(report_date, "MD20Y")
@@ -45,10 +46,14 @@ drop report_date
 gen clear_date2 = date(clear_date, "MD20Y")
 format clear_date2 %td
 drop clear_date
+gen incident_date2 = date(incident_date, "MD20Y")
+format incident_date2 %td
+drop incident_date
 rename *2 *
 g duration = clear_date - report_date
 
 // Crime type
+tostring crime_code, replace
 g crime_type = "Non-sex crime"
 
 replace crime_type = "Sexual assault"        if inlist(crime, "AGG RAPE", "EXPIRED-ATT RAPE", "RAPE")

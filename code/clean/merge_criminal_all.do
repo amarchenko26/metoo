@@ -10,6 +10,13 @@ Outputs:
 	
 Already merged: 
 	- Austin
+	- Chicago
+	- Kansas City
+	- Los Angeles
+	- Louisville
+	- New York City
+	- Seattle
+	- Tucson
 
 
 *******************************************************************************/
@@ -22,57 +29,67 @@ Pull cleaned Austin data
 use "$clean_data/clean_austin.dta", clear
 
 /*******************************************************************************
-Append to MA
+Append to Chicago
 *******************************************************************************/
 
-append using "$clean_data/clean_ma.dta"
+append using "$clean_data/clean_chicago.dta"
+
+/*******************************************************************************
+Append to Kansas City
+*******************************************************************************/
+
+append using "$clean_data/clean_kansas_city.dta"
+
+/*******************************************************************************
+Append to Los Angeles
+*******************************************************************************/
+
+append using "$clean_data/clean_la.dta"
+
+/*******************************************************************************
+Append to Louisville
+*******************************************************************************/
+
+append using "$clean_data/clean_louisville.dta"
+
+/*******************************************************************************
+Append to New York City
+*******************************************************************************/
+
+append using "$clean_data/clean_nyc.dta"
+
+/*******************************************************************************
+Append to Seattle
+*******************************************************************************/
+
+append using "$clean_data/clean_seattle.dta"
+
+/*******************************************************************************
+Append to Tucson
+*******************************************************************************/
+
+append using "$clean_data/clean_tucson.dta"
 
 
 /*******************************************************************************
 Clean joint data
 *******************************************************************************/
 
-// Make common filing date, regardless of stage of case
-g common_file_date = cond(missing(charge_file_date), court_file_date, charge_file_date)
+// Make common filing date
+g common_file_date = cond(missing(report_date), incident_date, report_date)
 format common_file_date %td
-
-g common_res_date = cond(missing(charge_res_date), court_res_date, charge_res_date)
-format common_res_date %td
 
 // Clean duration variable 
 replace duration = 0 if duration < 0 
-winsor duration, p(.01) gen(duration_w)
 
 // Gen ym var
+drop year
 g ym = ym(year(common_file_date), month(common_file_date)) 
 format ym %tm 
-la var ym "Year-month var of file date"
+la var ym "Year-month var of report date"
 
-g common_year = year(common_file_date)
-
-// Get year
-g charge_file_year = year(charge_file_date)
-g charge_res_year = year(charge_res_date)
-g court_file_year = year(court_file_date)
-g court_res_year = year(court_res_date)
-
-
-
-/*******************************************************************************
-2 Definitions of Overlap
-*******************************************************************************/
-
-// Overlap MeToo - 1 if case filed before MeToo & ended after, 0 o/w
-g overlap_all = 1 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1 // 1 if case ended after MeToo
-replace overlap_all = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1 // 0 if case ended before MeToo
-replace overlap_all = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
-replace overlap_all = . if sh == 0 // Double check to leave only sh cases
-
-// overlap_2 - Bounded at a duration of 2 years maximum
-g overlap_2 = overlap_all
-replace overlap_2 = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than two years before MeToo
-replace overlap_2 = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
-replace overlap_2 = . if (common_file_date < date("$metoo", "DMY") - 365) & (overlap_2 == 1) // remove overlap cases filed more than a year before MeToo
+g report_year = year(common_file_date)
+g clear_year = year(clear_date)
 
 
 /*******************************************************************************
@@ -81,29 +98,19 @@ Gen post and treat
 
 // Gen post and treat
 g post = (common_file_date > date("$metoo", "DMY"))
-g treat = post*sh // treat=1 if post =1 and sh=1
-replace treat = . if sex_cases == 1 & sh == 0 
-replace treat = 1 if overlap_2 == 1
-
-// Clean relief
-winsor relief, p(.05) gen(relief_w)
-replace relief = . if missing_relief == 1 // if relief = 0, person lost, so everything is CONDITIONAL ON WINNING 
-
-g relief_scale = relief / 1000
+g treat = post*sex_cases // treat=1 if post=1 and sex_cases=1
 
 // Gen index var for count
 g y = 1
 
 // Gen cases_filed for regression
-bys sh common_year: gen filed_per_year = _N
-bys common_year: gen total_cases_per_year = _N
+bys sex_cases report_year: gen filed_per_year = _N
+bys report_year: gen total_cases_per_year = _N
 replace filed_per_year = filed_per_year / total_cases_per_year
 
 // Gen categorical version of common vars
-encode state, g(state_cat)
-encode basis, g(basis_cat)
+encode city, g(city_cat)
 
-replace eeoc_filed = 0 if missing(eeoc_filed)
 
 /*******************************************************************************
 Create time to treat - 0 is the pre-period before MeToo
@@ -123,45 +130,26 @@ create_time_to_treat, period(12) period_label("Years relative to MeToo")
 Label all variables
 *******************************************************************************/
 
-// EEOC
-la var resp_org "Respondent organization"
-la var resp_ln "Respondent last name"
-la var civil_action_number "ID of court case"
-la var court_name "Court ID where case filed"
-la var court_file_date "Court filing date"
-la var court_res_date "Court resolution date"
-la var court_file_year "Year court case filed"
-la var court_res_year "Year court case resolved"
-la var relief "Compensation to plaintiff"
-la var relief_scale "Compensation"
-la var missing_relief "Missing compensation amount"
-la var victim_f "Complainant is female"
-la var eeoc_filed "Indicator for if data from ProPublica request"
-
-// MA
-la var id "State-given ID"
-la var charge_file_year "Year filed"
-la var charge_res_year "Year resolved"
-la var outcome "Outcome of charge: no cause finding, hearing, settlement, etc"
-la var charge_file_date "Date case filed"
-la var charge_res_date "Date case resolved"
-
 //Common
-la var state "State"
-la var basis_raw "Basis of discrimination alleged"
-la var basis "Basis of discrimination, standardized"
+la var id "City-given ID"
+la var city "City"
+la var crime "Name of reported crime"
+la var crime_code "City-given code for reported crime"
+la var crime_category "Category of crime (raw)"
+la var crime_type "Excluded crime, Non-sex crime, Sexual assault, Sexual harassment"
+la var clearance "Whether case was cleared"
+la var clear_status "Method case was cleared"
+la var court "Went to court (arrest issued)"
+la var incident_date "Date incident occurred"
+la var report_date "Date incident reported"
+la var clear_date "Date incident cleared"
 la var sh "Sexual harassment"
-la var sex_cases "Sex-related charge" // Title VII / Sex‐Female or Title VII / Sex‐Female / Sexual-Harassment for EEOC
+la var sex_cases "Sex-related cases"
 la var post "Filed after MeToo"
-la var treat "Post = 1 and case is SH or overlap"
-la var juris "Employment, housing, public accommodations, or education"
+la var treat "Post = 1 and case is sex-related"
 la var duration "Duration (days)"
-la var overlap_2 "Overlaps with MeToo"
-la var court "Went to court"
-la var filed "Number of cases filed by SH and Post"
-la var common_year "Year of filing"
-la var win "Plaintiff won" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
-la var settle "Settled"
+la var filed "Number of sex-related cases filed by S Post"
+la var report_year "Year of reporting"
 
 // Indent all variable labels for tables
 foreach v of varlist * {
@@ -172,4 +160,4 @@ foreach v of varlist * {
 Export all cases
 *******************************************************************************/
 
-save "$clean_data/clean_cases.dta", replace
+save "$clean_data/clean_criminal_cases.dta", replace
