@@ -32,7 +32,7 @@ loc summary ///
     report_year ///
     clear_year ///
 	clearance ///
-    court ///
+    arrest ///
     duration
 
 
@@ -43,7 +43,7 @@ loc balance ///
 	crime_type_dummy2 ///
 	crime_type_dummy3 ///
 	crime_type_dummy4 ///
-	court ///
+	arrest ///
 	duration
 
 	
@@ -53,7 +53,7 @@ DiD regression
 
 loc y1 filed_per_year
 loc y2 clearance
-loc y3 court
+loc y3 arrest
 
 loc outcome_vars y1 y2 y3
 loc i 1

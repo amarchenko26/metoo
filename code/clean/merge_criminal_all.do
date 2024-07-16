@@ -91,6 +91,8 @@ la var ym "Year-month var of report date"
 g report_year = year(common_file_date)
 g clear_year = year(clear_date)
 
+keep if report_year >= 2010 & report_year <= 2024
+
 
 /*******************************************************************************
 Gen post and treat 
@@ -139,7 +141,7 @@ la var crime_category "Category of crime (raw)"
 la var crime_type "Excluded crime, Non-sex crime, Sexual assault, Sexual harassment"
 la var clearance "Whether case was cleared"
 la var clear_status "Method case was cleared"
-la var court "Went to court (arrest issued)"
+la var arrest "Arrest issued"
 la var incident_date "Date incident occurred"
 la var report_date "Date incident reported"
 la var clear_date "Date incident cleared"
@@ -150,6 +152,7 @@ la var treat "Post = 1 and case is sex-related"
 la var duration "Duration (days)"
 la var filed "Number of sex-related cases filed by S Post"
 la var report_year "Year of reporting"
+la var clear_year "Year of clearance"
 
 // Indent all variable labels for tables
 foreach v of varlist * {

@@ -68,14 +68,10 @@ replace sh = 1 if crime_type == "Sexual harassment"
 g sex_cases = 0 
 replace sex_cases = 1 if crime_type == "Sexual harassment" | crime_type == "Sexual assault"
 
-// Clearance
-g clearance = .
-replace clearance = 1 if clear_status == "true"
-
-// Court
-g court = .
-replace court = 1 if clear_status == "true"
-replace court = 0 if clear_status == "false"
+// Arrest
+g arrest = .
+replace arrest = 1 if clear_status == "true"
+replace arrest = 0 if clear_status == "false"
 
 
 /*******************************************************************************
