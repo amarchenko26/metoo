@@ -4,6 +4,22 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 
 ## Description of datasets
 
+**$raw_data/AK/ak_raw_cases.csv**  
+These data contain all employment, housing, and public accommodation/public service cases filed in Alaska from June 1, 2010 to June 1, 2023.
+- N: 3611
+- SH: 89
+- acct: unique identifier for each case
+- datecreated: date case was filed
+- liability: jurisdiction
+- casestatus: open/closed
+- dateclosed: date case was closed
+- closurereason: how case was closed
+- monetaryaward: relief
+- rptype: respondent type
+- investigationsense: substantial evidence investigation finding (years 2014+: SE/NSE)
+- basis (wide variable): basis of discrimination
+- issue (wide variable): adverse action alleged by complainant
+
 **$raw_data/PA/PA_raw_cases_severity.csv**  
 This file merges PA data from two sources. The first source is a spreadsheet of 21 cases from the public hearing docket (i.e., publicly available cases) of the Pennsylvania Human Relations Commission. We do not have PDFs of these cases. The second source is a set of ~200 PDFs of final orders issued by the Commission based on charges of discrimination which were filed during the period between XXX to XXXX. These PDFs were manually digitized by Jacob Hirschhorn.  
 - N: XXXX - Jake to add
@@ -216,7 +232,7 @@ The following variables are cleaned separately for each state.
 - Education
 
 ### Basis 
-`basis_clean` takes the following categories
+`basis` takes the following categories
 - Sex
 - LGBTQ
 - Religion
@@ -226,7 +242,7 @@ The following variables are cleaned separately for each state.
 - Age
 - Retaliation
 - Other  
-Other includes missings. `basis_clean` is defined using the finer grained `basis` variable. 
+Other includes missings. `basis` is defined using the finer grained `basis_raw` variable. 
 
 ### Sexual harassment
 `sh == 1` if `basis` is Sexual Harassment or `issue` (less common) is Sexual Harassment.  
