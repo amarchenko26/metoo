@@ -23,7 +23,7 @@ Event-study
 *******************************************************************************/
 
 local horizons "months_to_treat_12"
-local outcomes "clearance court"
+local outcomes "clearance arrest"
 
 if `event' == 1 {
 		

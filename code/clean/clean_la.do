@@ -75,10 +75,10 @@ g clearance = .
 replace clearance = 1 if inlist(clear_status, "Adult Arrest", "Adult Other", "Juv Arrest", "Juv Other")
 replace clearance = 0 if clear_status == "Invest Cont"
 
-// Court
-g court = .
-replace court = 1 if inlist(clear_status, "Adult Arrest", "Juv Arrest")
-replace court = 0 if inlist(clear_status, "Adult Other", "Juv Other", "Invest Cont")
+// Arrest
+g arrest = .
+replace arrest = 1 if inlist(clear_status, "Adult Arrest", "Juv Arrest")
+replace arrest = 0 if inlist(clear_status, "Adult Other", "Juv Other", "Invest Cont")
 
 
 /*******************************************************************************
