@@ -87,10 +87,10 @@ g clearance = .
 replace clearance = 1 if inlist(clear_status, "C", "O")
 replace clearance = 0 if clear_status == "N"
 
-// Arrest
-g arrest = .
-replace arrest = 1 if clear_status == "C"
-replace arrest = 0 if inlist(clear_status, "O", "N")
+// Court
+g court = .
+replace court = 1 if clear_status == "C"
+replace court = 0 if inlist(clear_status, "O", "N")
 
 
 /*******************************************************************************
