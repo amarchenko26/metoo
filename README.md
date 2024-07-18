@@ -21,13 +21,29 @@ These data contain all employment, housing, and public accommodation/public serv
 - issue (wide variable): adverse action alleged by complainant
 
 **$raw_data/PA/PA_raw_cases_severity.csv**  
-This file merges PA data from two sources. The first source is a spreadsheet of 21 cases from the public hearing docket (i.e., publicly available cases) of the Pennsylvania Human Relations Commission. We do not have PDFs of these cases. The second source is a set of ~200 PDFs of final orders issued by the Commission based on charges of discrimination which were filed during the period between XXX to XXXX. These PDFs were manually digitized by Jacob Hirschhorn.  
-- N: XXXX - Jake to add
-- SH: XXXX - Jake to add
+This file merges PA data from two sources. The first source is a spreadsheet of 21 cases from the public hearing docket (i.e., publicly available cases) of the Pennsylvania Human Relations Commission. We do not have PDFs of these cases. The second source is a set of ~200 PDFs of final orders issued by the Commission based on charges of discrimination which were filed during the period between April 9, 1963 to March 22, 2022. These PDFs were manually digitized by Jacob Hirschhorn.  
+- N: 210
+- SH: 8
+- resp_org: respondent name
+- case_id: unique identifier for each case
+- file_date: date case was filed
+- res_date: date case was closed
+- basis: basis of discrimination
+- jurisdiction: jurisdiction of the case
+  - Employment
+  - Public Accommodation
+  - Housing
+  - Education
+- win: whether the complainant won the case
+- settle: whether the case was settled
+- court: whether the case went to court
+- victim_f: whether the complainant was female
+- severity_manual: Ranking of the severity of the case, from 0 to 1, done manually by searching for keywords related to sexual harassment
+- severity_sentiment: Ranking of the severity of the case, from -1 to 1, done using the VADER sentiment analysis package
 
 
 **$raw_data/RI/ri_raw_cases.csv**  
-These data were extracted from PDF files of copies of all decision and orders issued by the Commission based on charges of employment discrimination which were filed during the period between June 1,2010 to December 31, 2022.
+These data were extracted from PDF files of copies of all decision and orders issued by the Commission based on charges of employment discrimination which were filed during the period between June 1, 2010 to December 31, 2022.
 - N: 12
 - SH: 3
 - resp_org: respondent name
@@ -35,10 +51,14 @@ These data were extracted from PDF files of copies of all decision and orders is
 - file_date: date case was filed
 - res_date: date case was closed
 - basis: basis of discrimination
-- jurisdiction
-- win
-- settle
-- court
+- jurisdiction: jurisdiction of the case
+  - Employment
+  - Public Accommodation
+  - Housing
+  - Education
+- win: whether the complainant won the case
+- settle: whether the case was settled
+- court: whether the case went to court
 - victim_f: whether the complainant was female
 
 **$raw_data/MN/mn_raw_cases.xlsx**  
