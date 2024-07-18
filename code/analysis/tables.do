@@ -116,7 +116,7 @@ if `run_overlap' == 1 {
 	#delimit ;
 	esttab est1 est2 est3 using "$tables/overlap_panel.tex", style(tex) replace
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{span}{c}{\textbf{Panel A: 2 Years Pre-MeToo}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: 2 Years Pre-MeToo}} \\ \midrule")
 		fragment
 		varlabels(overlap_2 "Overlap" duration "Duration") keep(overlap_2 duration)
 		mgroups("Settle" "Win" "Compensation", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
@@ -141,7 +141,7 @@ if `run_overlap' == 1 {
 	
 	#delimit ;	
 	esttab est1 est2 est3 using "$tables/overlap_panel.tex", style(tex)
-		posthead("\midrule \multicolumn{span}{c}{\textbf{Panel B: All Pre-MeToo}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: All Pre-MeToo}} \\ \midrule")
 		fragment
 		append
 		varlabels(overlap_all "Overlap" duration "Duration") keep(overlap_all duration)
