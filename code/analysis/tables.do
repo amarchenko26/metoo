@@ -159,62 +159,6 @@ if `run_overlap' == 1 {
 
 }
 
-if `run_overlap' == 1 {
-	
-	// Panel A
-	foreach y of local outcome_vars {
-		eststo: reg ``y'' overlap_2 duration, r
-		qui: sum ``y'' if overlap_2 == 0
-		estadd scalar control_mean = `r(mean)' 
-
-		loc ++i
-	}
-	
-	#delimit ;
-	estout _all using "$tables/overlap_panel_a.tex", style(tex) replace
-		varlabels(overlap_2 "Overlap" duration "Duration") keep(overlap_2 duration)
-		mgroups("Settle" "Win" "Compensation", pattern(1 1 1) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
-		stats(N r2 control_mean, 
-			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)")
-		refcat(overlap_2_2 "\emph{Control group: 2 years pre-MeToo}", nolabel)
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}");
-	#delimit cr
-	eststo clear
-	estimates clear
-	
-	// Panel B 
-	foreach y of local outcome_vars {
-		eststo: reg ``y'' overlap_all duration, r
-		qui: sum ``y'' if overlap_all == 0
-		estadd scalar control_mean = `r(mean)' 
-
-		loc ++i
-	}
-	
-	#delimit ;	
-	estout _all using "$tables/overlap_panel_b.tex", style(tex) replace
-		varlabels(overlap_all "Overlap" duration "Duration") keep(overlap_all duration)
-		stats(N r2 control_mean, 
-			label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		refcat(overlap_2_all "\emph{Control group: All pre-MeToo SH}", nolabel)
-		mlabel(none)
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}");
-
-	#delimit cr
-	eststo clear
-	estimates clear
-}
-
 	
 /*******************************************************************************
 DiD regression
