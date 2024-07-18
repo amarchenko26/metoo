@@ -114,7 +114,7 @@ if `run_overlap' == 1 {
 	}
 	
 	#delimit ;
-	estout _all using "$tables/overlap_panel.tex", style(tex) replace
+	esttab est1 est2 est3 using "$tables/overlap_panel.tex", style(tex) replace
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{span}{c}{\textbf{Panel A: 2 Years Pre-MeToo}} \\ \midrule")
 		fragment
@@ -140,7 +140,7 @@ if `run_overlap' == 1 {
 	}
 	
 	#delimit ;	
-	estout _all using "$tables/overlap_panel.tex", style(tex)
+	esttab est1 est2 est3 using "$tables/overlap_panel.tex", style(tex)
 		posthead("\midrule \multicolumn{span}{c}{\textbf{Panel B: All Pre-MeToo}} \\ \midrule")
 		fragment
 		append
