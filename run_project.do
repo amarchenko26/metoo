@@ -73,6 +73,7 @@ do "$droot/code/programs/programs.do"
 // cleaning files
 do "$droot/code/clean/clean_eeoc.do"
 do "$droot/code/clean/clean_eeoc_filed.do"
+do "$droot/code/clean/clean_ak.do"
 do "$droot/code/clean/clean_hi.do"
 do "$droot/code/clean/clean_il.do"
 do "$droot/code/clean/clean_ma.do"
