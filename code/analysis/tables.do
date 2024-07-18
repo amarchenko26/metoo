@@ -5,7 +5,7 @@ Tables for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc	run_did 	 = 0
-loc run_did_all  = 1
+loc run_did_all  = 0
 loc run_overlap  = 1
 
 loc run_summary  = 0
@@ -102,6 +102,62 @@ loc y3 relief_w
 
 loc outcome_vars y1 y2 y3
 loc i 1
+
+if `run_overlap' == 1 {
+	
+	// Panel A
+	foreach y of local outcome_vars {
+		eststo: reg ``y'' overlap_2 duration, r
+		qui: sum ``y'' if overlap_2 == 0
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+	
+	#delimit ;
+	estout _all using "$tables/overlap_panel.tex", style(tex) replace
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule \multicolumn{span}{c}{\textbf{Panel A: 2 Years Pre-MeToo}} \\ \midrule")
+		fragment
+		varlabels(overlap_2 "Overlap" duration "Duration") keep(overlap_2 duration)
+		mgroups("Settle" "Win" "Compensation", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles
+		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)")
+		refcat(overlap_2_2 "\emph{Control group: 2 years pre-MeToo}", nolabel)
+		prefoot("\\" "\midrule");
+		
+	#delimit cr
+	eststo clear
+	estimates clear
+	
+	// Panel B
+	foreach y of local outcome_vars {
+		eststo: reg ``y'' overlap_all duration, r
+		qui: sum ``y'' if overlap_all == 0
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+	
+	#delimit ;	
+	estout _all using "$tables/overlap_panel.tex", style(tex)
+		posthead("\midrule \multicolumn{span}{c}{\textbf{Panel B: All Pre-MeToo}} \\ \midrule")
+		fragment
+		append
+		varlabels(overlap_all "Overlap" duration "Duration") keep(overlap_all duration)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		refcat(overlap_2_all "\emph{Control group: All pre-MeToo SH}", nolabel)
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	eststo clear
+	estimates clear
+
+}
 
 if `run_overlap' == 1 {
 	
