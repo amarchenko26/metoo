@@ -81,6 +81,8 @@ format common_file_date %td
 
 // Clean duration variable 
 replace duration = 0 if duration < 0 
+replace duration = . if duration == 0
+g no_duration = duration == .
 
 // Gen ym var
 drop year
@@ -91,7 +93,7 @@ la var ym "Year-month var of report date"
 g report_year = year(common_file_date)
 g clear_year = year(clear_date)
 
-keep if report_year >= 2010 & report_year <= 2024
+keep if report_year >= 2010 & report_year <= 2024 & ((clear_year >= 2010 & clear_year <= 2024) | clear_year == .)
 
 
 /*******************************************************************************
@@ -150,6 +152,7 @@ la var sex_cases "Sex-related cases"
 la var post "Filed after MeToo"
 la var treat "Post = 1 and case is sex-related"
 la var duration "Duration (days)"
+la var no_duration "Missing duration"
 la var filed "Number of sex-related cases filed by S Post"
 la var report_year "Year of reporting"
 la var clear_year "Year of clearance"
