@@ -5,7 +5,7 @@ Run the project by navigating to metoo Github folder (using `cd`) and typing `./
 ## Description of datasets
 
 **$raw_data/AK/ak_raw_cases.csv**  
-These data contain all employment, housing, and public accommodation/public service cases filed in Alaska from June 1, 2010 to June 1, 2023.
+These data contain all employment, housing, and public accommodation/public service cases filed in Alaska from June 1, 2010 to June 1, 2023. TEST
 - N: 3611
 - SH: 89
 - acct: unique identifier for each case
