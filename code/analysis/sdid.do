@@ -83,6 +83,30 @@ if `run_sdid' == 1 {
 		#delimit cr
 	restore
 
+	preserve 
+		loc y 	 relief_scale
+		loc time months_to_treat_12
+		loc unit basis
+
+		collapse (mean) `y', by(`time' `unit')
+		drop if `time' == .
+
+		egen `unit'_cat = group(`unit') // can't xtset string var
+		xtset `unit'_cat `time' // xtset for panel data
+		spbalance, balance // check balance, drop if unbalanced
+
+		g treat = 0 
+		replace treat = 1 if `unit' == "Sex" & `time' > 0 
+
+		#delimit ;
+		sdid `y' `unit' `time' treat, 
+			vce(placebo) reps(100) seed(123) method(sdid) 
+			graph g1on msize(medium)
+			g2_opt(xlabel(-7(1)6) ytitle("Compensation") xtitle("Time relative to MeToo (12 months)"))
+			graph_export("$figures/sdid_`y'_", .png); 
+		#delimit cr
+	restore
+
 }
 
 
@@ -91,7 +115,7 @@ Robustness
 *******************************************************************************/
 loc y2 settle
 loc y3 win
-loc y4 relief_w
+loc y4 relief_scale
 
 loc outcome_vars y2 y3 y4
 loc i 1
@@ -113,9 +137,9 @@ if `run_robust' == 1 {
 	#delimit ;	
 	estout u1 u2 u3 sdid_s sdid_p using "$tables/sdid.tex", style(tex) replace
 		varlabels(treat "ATT") keep(treat)
-		mgroups("Unit trends" "SDID", pattern(1 0 0 1 0) 
+		mgroups("Unit trends" "SDID", pattern(1 0 0 1 0 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel("Settle" "Win" "Comp." "Settle" "Win", pattern(1 1 1 1 1) 
+		mlabel("Settle" "Win" "Comp." "Settle" "Win" "Comp.", pattern(1 1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		stats(feunit fetime unit_time N r2, label("Case FE" "Time FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
@@ -128,30 +152,6 @@ if `run_robust' == 1 {
 }
 
 
-/* This panel is currently unabalanced because of not enough observations of relief. 
-We can run this when new data gets added. 
-
-preserve 
-	loc y 	 relief_scale
-	loc time months_to_treat_12
-	loc unit basis
-
-	collapse (mean) `y', by(`time' `unit')
-	drop if `time' == .
-
-	g treat = 0 
-	replace treat = 1 if `unit' == "Sex" & `time' > 0 
-
-	#delimit ;
-	sdid `y' `unit' `time' treat, 
-		vce(placebo) reps(100) seed(123) method(sdid) 
-		graph g1on msize(medium)
-		g2_opt(xlabel(-7(1)6) ytitle("Compensation") xtitle("Time relative to MeToo (12 months)"))
-		graph_export("$figures/sdid_`y'_", .png); 
-	#delimit cr
-restore
-
-*/
 
 
 
