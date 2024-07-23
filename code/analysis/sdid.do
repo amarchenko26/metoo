@@ -41,6 +41,10 @@ if `run_sdid' == 1 {
 		collapse (mean) `y', by(`time' `unit')
 		drop if `time' == .
 
+		egen `unit'_cat = group(`unit') // can't xtset string var
+		xtset `unit'_cat `time' // xtset for panel data
+		spbalance, balance // check balance, drop if unbalanced
+
 		g treat = 0 
 		replace treat = 1 if `unit' == "Sex" & `time' > 0 
 
@@ -62,6 +66,10 @@ if `run_sdid' == 1 {
 
 		collapse (mean) `y', by(`time' `unit')
 		drop if `time' == .
+
+		egen `unit'_cat = group(`unit') // can't xtset string var
+		xtset `unit'_cat `time' // xtset for panel data
+		spbalance, balance // check balance, drop if unbalanced
 
 		g treat = 0 
 		replace treat = 1 if `unit' == "Sex" & `time' > 0 
