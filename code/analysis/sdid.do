@@ -31,111 +31,67 @@ drop if ym < 606 // drop cases before Jan 2010
 Do SDID treat
 *******************************************************************************/
 
+loc y1 settle
+loc y2 win
+loc y3 relief_scale
+	
+loc outcome_vars y1 y2 y3
+
 if `run_sdid' == 1 {
 
-	preserve
-		loc y 	 settle
-		loc time months_to_treat_12
-		loc unit basis
+	loc time months_to_treat_12
+	loc unit basis
 
-		collapse (mean) `y', by(`time' `unit')
-		drop if `time' == .
+	loc i 1 // counter for eststo labeling
 
-		egen `unit'_cat = group(`unit') // can't xtset string var
-		xtset `unit'_cat `time' // xtset for panel data
-		spbalance, balance // check balance, drop if unbalanced
+	foreach y of loc outcome_vars{
+		preserve
+			collapse (mean) ``y'', by(`time' `unit')
+			drop if `time' == .
 
-		g treat = 0 
-		replace treat = 1 if `unit' == "Sex" & `time' > 0 
+			egen `unit'_cat = group(`unit') // can't xtset string var
+			xtset `unit'_cat `time' // xtset for panel data
+			spbalance, balance // check balance, drop if unbalanced
 
-		#delimit ;
-		eststo sdid_s: sdid `y' `unit' `time' treat, //covariates(r, projected)
-			vce(placebo) reps(100) seed(123) method(sdid) 
-			graph g1on msize(medium)
-			g2_opt(xlabel(-8(1)5) ytitle("Probability of settlement", size(medium)) xtitle("Time to MeToo", size(medium)))
-			graph_export("$figures/sdid_`y'_", .png); 
+			g treat = 0 
+			replace treat = 1 if `unit' == "Sex" & `time' > 0 
+
+			#delimit ;
+			eststo sdid`i': sdid ``y'' `unit' `time' treat,
+				vce(placebo) reps(100) seed(123) method(sdid) 
+				graph g1on msize(medium)
+				g2_opt(xlabel(-8(1)5) xtitle("Time to MeToo", size(medium))) //ytitle("Probability of settlement", size(medium))
+				graph_export("$figures/sdid_``y''_", .png); 
 		
-		#delimit cr
-	restore
-		
-		
-	preserve 
-		loc y 	 win
-		loc time months_to_treat_12
-		loc unit basis
-
-		collapse (mean) `y', by(`time' `unit')
-		drop if `time' == .
-
-		egen `unit'_cat = group(`unit') // can't xtset string var
-		xtset `unit'_cat `time' // xtset for panel data
-		spbalance, balance // check balance, drop if unbalanced
-
-		g treat = 0 
-		replace treat = 1 if `unit' == "Sex" & `time' > 0 
-
-		#delimit ;
-		eststo sdid_p: sdid `y' `unit' `time' treat, 
-			vce(placebo) reps(100) seed(123) method(sdid) 
-			graph g1on msize(medium)
-			g2_opt(xlabel(-8(1)5) ytitle("Probability of win", size(medium)) xtitle("Time to MeToo", size(medium)))
-			graph_export("$figures/sdid_`y'_", .png); 
-		#delimit cr
-	restore
-
-	preserve 
-		loc y 	 relief_scale
-		loc time months_to_treat_12
-		loc unit basis
-
-		collapse (mean) `y', by(`time' `unit')
-		drop if `time' == .
-
-		egen `unit'_cat = group(`unit') // can't xtset string var
-		xtset `unit'_cat `time' // xtset for panel data
-		spbalance, balance // check balance, drop if unbalanced
-
-		g treat = 0 
-		replace treat = 1 if `unit' == "Sex" & `time' > 0 
-
-		#delimit ;
-		sdid `y' `unit' `time' treat, 
-			vce(placebo) reps(100) seed(123) method(sdid) 
-			graph g1on msize(medium)
-			g2_opt(xlabel(-7(1)6) ytitle("Compensation") xtitle("Time relative to MeToo (12 months)"))
-			graph_export("$figures/sdid_`y'_", .png); 
-		#delimit cr
-	restore
-
+			#delimit cr
+			loc ++i
+		restore
+	}
 }
 
 
 /*******************************************************************************
 Robustness 
 *******************************************************************************/
-loc y2 settle
-loc y3 win
-loc y4 relief_scale
 
-loc outcome_vars y2 y3 y4
-loc i 1
+// Same locals as above 
+loc j 1
 
 if `run_robust' == 1 {
 
 	foreach y of local outcome_vars {
 		
-		// Outcome `y'
 		reghdfe ``y'' treat c.ym#i.basis_cat, absorb(basis ym) vce(cluster basis)
-		eststo u`i'
+		eststo u`j'
 		qui estadd loc feunit "Yes", replace
 		qui estadd loc fetime "Yes", replace
 		qui estadd loc unit_time "Yes", replace
 				
-		loc ++i
+		loc ++j
 	}
 	
 	#delimit ;	
-	estout u1 u2 u3 sdid_s sdid_p using "$tables/sdid.tex", style(tex) replace
+	estout u1 u2 u3 sdid1 sdid2 sdid3 using "$tables/sdid.tex", style(tex) replace
 		varlabels(treat "ATT") keep(treat)
 		mgroups("Unit trends" "SDID", pattern(1 0 0 1 0 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
