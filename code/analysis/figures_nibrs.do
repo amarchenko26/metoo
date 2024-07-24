@@ -2,7 +2,7 @@
 Figures for MeToo project
 *******************************************************************************/
 
-use "$clean_data/clean_nibrs.dta", replace
+use "$clean_data/clean_nibrs_cases.dta", replace
 
 loc event 	   = 1
 loc timeseries = 1

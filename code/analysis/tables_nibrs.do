@@ -2,7 +2,7 @@
 Tables for MeToo project
 *******************************************************************************/
 
-use "$clean_data/clean_nibrs.dta", replace
+use "$clean_data/clean_nibrs_cases.dta", replace
 
 loc run_did  = 1
 
