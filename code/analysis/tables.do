@@ -123,7 +123,6 @@ if `run_overlap' == 1 {
 		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)")
-		refcat(overlap_2_2 "\emph{Control group: 2 years pre-MeToo}", nolabel)
 		prefoot("\\" "\midrule");
 		
 	#delimit cr
@@ -148,7 +147,6 @@ if `run_overlap' == 1 {
 		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		refcat(overlap_2_all "\emph{Control group: All pre-MeToo SH}", nolabel)
 		prefoot("\\" "\midrule")
 		postfoot("\bottomrule" "\end{tabular}");
 
