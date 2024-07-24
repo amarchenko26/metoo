@@ -12,7 +12,7 @@ Clean vars
 *******************************************************************************/
 
 // Keeping only relevant vars
-keep cmplnt_num cmplnt_fr_dt rpt_dt ky_cd ofns_desc pd_desc
+keep cmplnt_num cmplnt_fr_dt rpt_dt ky_cd ofns_desc pd_desc vic_sex
 
 // Rename vars
 ren cmplnt_num id
@@ -61,10 +61,18 @@ replace crime_type = "Excluded crime"		 if inlist(crime, "BIGAMY", "PROMOTING A 
 // SH
 g sh = 0
 replace sh = 1 if crime_type == "Sexual harassment"
+replace sh = . if inlist(crime_type, "Sexual assault", "Excluded crime")
 
 // Sex
 g sex_cases = 0 
 replace sex_cases = 1 if crime_type == "Sexual harassment" | crime_type == "Sexual assault"
+replace sex_cases = . if crime_type == "Excluded crime"
+
+// Victim
+g victim_f = .
+replace victim_f = 1 if vic_sex == "F"
+replace victim_f = 0 if vic_sex == "M"
+drop vic_sex
 
 
 /*******************************************************************************

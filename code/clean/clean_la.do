@@ -20,7 +20,7 @@ Clean vars
 *******************************************************************************/
 
 // Keeping only relevant vars
-keep dr_no daterptd dateocc crmcd crmcddesc statusdesc
+keep dr_no daterptd dateocc crmcd crmcddesc statusdesc victsex
 
 // Rename vars
 ren dr_no id
@@ -65,10 +65,12 @@ replace crime_type = "Excluded crime"        if strpos(crime, "SEX") > 0 & !inli
 // SH
 g sh = 0
 replace sh = 1 if crime_type == "Sexual harassment"
+replace sh = . if inlist(crime_type, "Sexual assault", "Excluded crime")
 
 // Sex
 g sex_cases = 0 
 replace sex_cases = 1 if crime_type == "Sexual harassment" | crime_type == "Sexual assault"
+replace sex_cases = . if crime_type == "Excluded crime"
 
 // Clearance
 g clearance = .
@@ -79,6 +81,12 @@ replace clearance = 0 if clear_status == "Invest Cont"
 g arrest = .
 replace arrest = 1 if inlist(clear_status, "Adult Arrest", "Juv Arrest")
 replace arrest = 0 if inlist(clear_status, "Adult Other", "Juv Other", "Invest Cont")
+
+// Victim
+g victim_f = .
+replace victim_f = 1 if victsex == "F"
+replace victim_f = 0 if victsex == "M"
+drop victsex
 
 
 /*******************************************************************************

@@ -63,10 +63,12 @@ drop domestic
 // SH
 g sh = 0
 replace sh = 1 if crime_type == "Sexual harassment"
+replace sh = . if inlist(crime_type, "Sexual assault", "Excluded crime")
 
 // Sex
 g sex_cases = 0 
 replace sex_cases = 1 if crime_type == "Sexual harassment" | crime_type == "Sexual assault"
+replace sex_cases = . if crime_type == "Excluded crime"
 
 // Arrest
 g arrest = .
