@@ -141,8 +141,10 @@ These data contain all police cases reported in Los Angeles from 2010 to 2024 (d
 - Vict Age: Two character numeric
 - Vict Sex:
   - F: Female
-  - M:Male
+  - M: Male
   - X: Unknown
+  - H: ?
+  - N: ?
 - Vict Descent:	Descent Code
   - A: Other Asian
   - B: Black
@@ -234,6 +236,12 @@ These data contain all police cases reported in New York City from 2006 to 2023 
 - SUSP_AGE_GROUP: Suspect’s Age Group
 - SUSP_RACE: Suspect’s Race Description
 - SUSP_SEX: Suspect’s Sex Description
+  - D: Business/Organization
+  - E: PSNY/People of the State of New York
+  - F: Female
+  - L: ?
+  - M: Male
+  - U: Unknown
 - TRANSIT_DISTRICT: Transit district in which the offense occurred
 - VIC_AGE_GROUP: Victim’s Age Group
 - VIC_RACE: Victim’s Race Description
