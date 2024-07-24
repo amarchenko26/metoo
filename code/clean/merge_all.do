@@ -168,7 +168,7 @@ replace treat = 1 if overlap_2 == 1
 winsor relief, p(.05) gen(relief_w)
 replace relief = . if missing_relief == 1 // if relief = 0, person lost, so everything is CONDITIONAL ON WINNING 
 
-g relief_scale = relief / 1000
+g relief_scale = relief_w / 1000
 
 // Gen index var for count
 g y = 1

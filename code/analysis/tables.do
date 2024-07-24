@@ -4,9 +4,8 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 = 0
-loc run_did_all  = 0
-loc run_overlap  = 1
+loc	run_did 	 = 1
+loc run_overlap  = 0
 
 loc run_summary  = 0
 loc run_balance  = 0
@@ -165,7 +164,7 @@ DiD regression
 loc y1 filed_per_year
 loc y2 settle
 loc y3 win
-loc y4 relief_w
+loc y4 relief_scale
 
 loc outcome_vars y1 y2 y3 y4
 loc i 1
@@ -173,48 +172,48 @@ loc i 1
 g unit_state = basis * state_cat
 g time_state = ym * state_cat
 
-if `run_did_all' == 1 {
-
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
-		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "Yes", replace
-		qui estadd loc fetime_s "Yes", replace
-						
-		loc ++i
-	}
-
-	#delimit ;	
-	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_all.tex", style(tex) replace
-		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Filed per year" "Settle" "Win" "Compensation", pattern(1 0 1 0 1 0 1  0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
-		stats(feunit fetime feunit_s fetime_s N r2, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") ;
-	#delimit cr
-	estimates clear
-	eststo clear
-}
-
-loc outcome_vars y1 y2 y3 y4
-loc i 1
-
 if `run_did' == 1 {
 
 	preserve 
 	keep if eeoc_filed == 0
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "Yes", replace
+		qui estadd loc fetime_s "Yes", replace
+						
+		loc ++i
+	}
+
+	#delimit ;	// DID - No EEOC data 
+	//use esttab not estout, estout has no fragment option
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Estimation sample}} \\ \midrule")
+		fragment
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 0 1 0 1 0 1  0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	restore
+
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
 
 	foreach y of local outcome_vars {
 		
@@ -231,40 +230,26 @@ if `run_did' == 1 {
 		loc ++i
 	}
 
-	#delimit ;	
-	estout a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace
+	#delimit ;	// DID - All data
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{All cases}} \\ \midrule")
+		fragment
+		append
 		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Filed per year" "Settle" "Win" "Compensation", pattern(1 0 1 0 1 0 1  0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
+		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit fetime feunit_s fetime_s N r2, 
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") ;
+		postfoot("\bottomrule" "\end{tabular}");
+
 	#delimit cr
 	estimates clear
 	eststo clear
-	restore
 }
 
 drop time_state unit_state
-
-
-/*
-mgroups("\shortstack{Income from \\ non ag wages}" ///
-"\shortstack{Income from \\ NREGA}" ///
-"\shortstack{Income from \\ non-NREGA \\ non ag wage}" ///
-"\shortstack{Income from \\ wage & salary}" ///
-"\shortstack{Income from \\ HH businesses}" ///
-"\shortstack{All Income}" "HH Cons" "\shortstack{Current HH \\ debt}" ///
-, pattern(1 1 1 1 1 1 1 1) ///
-span) ///
-
-*/
-
 
 
 /*******************************************************************************

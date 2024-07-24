@@ -8,6 +8,7 @@ Created on Mon Jul 15 16:48:01 2024
 
 import pandas as pd
 import getpass
+from gender_guesser.detector import Detector
 from pathlib import Path
 
 # Determine user and set root path
@@ -27,7 +28,7 @@ file_path = root / 'raw/IL/il_raw_cases.csv'
 il_data = pd.read_csv(file_path)
 
 # Initialize the gender detector
-d = gender.Detector()
+d = Detector()
 
 # Function to extract the first name
 def extract_first_name(name):

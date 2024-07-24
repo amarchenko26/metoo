@@ -363,6 +363,11 @@ The following variables are cleaned separately for each city.
 `clearance == 1` if the case was cleared by arrest or exception  
 `clearance == 0` if the case was not cleared  
 
+### Victim female  
+`victim_f = 1` if complainant/victim is female  
+`victim_f = 0` if complainant/victim is male     
+`victim_f = .` if missing data on complainant gender  
+
 The following variables are cleaned altogether, after city data is appended together. 
 
 ### Overlap
