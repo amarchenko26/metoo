@@ -51,12 +51,13 @@ These data contain all cases reported to NIBRS from 2010 to 2020 from US agencie
 - Sodomy
 - Sexual Assault with an Object
 - Forcible Fondling
-- Statutory Rape
-  `sex_cases == 0` otherwise.
+- Statutory Rape  
+  
+`sex_cases == 0` otherwise.
 
 ### Sexual harassment cases
 
-`sh == 0` always, since no sexual harassment cases are reported to NIBRS
+`sh == 0` always, since no sexual harassment cases are reported to NIBRS  
 
 ### Crime type
 
