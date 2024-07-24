@@ -4,12 +4,15 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 = 1
+loc	run_did 	 = 0
 loc run_overlap  = 0
 
 loc run_summary  = 0
 loc run_balance  = 0
-loc run_duration = 0
+loc run_duration = 1
+
+eststo clear
+estimates clear
 
 /*******************************************************************************
 Prep vars for tables
@@ -97,7 +100,7 @@ overlap_2 regression
 
 loc y1 settle
 loc y2 win
-loc y3 relief_w
+loc y3 relief_scale
 
 loc outcome_vars y1 y2 y3
 loc i 1
@@ -117,7 +120,7 @@ if `run_overlap' == 1 {
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: 2 Years Pre-MeToo}} \\ \midrule")
 		fragment
-		varlabels(overlap_2 "Overlap" duration "Duration") keep(overlap_2 duration)
+		varlabels(overlap_2 "Overlap") keep(overlap_2)
 		mgroups("Settle" "Win" "Compensation", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
@@ -142,7 +145,7 @@ if `run_overlap' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: All Pre-MeToo}} \\ \midrule")
 		fragment
 		append
-		varlabels(overlap_all "Overlap" duration "Duration") keep(overlap_all duration)
+		varlabels(overlap_all "Overlap") keep(overlap_all)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
@@ -306,29 +309,26 @@ Correlation b/w duration and outcomes
 *******************************************************************************/
 if `run_duration' == 1 {
 
-	preserve 
-	keep if eeoc_filed == 0
+	eststo: reg settle duration, r
 
-	eststo: reg duration i.win, r
+	eststo: reg settle duration if sh == 1, r
 
-	eststo: reg duration i.win if sh == 1, r
+	eststo: reg win duration, r
 
-	eststo:	reg duration i.win if sex_cases == 1, r
+	eststo: reg win duration if sh == 1, r
 
-	eststo:	reg duration relief_w, r
+	eststo:	reg relief_scale duration, r
 
-	eststo:	reg duration relief_w if sh == 1, r
+	eststo:	reg relief_scale duration if sh == 1, r
 
-	eststo:	reg duration relief_w if sex_cases == 1, r
-		
 	#delimit ;
 	
 	estout _all using "$tables/duration_corr.tex", style(tex) replace
 		drop(_cons)
-		varlabels(relief_w "Compensation" 1.win "Win")
-		mgroups("Duration", pattern(1 0 0 0 0 0) 
+		varlabels(duration "Duration")
+		mgroups("Settle" "Win" "Compensation", pattern(1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel("All" "SH" "Sex" "All" "SH" "Sex")
+		mlabel(none)
 		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
@@ -339,5 +339,4 @@ if `run_duration' == 1 {
 	#delimit cr
 	estimates clear
 	eststo clear
-	restore
 }
