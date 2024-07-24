@@ -6,10 +6,11 @@ use "$clean_data/clean_cases.dta", replace
 
 loc	run_did 	 = 0
 loc run_overlap  = 0
+loc run_victim_f = 1
 
 loc run_summary  = 0
 loc run_balance  = 0
-loc run_duration = 1
+loc run_duration = 0
 
 eststo clear
 estimates clear
@@ -172,10 +173,10 @@ loc y4 relief_scale
 loc outcome_vars y1 y2 y3 y4
 loc i 1
 
-g unit_state = basis * state_cat
-g time_state = ym * state_cat
-
 if `run_did' == 1 {
+
+	g unit_state = basis * state_cat
+	g time_state = ym * state_cat
 
 	preserve 
 	keep if eeoc_filed == 0
@@ -250,10 +251,44 @@ if `run_did' == 1 {
 	#delimit cr
 	estimates clear
 	eststo clear
-}
+
+
+
 
 drop time_state unit_state
 
+}
+
+/*******************************************************************************
+Victim female regression
+*******************************************************************************/
+
+if `run_victim_f' == 1 {
+
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
+
+	foreach y of local outcome_vars {
+		reg ``y'' sh##post##victim_f, cluster(basis)
+		loc ++i
+	}
+
+	estout _all using "$tables/did_f.tex", style(tex) replace
+		varlabels(1.victim_f#1.post#1.sh "Female $\times$ SH $\times$ Post") keep(1.victim_f#1.post#1.sh)
+		mgroups("Settle" "Win" "Compensation", pattern(1 1 1 1) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none)
+		stats(N r2, 
+			label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)")
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+	#delimit cr
+	eststo clear
+	estimates clear
+}
 
 /*******************************************************************************
 Summary
@@ -261,7 +296,7 @@ Summary
 if `run_summary' == 1 {
 
 	preserve
-	keep if eeoc_filed == 0
+	*keep if eeoc_filed == 0
 	
 	estpost tabstat post `summary', c(stat) stat(mean sd min max n)
 
