@@ -37,6 +37,9 @@ drop charge_res_date
 rename *2 *
 g duration = charge_res_date - charge_file_date
 
+// Jurisdiction
+replace juris = "Public Accommodation" if juris == "Public Accomodation"
+
 // Basis
 replace basis = strproper(basis)
 replace basis = "LGBTQ" if basis == "Lgbtq"

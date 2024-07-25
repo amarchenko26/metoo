@@ -269,13 +269,14 @@ if `run_victim_f' == 1 {
 	loc i 1
 
 	foreach y of local outcome_vars {
-		reg ``y'' sh##post##victim_f, cluster(basis)
+		eststo: reg ``y'' sh##post##victim_f, cluster(basis)
 		loc ++i
 	}
 
-	estout _all using "$tables/did_f.tex", style(tex) replace
-		varlabels(1.victim_f#1.post#1.sh "Female $\times$ SH $\times$ Post") keep(1.victim_f#1.post#1.sh)
-		mgroups("Settle" "Win" "Compensation", pattern(1 1 1 1) 
+	#delimit ;
+	esttab est1 est2 est3 est4 using "$tables/did_f.tex", style(tex) replace
+		coeflabel(1.sh#1.post#1.victim_f "Female $\times$ SH $\times$ Post") keep(1.sh#1.post#1.victim_f)
+		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 1 1 1)
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none)
 		stats(N r2, 
