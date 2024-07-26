@@ -96,22 +96,24 @@ forval n = 2010/2020 {
 	tostring crime_code, replace
 	drop temp_crime_code
 
-	// gen sex_cases var
-	// If any of the crimes are sex-related mark it in sex_cases
-	gen sex_cases = 0
-	replace sex_cases = 1 if ((crime_code == "111") | (crime_code == "112") | (crime_code == "113") | (crime_code == "114") | (crime_code == "362"))
-
-	// No sh cases in NIBRS data
-	gen sh = .
 
 	// gen crime_type variables
 	gen crime_type = "Non-sex crime"
 
-	replace crime_type = "Sexual assault" 	if sex_cases == 1
+	replace crime_type = "Sexual assault" 	if inlist(crime_code, "111", "112", "113", "114", "362")
 	replace crime_type = "Excluded crime" 	if inlist(crime_code, "361", "370", "401", "402", "403", "641", "642")
 	replace crime_type = "Excluded crime" 	if (crime_code == "131" & inlist(relationship, 1, 2, 18, 20, 21))
 	drop relationship
+	
+	// gen sex_cases var
+	// If any of the crimes are sex-related mark it in sex_cases
+	gen sex_cases = 0 if (crime_type == "Non-sex crime")
+	replace sex_cases = 1 if (crime_type == "Sexual assault")
+	replace sex_cases = . if (crime_type == "Excluded crime")
 
+	// No sh cases in NIBRS data
+	gen sh = .
+	
 
 	// gen clearance-related vars
 	// gen clearance var

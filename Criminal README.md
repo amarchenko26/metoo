@@ -449,27 +449,16 @@ The following variables are cleaned altogether, after city data is appended toge
 
 ### clean_nibrs_cases.dta
 
-#### Sex-based cases
+#### Crime type
 
-`sex_cases == 1` if `crime_code` is 111, 112, 113, 114, or 362, leading to:
-
+`crime_type == Sexual assault` if `crime_code` is 111, 112, 113, 114, or 362, leading to:
 - Rape
 - Sodomy
 - Sexual Assault with an Object
 - Forcible Fondling
 - Statutory Rape
-  `sex_cases == 0` otherwise.
-
-#### Sexual harassment cases
-
-`sh == .` always, since no sexual harassment cases are reported to NIBRS
-
-#### Crime type
-
-`crime_type == Sexual assault` if `sex_cases == 1`
 
 `crime_type == Excluded crime` if the crime is not directly affected by the MeToo movement but could be indirectly related to it.
-
 - Incest
 - Pornography/Obscene Material
 - Prostitution
@@ -482,6 +471,16 @@ The following variables are cleaned altogether, after city data is appended toge
   - Victim and Offender were in a homosexual relationship
 
 `crime_type == Non-sex crime` for all other crimes.
+
+#### Sex-based cases
+
+`sex_cases == 1` if `crime_type == Sexual assault`
+`sex_cases == 0` if `crime_type ==  Non-sex crime`
+`sex_cases == .` if `crime_type ==  Excluded crime`
+
+#### Sexual harassment cases
+
+`sh == .` always, since no sexual harassment cases are reported to NIBRS
 
 #### Clearance
 
