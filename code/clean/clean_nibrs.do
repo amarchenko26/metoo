@@ -1,6 +1,12 @@
 /*******************************************************************************
 
-Clean NIBRS cases
+Clean and merge NIBRS cases
+
+Inputs: 
+	- raw NIBRS criminal data
+	
+Outputs: 
+	- clean_nibrs_casees.dta
 
 *******************************************************************************/
 
@@ -12,7 +18,7 @@ save "`temp'", replace emptyok
 Define Variables
 *******************************************************************************/
 
-loc keep_variables "STATE INCDATE BH041 V1006 V1013 V1014 V20061 V40191 V40321 V60081"
+loc keep_variables "STATE INCDATE BH041 V1006 V1013 V1014 V20061 V40191 V40192 V40193 V40321 V60081"
 
 local dates = "INCDATE V60081 V1014"
 
@@ -75,7 +81,9 @@ forval n = 2010/2020 {
 	ren V1013 clear_exception
 	ren V1014 exception_date
 	ren V20061 temp_crime_code
-	ren V40191 temp_victim_sex
+	ren V40191 victim_sex_1
+	ren V40192 victim_sex_2
+	ren V40193 victim_sex_3
 	ren V40321 relationship
 	ren V60081 arrest_date
 	
@@ -88,28 +96,31 @@ forval n = 2010/2020 {
 	tostring crime_code, replace
 	drop temp_crime_code
 
-	// gen sex_cases var
-	// If any of the crimes are sex-related mark it in sex_cases
-	gen sex_cases = 0
-	replace sex_cases = 1 if ((crime_code == "111") | (crime_code == "112") | (crime_code == "113") | (crime_code == "114") | (crime_code == "362"))
-
-	// No sh cases in NIBRS data
-	gen sh = 0
 
 	// gen crime_type variables
 	gen crime_type = "Non-sex crime"
 
-	replace crime_type = "Sexual assault" 	if sex_cases == 1
+	replace crime_type = "Sexual assault" 	if inlist(crime_code, "111", "112", "113", "114", "362")
 	replace crime_type = "Excluded crime" 	if inlist(crime_code, "361", "370", "401", "402", "403", "641", "642")
 	replace crime_type = "Excluded crime" 	if (crime_code == "131" & inlist(relationship, 1, 2, 18, 20, 21))
 	drop relationship
+	
+	// gen sex_cases var
+	// If any of the crimes are sex-related mark it in sex_cases
+	gen sex_cases = 0 if (crime_type == "Non-sex crime")
+	replace sex_cases = 1 if (crime_type == "Sexual assault")
+	replace sex_cases = . if (crime_type == "Excluded crime")
 
+	// No sh cases in NIBRS data
+	gen sh = .
+	
 
 	// gen clearance-related vars
 	// gen clearance var
 	gen clearance = 0
 	replace clearance = 1 if !missing(arrest_date)
-	replace clearance = 1 if inlist(clear_exception, 1, 2, 3, 4, 5)
+	replace clearance = 1 if clear_exception == 2
+	replace clearance = . if inlist(clear_exception, 1, 3, 4, 5)
 	drop clear_exception
 
 	// gen arrest var
@@ -141,9 +152,9 @@ forval n = 2010/2020 {
 	gen clear_year = year(clear_date)
 
 	// gen victim_f var
-	gen victim_f = 1 if temp_victim_sex == 0
-	replace victim_f = 0 if temp_victim_sex == 1
-	drop temp_victim_sex
+	gen victim_f = 1 if (victim_sex_1 == 0) | (victim_sex_2 == 0) | (victim_sex_3 == 0)
+	replace victim_f = 0 if missing(victim_f) & ((victim_sex_1 == 1) | (victim_sex_2 == 1) | (victim_sex_3 == 1))
+	drop victim_sex_1 victim_sex_2 victim_sex_3
 
 
 	/*******************************************************************************
@@ -215,4 +226,11 @@ foreach v of varlist * {
 	label variable `v' `"\hspace{0.1cm} `: variable label `v''"'
 	}
 
-save "$clean_data/clean_nibrs.dta", replace
+// Change the label of the dataset
+la data "2010-2020 Clean NIBRS Data"
+
+/*******************************************************************************
+Export all cases
+*******************************************************************************/
+
+save "$clean_data/clean_nibrs_cases.dta", replace
