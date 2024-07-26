@@ -4,9 +4,9 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 = 0
+loc	run_did 	 = 1
 loc run_overlap  = 0
-loc run_victim_f = 1
+loc run_victim_f = 0
 
 loc run_summary  = 0
 loc run_balance  = 0
@@ -122,7 +122,7 @@ if `run_overlap' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: 2 Years Pre-MeToo}} \\ \midrule")
 		fragment
 		varlabels(overlap_2 "Overlap") keep(overlap_2)
-		mgroups("Settle" "Win" "Compensation", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
+		mgroups("Settled" "Won" "\($\) paid", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
@@ -178,6 +178,7 @@ if `run_did' == 1 {
 	g unit_state = basis * state_cat
 	g time_state = ym * state_cat
 
+	// DID - No EEOC data **********************************************************/
 	preserve 
 	keep if eeoc_filed == 0
 	foreach y of local outcome_vars {
@@ -195,14 +196,14 @@ if `run_did' == 1 {
 		loc ++i
 	}
 
-	#delimit ;	// DID - No EEOC data 
+	#delimit ;	
 	//use esttab not estout, estout has no fragment option
 	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Estimation sample}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 0 1 0 1 0 1  0) 
+		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit fetime feunit_s fetime_s N r2, 
@@ -216,6 +217,7 @@ if `run_did' == 1 {
 	eststo clear
 	restore
 
+	// DID - All data ************************************************************/
 	loc outcome_vars y1 y2 y3 y4
 	loc i 1
 
@@ -234,7 +236,7 @@ if `run_did' == 1 {
 		loc ++i
 	}
 
-	#delimit ;	// DID - All data
+	#delimit ;
 	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{All cases}} \\ \midrule")
 		fragment
@@ -245,42 +247,90 @@ if `run_did' == 1 {
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}");
-
+		prefoot("\\" "\midrule");
 	#delimit cr
 	estimates clear
 	eststo clear
 
+	// Victim female **********************************************************/
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
 
+	g triple_did = victim_f * treat
+	
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' triple_did, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		
+		reghdfe ``y'' triple_did, absorb(unit_state time_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "Yes", replace
+		qui estadd loc fetime_s "Yes", replace
+						
+		loc ++i
+	}
 
+	#delimit ;	// DID - All data
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Complainant is female}} \\ \midrule")
+		fragment
+		append
+		varlabels(triple_did "Female $\times$ SH $\times$ Post") keep(triple_did)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+	#delimit cr
+	estimates clear
+	eststo clear
 
-drop time_state unit_state
+	drop time_state unit_state
 
 }
 
 /*******************************************************************************
-Victim female regression
+Victim female regression - for presentations only, not in paper, generates 
+3rd panel of did.tex but separately
 *******************************************************************************/
 
-if `run_victim_f' == 1 {
+if `run_victim_f_present' == 1 {
 
 	loc outcome_vars y1 y2 y3 y4
 	loc i 1
 
+	g triple_did = victim_f * treat
+	g unit_state = basis * state_cat
+	g time_state = ym * state_cat
+
 	foreach y of local outcome_vars {
-		eststo: reg ``y'' sh##post##victim_f, cluster(basis)
+		
+		reghdfe ``y'' triple_did, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "Yes", replace
+		qui estadd loc fetime "Yes", replace
+		
+		reghdfe ``y'' triple_did, absorb(unit_state time_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "Yes", replace
+		qui estadd loc fetime_s "Yes", replace
+						
 		loc ++i
 	}
 
 	#delimit ;
-	esttab est1 est2 est3 est4 using "$tables/did_f.tex", style(tex) replace
-		coeflabel(1.sh#1.post#1.victim_f "Female $\times$ SH $\times$ Post") keep(1.sh#1.post#1.victim_f)
-		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 1 1 1)
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_f.tex", style(tex) replace
+		coeflabel(triple_did "Female $\times$ SH $\times$ Post") keep(triple_did)
+		mgroups("Filed" "Settled" "Won" "\($\) paid", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none)
-		stats(N r2, 
-			label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)")
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
