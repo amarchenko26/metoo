@@ -480,8 +480,8 @@ The following variables are cleaned altogether, after city data is appended toge
 
 #### Sex-based cases
 
-`sex_cases == 1` if `crime_type == Sexual assault`
-`sex_cases == 0` if `crime_type ==  Non-sex crime`
+`sex_cases == 1` if `crime_type == Sexual assault`  
+`sex_cases == 0` if `crime_type ==  Non-sex crime`  
 `sex_cases == .` if `crime_type ==  Excluded crime`
 
 #### Sexual harassment cases
@@ -490,25 +490,25 @@ The following variables are cleaned altogether, after city data is appended toge
 
 #### Clearance
 
-`clearance == 1` if the case was marked as cleared by arrest or cleared by prosecution deciding not to prosecute
-`clearance == 0` if the case is not marked as resulting in arrest or exceptional clearance - per FBI this means that the case is marked as not cleared
+`clearance == 1` if the case was marked as cleared by arrest or cleared by prosecution deciding not to prosecute  
+`clearance == 0` if the case is not marked as resulting in arrest or exceptional clearance - per FBI this means that the case is marked as not cleared  
 `clearance == .` if the case was cleared exceptionally for any other reason
 
 #### Victim_f
 
-`victim_f == 1` if any victim of the case is female
-`victim_f == 0` if all victims are male
+`victim_f == 1` if any victim of the case is female  
+`victim_f == 0` if all victims are male  
 `victim_f == .` if no data is available
 
 #### Court
 
-`court == 1` if the case went to court
+`court == 1` if the case went to court  
 `court == 0` otherwise
 
 #### Overlap
 
-`overlap == 1` if `sex_cases == 1` and case filed before MeToo and resolved after MeToo
-`overlap == 0` if `sex_cases == 1` and case filed before MeToo and resolved before MeToo
+`overlap == 1` if `sex_cases == 1` and case filed before MeToo and resolved after MeToo  
+`overlap == 0` if `sex_cases == 1` and case filed before MeToo and resolved before MeToo  
 `overlap == .` if `sex_cases == 0`  
 `overlap == .` if case filed after MeToo
 
