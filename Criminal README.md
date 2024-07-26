@@ -1,10 +1,12 @@
 # MeToo Criminal Data
+
 **City Data and National Incident-Based Reporting System Data**
 
 ## Description of datasets (kept variables bolded)
 
 **$raw_data/Criminal/Austin.csv**  
 These data contain all police cases reported in Austin from 2003 to 2024 (downloaded 7/1/2024).
+
 - N: 1,561,674 (years 2010+); 2,477,359 (raw)
 - SH: 5,608 (years 2010+)
 - SA: 6,324 (years 2010+)
@@ -41,6 +43,7 @@ These data contain all police cases reported in Austin from 2003 to 2024 (downlo
 
 **$raw_data/Criminal/Chicago.csv**  
 These data contain all police cases reported in Chicago from 2001 to 2024 (downloaded 7/9/2024).
+
 - N: 4,023,799 (years 2010+); 8,101,448 (raw)
 - SH: 7,974 (years 2010+)
 - SA: 25,725 (years 2010+)
@@ -72,6 +75,7 @@ These data contain all police cases reported in Denver from 2019 to 2024 (downlo
 
 **$raw_data/Criminal/Kansas City `year`.csv**  
 These data contain all police cases reported in Kansas City from 2015 to 2024 (downloaded 7/2/2024).
+
 - N: 1,061,787 (dropping cases not in Kansas City); 1,068,111 (raw)
 - SH: 2,296 (dropping cases not in Kansas City)
 - SA: 11,017 (dropping cases not in Kansas City)
@@ -92,7 +96,7 @@ These data contain all police cases reported in Kansas City from 2015 to 2024 (d
 - City
 - Zip Code
 - Rep_Dist: Area where offense occurred
-- Area:	Division the offense occurred in (Central, East, Metro, South, North, and Shoal Creek)
+- Area: Division the offense occurred in (Central, East, Metro, South, North, and Shoal Creek)
 - DVFlag: Indicates if it was a domestic violence offense
   - 2015-2020:
     - N: No
@@ -125,6 +129,7 @@ These data contain all police cases reported in Kansas City from 2015 to 2024 (d
 
 **$raw_data/Criminal/Los Angeles 1.csv** (2010-2019) & **$raw_data/Criminal/Los Angeles 2.csv** (2020-2024)  
 These data contain all police cases reported in Los Angeles from 2010 to 2024 (downloaded 7/2/2024).
+
 - N: 3,078,199
 - SH: 46,571
 - SA: 40,989
@@ -144,7 +149,7 @@ These data contain all police cases reported in Los Angeles from 2010 to 2024 (d
   - F: Female
   - M:Male
   - X: Unknown
-- Vict Descent:	Descent Code
+- Vict Descent: Descent Code
   - A: Other Asian
   - B: Black
   - C: Chinese
@@ -181,6 +186,7 @@ These data contain all police cases reported in Los Angeles from 2010 to 2024 (d
 
 **$raw_data/Criminal/Louisville `year`.csv**  
 These data contain all police cases reported in Louisville from 2010 to 2024 (downloaded 7/2/2024).
+
 - N: 1,057,124 (dropping cases not in Louisville); 1,123,144 (raw)
 - SH: 1,463 (dropping cases not in Louisville)
 - SA: 5,260 (dropping cases not in Louisville)
@@ -206,6 +212,7 @@ These data contain all police cases reported in Louisville from 2010 to 2024 (do
 
 **$raw_data/Criminal/New York City.csv**  
 These data contain all police cases reported in New York City from 2006 to 2023 (downloaded 7/2/2024).
+
 - N: 6,804,659 (years 2010+); 8,914,838 (raw)
 - SH: 12,151 (years 2010+)
 - SA: 84,287 (years 2010+)
@@ -222,7 +229,7 @@ These data contain all police cases reported in New York City from 2006 to 2023 
 - JURISDICTION_CODE: Jurisdiction responsible for incident. Either internal, like Police(0), Transit(1), and Housing(2); or external(3), like Correction, Port Authority, etc.
 - JURIS_DESC: Description of the jurisdiction code
 - **KY_CD**: Three digit offense classification code
-- LAW_CAT_CD: Level of offense: felony, misdemeanor, violation 
+- LAW_CAT_CD: Level of offense: felony, misdemeanor, violation
 - LOC_OF_OCCUR_DESC: Specific location of occurrence in or around the premises; inside, opposite of, front of, rear of
 - **OFNS_DESC**: Description of offense corresponding with key code
 - PARKS_NM: Name of NYC park, playground or greenspace of occurrence, if applicable (state parks are not included)
@@ -230,7 +237,7 @@ These data contain all police cases reported in New York City from 2006 to 2023 
 - PD_CD: Three digit internal classification code (more granular than Key Code)
 - PD_DESC: Description of internal classification corresponding with PD code (more granular than Offense Description)
 - PREM_TYP_DESC: Specific description of premises; grocery store, residence, street, etc.
-- **RPT_DT**: Date event was reported to police 
+- **RPT_DT**: Date event was reported to police
 - STATION_NAME: Transit station name
 - SUSP_AGE_GROUP: Suspect’s Age Group
 - SUSP_RACE: Suspect’s Race Description
@@ -241,11 +248,12 @@ These data contain all police cases reported in New York City from 2006 to 2023 
 - VIC_SEX: Victim’s Sex Description
 - X_COORD_CD: X-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104)
 - Y_COORD_CD: Y-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104)
-- Latitude: Midblock Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326) 
+- Latitude: Midblock Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 - Longitude: Midblock Longitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326)
 
 **$raw_data/Criminal/Seattle.csv**  
 These data contain all police cases reported in Seattle from 2008 to 2024 (downloaded 7/1/2024).
+
 - N: 998,545 (years 2010+); 1,128,357 (raw)
 - SH: 183 (years 2010+)
 - SA: 6,781 (years 2010+)
@@ -269,6 +277,7 @@ These data contain all police cases reported in Seattle from 2008 to 2024 (downl
 
 **$raw_data/Criminal/Tucson `year`.csv**  
 These data contain all police cases reported in Tucson from 2010 to 2023 (downloaded 7/2/2024). Currently missing years 2013 and 2017, emailed for data files.
+
 - N: 1,668,669 (dropping empty cases and cases not in Tucson); 1,700,820 (raw)
 - SH: 4,007 (dropping empty cases and cases not in Tucson)
 - SA: 4,867 (dropping empty cases and cases not in Tucson)
@@ -325,6 +334,7 @@ These data contain all police cases reported in Tucson from 2010 to 2023 (downlo
 
 **$raw_data/Criminal/`year` NIBRS data'.dta**
 These data contain all cases reported to NIBRS from 2010 to 2020 from US agencies
+
 - N: 60,729,477
 - SA: 935,987
 - ID: Unique identifier for the case
@@ -370,18 +380,22 @@ The two clean datasets containing criminal data are clean_criminal_cases.dta and
 The following variables are cleaned separately for each city.
 
 #### Crime type
-`crime_type == Sexual assault` if the crime includes physical contact.  
+
+`crime_type == Sexual assault` if the crime includes physical contact.
+
 - Rape
 - Sodomy
 - Sexual assault
 
 `crime_type == Sexual harrassment` if the crime does not include physical contact.
+
 - Stalking
 - Indecent exposure
 - Window peeping
 - Public lewdness
 
 `crime_type == Excluded crime` if the crime is not directly affected by the MeToo movement but could be indirectly related to it.
+
 - Bestiality
 - Bigamy
 - Sex crimes against children
@@ -395,38 +409,43 @@ The following variables are cleaned separately for each city.
 `crime_type == Non-sex crime` for all other crimes.
 
 #### Sexual harassment
+
 `sh == 1` if `crime_type` is Sexual harassment.  
-`sh == 0` otherwise  
+`sh == 0` otherwise
 
 #### Sex-based cases
+
 `sex_cases == 1` if `crime_type` is Sexual harassment or Sexual assault.  
-`sex_cases == 0` otherwise.  
+`sex_cases == 0` otherwise.
 
 #### Clearance
+
 `clearance == 1` if the case was cleared by arrest or exception  
-`clearance == 0` if the case was not cleared  
+`clearance == 0` if the case was not cleared
 
-#### Victim female  
+#### Victim female
+
 `victim_f = 1` if complainant/victim is female  
-`victim_f = 0` if complainant/victim is male     
-`victim_f = .` if missing data on complainant gender  
+`victim_f = 0` if complainant/victim is male  
+`victim_f = .` if missing data on complainant gender
 
-The following variables are cleaned altogether, after city data is appended together. 
+The following variables are cleaned altogether, after city data is appended together.
 
 #### Overlap
+
 `overlap == 1` if `sex_cases == 1` and case filed before MeToo and resolved after MeToo  
 `overlap == 0` if `sex_cases == 1` and case filed before MeToo and resolved before MeToo  
 `overlap == .` if `sex_cases == 0`  
-`overlap == .` if case filed after MeToo  
+`overlap == .` if case filed after MeToo
 
 #### Treat
-`post = 1` if file date after MeToo.   
-`post = 0` if file date before MeToo.    
-`post = .` never  
+
+`post = 1` if file date after MeToo.  
+`post = 0` if file date before MeToo.  
+`post = .` never
 
 `treat = post*sex_cases`  
-`treat = 1` if `overlap == 1` since overlap cases are sex cases AND treated, but definition of post doesn't capture them.  
-
+`treat = 1` if `overlap == 1` since overlap cases are sex cases AND treated, but definition of post doesn't capture them.
 
 ### clean_nibrs_cases.dta
 
@@ -443,7 +462,7 @@ The following variables are cleaned altogether, after city data is appended toge
 
 #### Sexual harassment cases
 
-`sh == 0` always, since no sexual harassment cases are reported to NIBRS
+`sh == .` always, since no sexual harassment cases are reported to NIBRS
 
 #### Crime type
 
@@ -466,14 +485,15 @@ The following variables are cleaned altogether, after city data is appended toge
 
 #### Clearance
 
-`clearance == 1` if the case was marked as cleared by arrest or cleared by prosecution deciding not to prosecute 
+`clearance == 1` if the case was marked as cleared by arrest or cleared by prosecution deciding not to prosecute
 `clearance == 0` if the case is not marked as resulting in arrest or exceptional clearance - per FBI this means that the case is marked as not cleared
 `clearance == .` if the case was cleared exceptionally for any other reason
 
 #### Victim_f
 
-`victim_f == 1` if the victim of the case is female
-`victim_f == 0` otherwise
+`victim_f == 1` if any victim of the case is female
+`victim_f == 0` if all victims are male
+`victim_f == .` if no data is available
 
 #### Court
 
@@ -482,8 +502,8 @@ The following variables are cleaned altogether, after city data is appended toge
 
 #### Overlap
 
-`overlap == 1` if `sex_cases == 1` and case filed before MeToo and resolved after MeToo  
-`overlap == 0` if `sex_cases == 1` and case filed before MeToo and resolved before MeToo  
+`overlap == 1` if `sex_cases == 1` and case filed before MeToo and resolved after MeToo
+`overlap == 0` if `sex_cases == 1` and case filed before MeToo and resolved before MeToo
 `overlap == .` if `sex_cases == 0`  
 `overlap == .` if case filed after MeToo
 
