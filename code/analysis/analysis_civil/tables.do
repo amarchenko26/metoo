@@ -6,7 +6,7 @@ use "$clean_data/clean_cases.dta", replace
 
 loc	run_did 	 = 1
 loc run_overlap  = 0
-loc run_victim_f = 0
+loc run_victim_f_present = 0
 
 loc run_summary  = 0
 loc run_balance  = 0
@@ -14,86 +14,6 @@ loc run_duration = 0
 
 eststo clear
 estimates clear
-
-/*******************************************************************************
-Prep vars for tables
-*******************************************************************************/
-tab juris, gen(juris_dummy)
-la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Education"
-la var juris_dummy2 "\hspace{5mm} Employment"
-la var juris_dummy3 "\hspace{5mm} Housing"
-la var juris_dummy4 "\hspace{5mm} Public Accommodation"
-la var juris_dummy5 "\hspace{5mm} Unspecified"
-
-tab basis, gen(basis_dummy)
-la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
-la var basis_dummy2 "\hspace{5mm} Disability"
-la var basis_dummy3 "\hspace{5mm} LGBTQ"
-la var basis_dummy4 "\hspace{5mm} Nationality"
-la var basis_dummy5 "\hspace{5mm} Other"
-la var basis_dummy6 "\hspace{5mm} Race"
-la var basis_dummy7 "\hspace{5mm} Religion"
-la var basis_dummy8 "\hspace{5mm} Retaliation"
-la var basis_dummy9 "\hspace{5mm} Sex"
-
-
-/*******************************************************************************
-Define locals 
-*******************************************************************************/
-
-loc summary ///
-    sh ///
-	juris_dummy1 ///
-	juris_dummy2 ///
-	juris_dummy3 ///
-	juris_dummy4 ///
-	juris_dummy5 ///
-	basis_dummy1 ///
-	basis_dummy2 ///
-	basis_dummy3 ///
-	basis_dummy4 ///
-	basis_dummy5 ///
-	basis_dummy6 ///
-	basis_dummy7 ///
-	basis_dummy8 ///
-	basis_dummy9 ///
-    charge_file_year ///
-    charge_res_year ///
-	settle ///
-    court ///
-    court_file_year ///
-    court_res_year ///
-    duration ///
-    overlap_2 ///
-    relief ///
-	missing_relief ///
-    win
-
-
-loc balance ///
-    sh ///
-	basis_dummy1 ///
-	basis_dummy2 ///
-	basis_dummy3 ///
-	basis_dummy4 ///
-	basis_dummy5 ///
-	basis_dummy6 ///
-	basis_dummy7 ///
-	basis_dummy8 ///
-	basis_dummy9 ///
-	juris_dummy1 ///
-	juris_dummy2 ///
-	juris_dummy3 ///
-	juris_dummy4 ///
-	juris_dummy5 ///
-    settle ///
-	court ///
-	duration ///
-    overlap_2 ///
-    relief ///
-	missing_relief ///
-    win
-
 
 /*******************************************************************************
 overlap_2 regression
@@ -185,13 +105,13 @@ if `run_did' == 1 {
 		
 		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
 		
 		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
 		eststo s`i'
-		qui estadd loc feunit_s "Yes", replace
-		qui estadd loc fetime_s "Yes", replace
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
 						
 		loc ++i
 	}
@@ -225,13 +145,13 @@ if `run_did' == 1 {
 		
 		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
 		
 		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
 		eststo s`i'
-		qui estadd loc feunit_s "Yes", replace
-		qui estadd loc fetime_s "Yes", replace
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
 						
 		loc ++i
 	}
@@ -262,13 +182,13 @@ if `run_did' == 1 {
 		
 		reghdfe ``y'' triple_did, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
 		
 		reghdfe ``y'' triple_did, absorb(unit_state time_state) vce(cluster basis)
 		eststo s`i'
-		qui estadd loc feunit_s "Yes", replace
-		qui estadd loc fetime_s "Yes", replace
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
 						
 		loc ++i
 	}
@@ -340,6 +260,88 @@ if `run_victim_f_present' == 1 {
 	eststo clear
 	estimates clear
 }
+
+
+/*******************************************************************************
+Prep vars for tables
+*******************************************************************************/
+tab juris, gen(juris_dummy)
+la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Education"
+la var juris_dummy2 "\hspace{5mm} Employment"
+la var juris_dummy3 "\hspace{5mm} Housing"
+la var juris_dummy4 "\hspace{5mm} Public Accommodation"
+la var juris_dummy5 "\hspace{5mm} Unspecified"
+
+tab basis, gen(basis_dummy)
+la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
+la var basis_dummy2 "\hspace{5mm} Disability"
+la var basis_dummy3 "\hspace{5mm} LGBTQ"
+la var basis_dummy4 "\hspace{5mm} Nationality"
+la var basis_dummy5 "\hspace{5mm} Other"
+la var basis_dummy6 "\hspace{5mm} Race"
+la var basis_dummy7 "\hspace{5mm} Religion"
+la var basis_dummy8 "\hspace{5mm} Retaliation"
+la var basis_dummy9 "\hspace{5mm} Sex"
+
+
+/*******************************************************************************
+Define locals 
+*******************************************************************************/
+
+loc summary ///
+    sh ///
+	juris_dummy1 ///
+	juris_dummy2 ///
+	juris_dummy3 ///
+	juris_dummy4 ///
+	juris_dummy5 ///
+	basis_dummy1 ///
+	basis_dummy2 ///
+	basis_dummy3 ///
+	basis_dummy4 ///
+	basis_dummy5 ///
+	basis_dummy6 ///
+	basis_dummy7 ///
+	basis_dummy8 ///
+	basis_dummy9 ///
+    charge_file_year ///
+    charge_res_year ///
+	settle ///
+    court ///
+    court_file_year ///
+    court_res_year ///
+    duration ///
+    overlap_2 ///
+    relief ///
+	missing_relief ///
+    win
+
+
+loc balance ///
+    sh ///
+	basis_dummy1 ///
+	basis_dummy2 ///
+	basis_dummy3 ///
+	basis_dummy4 ///
+	basis_dummy5 ///
+	basis_dummy6 ///
+	basis_dummy7 ///
+	basis_dummy8 ///
+	basis_dummy9 ///
+	juris_dummy1 ///
+	juris_dummy2 ///
+	juris_dummy3 ///
+	juris_dummy4 ///
+	juris_dummy5 ///
+    settle ///
+	court ///
+	duration ///
+    overlap_2 ///
+    relief ///
+	missing_relief ///
+    win
+
+
 
 /*******************************************************************************
 Summary

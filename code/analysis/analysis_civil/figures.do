@@ -4,11 +4,12 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc event 	   = 1 // Event study
-loc event_all  = 1 // All cases (eeoc_filed == 1) 
-loc timeseries = 1
-loc diff 	   = 1 
-loc duration   = 1 
+loc run_placebo = 1
+loc event 	   = 0 // Event study
+loc event_all  = 0 // All cases (eeoc_filed == 1) 
+loc timeseries = 0
+loc diff 	   = 0 
+loc duration   = 0 
 
 /*******************************************************************************
 Prep data for plotting
@@ -19,6 +20,42 @@ drop if months_to_treat_12 == 6 // drop obs after 2022
 
 drop if sh == . // drop if missing sh
 di tm(2017m10) // di numeric value for October 2017, it's 693
+
+
+/*******************************************************************************
+Placebo coef plots 
+*******************************************************************************/
+
+loc y1 filed_per_year
+loc y2 settle
+loc y3 win
+loc y4 relief_scale
+
+loc outcome_vars y1 y2 y3 y4
+loc i 1
+
+// Gen placebo treat variables 
+levelsof basis_cat, local(levels)
+foreach l of local levels {
+	g placebo_treat_`l' = (post==1 & basis_cat == `l')
+}
+drop placebo_treat_9 // don't make a placebo for Sex cases 
+
+if `run_placebo' == 1 {
+
+	g unit_state = basis * state_cat
+	g time_state = ym * state_cat
+
+	foreach y of local outcome_vars {
+		forvalues index = 1(1)8 {
+			reghdfe ``y'' placebo_treat_`index', absorb(unit_state time_state) vce(cluster basis)
+			eststo s`i'
+			loc ++i
+		}
+	}
+
+}
+
 
 /*******************************************************************************
 Event-study
@@ -172,7 +209,7 @@ if `timeseries' == 1 {
 
 
 
-// Damages over time
+	// Damages over time
 	preserve 
 	collapse (mean) mean_relief = relief_w, by(ym sh)
 		twoway ///
@@ -189,7 +226,7 @@ if `timeseries' == 1 {
 	restore	
 
 
-// Probability of winning over time
+	// Probability of winning over time
 	preserve 
 	collapse (mean) mean_prob_cause = win, by(ym sh)
 		twoway ///
