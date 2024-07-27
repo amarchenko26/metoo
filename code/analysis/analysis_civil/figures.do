@@ -26,33 +26,62 @@ di tm(2017m10) // di numeric value for October 2017, it's 693
 Placebo coef plots 
 *******************************************************************************/
 
-loc y1 filed_per_year
+*loc y1 filed_per_year
 loc y2 settle
 loc y3 win
 loc y4 relief_scale
 
-loc outcome_vars y1 y2 y3 y4
+loc outcome_vars y2 y3 y4
 loc i 1
-
-// Gen placebo treat variables 
-levelsof basis_cat, local(levels)
-foreach l of local levels {
-	g placebo_treat_`l' = (post==1 & basis_cat == `l')
-}
-drop placebo_treat_9 // don't make a placebo for Sex cases 
+loc j 1
 
 if `run_placebo' == 1 {
+
+	preserve
+	drop if basis == "Sex" | sh == 1
+
+	// Gen placebo treat variables 
+	levelsof basis_cat, local(levels)
+	foreach l of local levels {
+		g placebo_treat_`l' = (post==1 & basis_cat == `l')
+	}
 
 	g unit_state = basis * state_cat
 	g time_state = ym * state_cat
 
 	foreach y of local outcome_vars {
-		forvalues index = 1(1)8 {
+		forvalues index = 1(1)7 {
 			reghdfe ``y'' placebo_treat_`index', absorb(unit_state time_state) vce(cluster basis)
-			eststo s`i'
+			eststo s_r_`i'
 			loc ++i
 		}
 	}
+	restore
+	
+	g unit_state = basis * state_cat
+	g time_state = ym * state_cat
+
+	foreach y of local outcome_vars {
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		eststo true`j'
+		loc ++j
+	}
+
+	#delimit ;
+	coefplot 
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 s_r_7 true1, bylabel(Settled)
+		|| s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 s_r_13 s_r_14 true2, bylabel(Won)
+		|| s_r_15 s_r_16 s_r_17 s_r_18 s_r_19 s_r_20 s_r_21 true3, bylabel(Compensation)
+		|| , drop(_cons)
+		byopts(xrescale legend(off)) // so x-axis is different for all plots
+		ciopts(lwidth(thick) recast(rcap))
+		ylabel(1 "Age" 2 "Disability" 3 "LGBTQ" 4 "Nationality" 5 "Other" 6 "Race" 7 "Religion" 8 "Sexual harassment", labsize(medium)) // angle(45)
+		xline(0, lc(gs8) lp(dash))
+		xtitle("Effect of MeToo", size(medium))
+		ytitle("Placebo treatment", size(medium));
+	#delimit cr
+
+    graph export "$figures/placebo.png", replace  
 
 }
 
