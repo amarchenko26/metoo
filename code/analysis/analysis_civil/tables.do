@@ -4,8 +4,8 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 = 1
-loc run_overlap  = 0
+loc run_overlap  = 1
+loc	run_did 	 = 0
 loc run_victim_f_present = 0
 
 loc run_summary  = 0
@@ -42,7 +42,7 @@ if `run_overlap' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: 2 Years Pre-MeToo}} \\ \midrule")
 		fragment
 		varlabels(overlap_2 "Overlap") keep(overlap_2)
-		mgroups("Settled" "Won" "\($\) paid", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
+		mgroups("Settled" "Won" "Compensation", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)

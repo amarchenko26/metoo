@@ -12,17 +12,6 @@ loc diff 	   = 0
 loc duration   = 0 
 
 /*******************************************************************************
-Prep data for plotting
-*******************************************************************************/
-
-drop if ym < 609				// drop obs before Oct 2010
-drop if months_to_treat_12 == 6 // drop obs after 2022 
-
-drop if sh == . // drop if missing sh
-di tm(2017m10) // di numeric value for October 2017, it's 693
-
-
-/*******************************************************************************
 Placebo coef plots 
 *******************************************************************************/
 
@@ -37,17 +26,17 @@ loc j 1
 
 if `run_placebo' == 1 {
 
+	g unit_state = basis * state_cat
+	g time_state = ym * state_cat
+
+	// Placebo treatment effects
 	preserve
 	drop if basis == "Sex" | sh == 1
 
-	// Gen placebo treat variables 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
-		g placebo_treat_`l' = (post==1 & basis_cat == `l')
+		g placebo_treat_`l' = (post==1 & basis_cat == `l') 	// Gen placebos 
 	}
-
-	g unit_state = basis * state_cat
-	g time_state = ym * state_cat
 
 	foreach y of local outcome_vars {
 		forvalues index = 1(1)7 {
@@ -57,10 +46,8 @@ if `run_placebo' == 1 {
 		}
 	}
 	restore
-	
-	g unit_state = basis * state_cat
-	g time_state = ym * state_cat
 
+	// True treatment effect 
 	foreach y of local outcome_vars {
 		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
 		eststo true`j'
@@ -82,8 +69,17 @@ if `run_placebo' == 1 {
 	#delimit cr
 
     graph export "$figures/placebo.png", replace  
-
 }
+
+
+/*******************************************************************************
+Prep data for plotting
+*******************************************************************************/
+
+drop if ym < 609				// drop obs before Oct 2010
+drop if months_to_treat_12 == 6 // drop obs after 2022 
+drop if sh == . // drop if missing sh
+di tm(2017m10) // di numeric value for October 2017, it's 693
 
 
 /*******************************************************************************
