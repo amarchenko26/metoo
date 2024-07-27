@@ -164,6 +164,8 @@ g treat = post*sh // treat=1 if post =1 and sh=1
 replace treat = . if sex_cases == 1 & sh == 0 
 replace treat = 1 if overlap_2 == 1
 
+g triple_did = victim_f * treat
+
 // Clean relief
 winsor relief, p(.05) gen(relief_w)
 replace relief = . if missing_relief == 1 // if relief = 0, person lost, so everything is CONDITIONAL ON WINNING 
@@ -183,6 +185,10 @@ encode state, g(state_cat)
 encode basis, g(basis_cat)
 
 replace eeoc_filed = 0 if missing(eeoc_filed)
+
+// Gen state*unit and state*time FE
+g unit_state = basis * state_cat
+g time_state = ym * state_cat
 
 /*******************************************************************************
 Create time to treat - 0 is the pre-period before MeToo

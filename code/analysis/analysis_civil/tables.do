@@ -12,8 +12,6 @@ loc run_summary  = 0
 loc run_balance  = 0
 loc run_duration = 0
 
-eststo clear
-estimates clear
 
 /*******************************************************************************
 overlap_2 regression
@@ -94,9 +92,6 @@ loc outcome_vars y1 y2 y3 y4
 loc i 1
 
 if `run_did' == 1 {
-
-	g unit_state = basis * state_cat
-	g time_state = ym * state_cat
 
 	// DID - No EEOC data **********************************************************/
 	preserve 
@@ -210,8 +205,6 @@ if `run_did' == 1 {
 	estimates clear
 	eststo clear
 
-	drop time_state unit_state
-
 }
 
 /*******************************************************************************
@@ -223,10 +216,6 @@ if `run_victim_f_present' == 1 {
 
 	loc outcome_vars y1 y2 y3 y4
 	loc i 1
-
-	g triple_did = victim_f * treat
-	g unit_state = basis * state_cat
-	g time_state = ym * state_cat
 
 	foreach y of local outcome_vars {
 		
