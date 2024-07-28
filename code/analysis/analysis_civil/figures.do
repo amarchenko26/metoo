@@ -4,7 +4,7 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_placebo = 1
+loc run_placebo = 0
 loc run_placebo_f = 1
 loc event 	   = 0 // Event study
 loc event_all  = 0 // All cases (eeoc_filed == 1) 
@@ -22,10 +22,11 @@ loc y3 win
 loc y4 relief_scale
 
 loc outcome_vars y2 y3 y4
-loc i 1
-loc j 1
 
 if `run_placebo' == 1 {
+
+	loc i 1
+	loc j 1
 
 	// Placebo treatment effects
 	preserve
@@ -73,7 +74,11 @@ if `run_placebo' == 1 {
 eststo clear
 estimates clear
 
+
 if `run_placebo_f' == 1 {
+
+	loc i 1
+	loc j 1
 
 	// VICTIM FEMALE Placebo treatment effects
 	preserve
