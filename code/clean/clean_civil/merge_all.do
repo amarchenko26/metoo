@@ -1,5 +1,4 @@
 /*******************************************************************************
-
 This file merges all state + federal data into a .dta. I start with EEOC data and 
 then merge in states, formatting all variables and labels equivalently. 
 
@@ -22,10 +21,7 @@ Already merged:
 	- RI
 	- AK
 	- PA
-
-
 *******************************************************************************/
-
 
 /*******************************************************************************
 Pull cleaned EEOC court case data
@@ -108,7 +104,7 @@ append using "$clean_data/clean_pa.dta"
 
 
 /*******************************************************************************
-Clean joint data
+Clean dates
 *******************************************************************************/
 
 // Make common filing date, regardless of stage of case
@@ -135,13 +131,41 @@ g charge_res_year = year(charge_res_date)
 g court_file_year = year(court_file_date)
 g court_res_year = year(court_res_date)
 
-
+replace eeoc_filed = 0 if missing(eeoc_filed)
 
 /*******************************************************************************
-2 Definitions of Overlap
+Gen fixed effects  
 *******************************************************************************/
 
-// Overlap MeToo - 1 if case filed before MeToo & ended after, 0 o/w
+encode state, g(state_cat)
+encode basis, g(basis_cat)
+
+// Gen state/unit and state/time FE
+g unit_state = basis * state_cat
+g time_state = ym * state_cat
+
+/*******************************************************************************
+Outcomes for regressions
+*******************************************************************************/
+
+// Gen index var for count
+g y = 1
+
+// Gen cases_filed
+bys sh common_year: gen filed_per_year = _N
+bys common_year: gen total_cases_per_year = _N
+replace filed_per_year = filed_per_year / total_cases_per_year
+
+// Clean relief
+winsor relief, p(.05) gen(relief_w)
+replace relief = . if missing_relief == 1 // if relief = 0, person lost, so relief is CONDITIONAL ON WINNING 
+g relief_scale = relief_w / 1000
+
+/*******************************************************************************
+Overlap
+*******************************************************************************/
+
+// overlap_all - all sh cases filed before MeToo & ended after, 0 o/w
 g overlap_all = 1 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1 // 1 if case ended after MeToo
 replace overlap_all = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1 // 0 if case ended before MeToo
 replace overlap_all = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
@@ -152,7 +176,6 @@ g overlap_2 = overlap_all
 replace overlap_2 = . if common_file_date < date("$metoo", "DMY") - 730 // drop cases filed more than two years before MeToo
 replace overlap_2 = . if common_res_date > date("$metoo", "DMY") + 365 // remove cases resolved more than a year after
 replace overlap_2 = . if (common_file_date < date("$metoo", "DMY") - 365) & (overlap_2 == 1) // remove overlap cases filed more than a year before MeToo
-
 
 /*******************************************************************************
 Gen post and treat 
@@ -165,30 +188,6 @@ replace treat = . if sex_cases == 1 & sh == 0
 replace treat = 1 if overlap_2 == 1
 
 g triple_did = victim_f * treat
-
-// Clean relief
-winsor relief, p(.05) gen(relief_w)
-replace relief = . if missing_relief == 1 // if relief = 0, person lost, so everything is CONDITIONAL ON WINNING 
-
-g relief_scale = relief_w / 1000
-
-// Gen index var for count
-g y = 1
-
-// Gen cases_filed for regression
-bys sh common_year: gen filed_per_year = _N
-bys common_year: gen total_cases_per_year = _N
-replace filed_per_year = filed_per_year / total_cases_per_year
-
-// Gen categorical version of common vars
-encode state, g(state_cat)
-encode basis, g(basis_cat)
-
-replace eeoc_filed = 0 if missing(eeoc_filed)
-
-// Gen state*unit and state*time FE
-g unit_state = basis * state_cat
-g time_state = ym * state_cat
 
 /*******************************************************************************
 Create time to treat - 0 is the pre-period before MeToo
@@ -203,6 +202,20 @@ create_time_to_treat, period(6) period_label("Half-years relative to MeToo")
 // Create time_to_treat for years
 create_time_to_treat, period(12) period_label("Years relative to MeToo")
 
+/*******************************************************************************
+Create consistent sample 
+*******************************************************************************/
+
+// Drop obs before Oct 2010
+di tm(2010m10)
+drop if ym < 609
+
+// Drop obs after Oct 2023
+di tm(2023m10)
+drop if ym > 765
+
+// Drop missing bases (N=10 obs in PA) 
+cap drop if basis == ""
 
 /*******************************************************************************
 Label all variables

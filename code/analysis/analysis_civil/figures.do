@@ -4,7 +4,7 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_placebo = 0
+loc run_placebo = 1
 loc run_placebo_f = 1
 loc event 	   = 0 // Event study
 loc event_all  = 0 // All cases (eeoc_filed == 1) 
@@ -29,13 +29,14 @@ if `run_placebo' == 1 {
 
 	// Placebo treatment effects
 	preserve
-	drop if basis == "Sex" | sh == 1
+	drop if basis == "Sex" | sh == 1 // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
 		g placebo_treat_`l' = (post==1 & basis_cat == `l') 	// Gen placebos 
 	}
 
+	// placebo treatment effects
 	foreach y of local outcome_vars {
 		forvalues index = 1(1)7 {
 			reghdfe ``y'' placebo_treat_`index', absorb(unit_state time_state) vce(cluster basis)
@@ -118,17 +119,6 @@ if `run_placebo_f' == 1 {
 	estimates clear
 }
 
-
-/*******************************************************************************
-Prep data for plotting
-*******************************************************************************/
-
-drop if ym < 609				// drop obs before Oct 2010
-drop if months_to_treat_12 == 6 // drop obs after 2022 
-drop if sh == . // drop if missing sh
-di tm(2017m10) // di numeric value for October 2017, it's 693
-
-
 /*******************************************************************************
 Event-study
 *******************************************************************************/
@@ -194,16 +184,13 @@ if `event_all' == 1 {
 }
 
 
-// For rest of .do file, drop journalist cases that mess up the graphs
-
-drop if eeoc_filed == 1
-
 if `event' == 1 {
-		
+
 	foreach horizon in `horizons' {
 		foreach y in `outcomes' {
 			
 			preserve 
+			drop if eeoc_filed == 1
 			drop if `horizon' == 5 | `horizon' == -8
 			
 			sum `horizon'
@@ -256,15 +243,16 @@ if `event' == 1 {
 	
 }
 
-
-
-
 /*******************************************************************************
-Other graphs
+Cases/outcomes over time 
 *******************************************************************************/
 
-// Number of discrimination cases filed over time
 if `timeseries' == 1 {
+	
+	drop if eeoc_filed == 1
+	drop if sh == . // otherwise it messes up collapse statement
+
+	// Number cases filed over time
     preserve
     collapse (count) mean_y = y, by(ym sh)
 		twoway ///
@@ -279,7 +267,25 @@ if `timeseries' == 1 {
     graph export "$figures/timeseries.png", replace
     restore
 
-
+    preserve
+	collapse (count) mean_y = y, by(ym basis)
+	#delimit ;
+	twoway
+		lowess mean_y ym if basis == "Age", color("gs3") lwidth(thick) yaxis(1) 
+		|| lowess mean_y ym if basis == "Race", color("blue") lwidth(thick) yaxis(1) 
+		|| lowess mean_y ym if basis == "LGBTQ", color("green") lwidth(thick) yaxis(1) 
+		|| lowess mean_y ym if basis == "Disability", color("purple") lwidth(thick) yaxis(1) 
+		|| lowess mean_y ym if basis == "Religion", color("red") lwidth(thick) yaxis(1) 
+		|| lowess mean_y ym if basis == "Nationality", color("orange") lwidth(thick) yaxis(1) 
+		|| lowess mean_y ym if basis == "Retaliation", color("brown") lwidth(thick) yaxis(1) 
+		|| lowess mean_y ym if basis == "Sex", color("orange_red") lwidth(thick) yaxis(1)
+	legend(order(1 "Age" 2 "Race" 3 "LGBTQ" 4 "Disability" 5 "Religion" 6 "Nationality" 7 "Retaliation" 8 "Sex") 
+		region(lcolor(none)) position(2) ring(0))
+	xtitle("Date filed", size(medium))
+	xline(693, lpattern(solid));
+	#delimit cr
+    graph export "$figures/timeseries_basis.png", replace
+    restore
 
 	// Damages over time
 	preserve 
@@ -298,7 +304,7 @@ if `timeseries' == 1 {
 	restore	
 
 
-	// Probability of winning over time
+	// Win over time
 	preserve 
 	collapse (mean) mean_prob_cause = win, by(ym sh)
 		twoway ///
@@ -317,6 +323,7 @@ if `timeseries' == 1 {
 
 // Difference between non-SH and SH cases filed over time
 if `diff' == 1 {
+
 	preserve
 	drop if sh ==.
 	collapse (count) mean_y = y, by(ym sh)
@@ -342,14 +349,17 @@ if `diff' == 1 {
 		xtitle("Date filed", size(medium)) ytitle("Number of cases", size(medium)) ///
 		xline(693)
 	graph export "$figures/timeseries_nocovid.png", replace 	
-restore	
+	restore	
 }
+
+/*******************************************************************************
+Duration
+*******************************************************************************/
 
 if `duration' == 1{
 	
 	binscatter win duration_w , n(50) ///
 		xtitle("Duration (winsorized at 1%)") ytitle("Probability of win")
-
 	graph export "$figures/duration_cause.png", replace 	
 
 
