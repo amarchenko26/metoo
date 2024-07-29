@@ -416,13 +416,15 @@ The following variables are cleaned separately for each city.
 
 #### Sexual harassment
 
-`sh == 1` if `crime_type` is Sexual harassment.  
-`sh == 0` otherwise
+`sh == 1` if `crime_type` is Sexual harassment  
+`sh == 0` if `crime_type` is Non-sex crime  
+`sh == .` if `crime_type` is Sexual assault or Excluded crime
 
 #### Sex-based cases
 
-`sex_cases == 1` if `crime_type` is Sexual harassment or Sexual assault.  
-`sex_cases == 0` otherwise.
+`sex_cases == 1` if `crime_type` is Sexual harassment or Sexual assault    
+`sex_cases == 0` if `crime_type` is Non-sex crime  
+`sex_cases == .` if `crime_type` is Excluded crime
 
 #### Clearance
 
