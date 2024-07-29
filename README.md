@@ -2,6 +2,87 @@
 
 Run the project by navigating to metoo Github folder (using `cd`) and typing `./run_project.sh` into command line. 
 
+## Variable Definitions Guide  
+
+The following variables are cleaned separately for each state. 
+
+### Jurisdiction
+`juris` takes the following categories
+- Employment
+- Public Accommodation
+- Housing
+- Education
+
+### Basis 
+`basis` takes the following categories
+- Sex
+- LGBTQ
+- Religion
+- Race
+- Nationality
+- Disability
+- Age
+- Retaliation
+- Other  
+Other includes missings. `basis` is defined using the finer grained `basis_raw` variable. 
+
+### Sexual harassment
+`sh == 1` if `basis` is Sexual Harassment or `issue` (less common) is Sexual Harassment.  
+`sh == 0` otherwise  
+`sh == .` if `sex_cases == 0 & sh == 1`, so a sexual harassment case was filed not on the basis of sex but of race, age, etc. These are weird and we'd like to exclude these altogether. 
+
+### Sex-based cases
+`sex_cases` == 1 includes all cases where `basis` has the word Sex.  
+`sex_cases` == 0 otherwise.  
+This is determined using regexm, which searches for string matches to "Sex". `sex_cases` == 1 can include discrimination against men as well. This variable can be used to understand trends in sex-based discrimination cases more generally. This variable should not be used to understand trends in discrimination against women, because it includes discrimination against men. 
+
+### Compensation/Relief
+`relief >0` is the total compensation plaintiff received from their case, conditional on winning. If plaintiff received money at both the hearing and court stage, relief is the sum of these.  
+`relief = 0` never  
+`relief = .` when the plantiff lost or when we don't have information on relief.  
+
+We should not have `relief = 0` if the plaintiff lost. If the plaintiff lost, `relief == .` and `missing_relief == 1`. If `settle == 1` most often `relief` is missing, unless the case was resolved by conciliation, in which case `relief` may be provided. 
+
+### Win
+`win == 1` if outcome explicitly says discrimination was found at hearing (this may be called probable cause); or if case went to court and plaintiff won the case.  
+`win == 0` if outcome explicitly says discrimination was not found (no probable cause)  
+`win == .` otherwise...e.g., if case was settled, was dismissed, etc.  
+
+If case went to court and plaintiff won compensation, we do not always make this variable equal 1 because receiving $ may not be an admission of discrimination being found. 
+
+### Settle
+`settle == 1` if outcome says case was settled, case was withdrawn with benefits, or case was resolved by conciliation (an administrative process by which two parties resolve their dispute without involving a hearing or court, we can often observe the relief for these cases).  
+`settle == 0` if otherwise  
+`settle == .` never  
+
+### Court 
+`court == 1` if data is court data, if outcome says "Notice of Right to Sue" was issued, or outcome says case went to court.  
+`court == 0` if otherwise  
+`court == .` never  
+
+The following variables are cleaned altogether, after state and federal data is appended together. 
+
+### Overlap
+`overlap == 1` if `sh ==1` and case filed before MeToo and resolved after MeToo  
+`overlap == 0` if `sh ==1` and case filed before MeToo and resolved before MeToo  
+`overlap == .` if `sh == 0`  
+`overlap == .` if case filed after MeToo  
+
+### Treat
+`post = 1` if file date after MeToo.   
+`post = 0` if file date before MeToo.    
+`post = .` never  
+
+`treat = post*sh`  
+`treat = .` if `sex_cases == 1 & sh == 0`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
+`treat = 1` if `overlap == 1` since overlap cases are sh AND treated, but definition of post doesn't capture them.  
+
+### Victim female
+`victim_f = 1` if complainant/victim is female  
+`victim_f = 0` if complainant/victim is male     
+`victim_f = .` if missing data on complainant gender  
+
+
 ## Description of datasets
 
 **$raw_data/AK/ak_raw_cases.csv**  
@@ -237,85 +318,3 @@ This contains all employment discrimination cases filed with EEOC for fiscal yea
 - RESOLUTION_DATE: date lawsuit was resolved
 - CASE_TYPE: case type of lawsuit
 - SELECTSUM(NVL(BACKPAY,0)+NVL(FRONTPAY,0)+NVL(INTEREST,0)+NVL(LIQUIDATED_DAMAGES,0)+NVL(NON_PEC_COMP_DAMAGES,0)+NVL(PEC_COMP_DAMAGES,0)+NVL(PUNITIVE_DAMAGES,0)+NVL(COSTS_AND_FEES,0)..: monetary damages recovered through lawsuit
-
-
-
-## Variable Definitions Guide 
-
-The following variables are cleaned separately for each state. 
-
-### Jurisdiction
-`juris` takes the following categories
-- Employment
-- Public Accommodation
-- Housing
-- Education
-
-### Basis 
-`basis` takes the following categories
-- Sex
-- LGBTQ
-- Religion
-- Race
-- Nationality
-- Disability
-- Age
-- Retaliation
-- Other  
-Other includes missings. `basis` is defined using the finer grained `basis_raw` variable. 
-
-### Sexual harassment
-`sh == 1` if `basis` is Sexual Harassment or `issue` (less common) is Sexual Harassment.  
-`sh == 0` otherwise  
-`sh == .` if `sex_cases == 0 & sh == 1`, so a sexual harassment case was filed not on the basis of sex but of race, age, etc. These are weird and we'd like to exclude these altogether. 
-
-### Sex-based cases
-`sex_cases` == 1 includes all cases where `basis` has the word Sex.  
-`sex_cases` == 0 otherwise.  
-This is determined using regexm, which searches for string matches to "Sex". `sex_cases` == 1 can include discrimination against men as well. This variable can be used to understand trends in sex-based discrimination cases more generally. This variable should not be used to understand trends in discrimination against women, because it includes discrimination against men. 
-
-### Compensation/Relief
-`relief >0` is the total compensation plaintiff received from their case, conditional on winning. If plaintiff received money at both the hearing and court stage, relief is the sum of these.  
-`relief = 0` never  
-`relief = .` when the plantiff lost or when we don't have information on relief.  
-
-We should not have `relief = 0` if the plaintiff lost. If the plaintiff lost, `relief == .` and `missing_relief == 1`. If `settle == 1` most often `relief` is missing, unless the case was resolved by conciliation, in which case `relief` may be provided. 
-
-### Win
-`win == 1` if outcome explicitly says discrimination was found at hearing (this may be called probable cause); or if case went to court and plaintiff won the case.  
-`win == 0` if outcome explicitly says discrimination was not found (no probable cause)  
-`win == .` otherwise...e.g., if case was settled, was dismissed, etc.  
-
-If case went to court and plaintiff won compensation, we do not always make this variable equal 1 because receiving $ may not be an admission of discrimination being found. 
-
-### Settle
-`settle == 1` if outcome says case was settled, case was withdrawn with benefits, or case was resolved by conciliation (an administrative process by which two parties resolve their dispute without involving a hearing or court, we can often observe the relief for these cases).  
-`settle == 0` if otherwise  
-`settle == .` never  
-
-### Court 
-`court == 1` if data is court data, if outcome says "Notice of Right to Sue" was issued, or outcome says case went to court.  
-`court == 0` if otherwise  
-`court == .` never  
-
-The following variables are cleaned altogether, after state and federal data is appended together. 
-
-### Overlap
-`overlap == 1` if `sh ==1` and case filed before MeToo and resolved after MeToo  
-`overlap == 0` if `sh ==1` and case filed before MeToo and resolved before MeToo  
-`overlap == .` if `sh == 0`  
-`overlap == .` if case filed after MeToo  
-
-### Treat
-`post = 1` if file date after MeToo.   
-`post = 0` if file date before MeToo.    
-`post = .` never  
-
-`treat = post*sh`  
-`treat = .` if `sex_cases == 1 & sh == 0`, since we don't want the control group to include potentially treated sex cases that are not sexual harassment.  
-`treat = 1` if `overlap == 1` since overlap cases are sh AND treated, but definition of post doesn't capture them.  
-
-### Victim female
-`victim_f = 1` if complainant/victim is female  
-`victim_f = 0` if complainant/victim is male     
-`victim_f = .` if missing data on complainant gender  
