@@ -59,8 +59,8 @@ gen state = "MA"
 
 // Gen outcome vars
 g win = . 
-replace win = 1 if outcome == "Probable Cause Found"
-replace win = 0 if outcome == "Closed - Lack of Probable Cause"
+replace win = 1 if outcome == "Probable Cause Found" | outcome == "Split Decision: PC/LOPC or PC/LOJ"
+replace win = 0 if outcome == "Closed - Lack of Probable Cause" | outcome == "Closed - No Violation"
 
 gen duration = charge_res_date - charge_file_date
 
@@ -69,6 +69,25 @@ g settle = 0
 replace settle = 1 if outcome == "Closed - Pre-Determination Settlement"
 replace settle = 1 if outcome == "Closed - Settled At Hearing"
 replace settle = 1 if outcome == "Closed - Withdrawn With Settlement"
+replace settle = 1 if outcome == "Closed - Conciliated"
+
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "Closed - Bankruptcy"
+replace admin_close = 1 if outcome == "Closed - EEOC-Administrative"
+replace admin_close = 1 if outcome == "Closed - Failure to Cooperate"
+replace admin_close = 1 if outcome == "Closed - Lack of Jurisdiction"
+replace admin_close = 1 if outcome == "Closed - Unable to Locate Complainant"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "Closed - Withdrawn"
+replace withdraw = 1 if outcome == "Closed - Withdrawn With Settlement"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if outcome == "Closed - Dismissed"
+replace dismissed = 1 if outcome == "Closed - R&A Dismissal"
 
 // Clean court
 g court = 1 if outcome == "Closed - Chapter 478 (removed to court)" 

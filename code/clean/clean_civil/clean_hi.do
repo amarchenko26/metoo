@@ -67,7 +67,7 @@ g missing_relief = (relief == .)
 g win = .
 replace win = 1 if outcome == "CA"
 replace win = 0 if enfclosurecode == "Order" & relief == . 
-replace win = 0 if outcome == "CA" & enfclosurecode == "No Cause"
+replace win = 0 if enfclosurecode == "No Cause"
 replace win = 0 if outcome == "13"
 
 // Settle
@@ -75,6 +75,21 @@ g settle = 0
 replace settle = 1 if outcome == "9"
 replace settle = 1 if outcome == "7" & relief != .
 replace settle = 1 if enfclosurecode == "Settled"
+
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "1"
+replace admin_close = 1 if outcome == "3"
+replace admin_close = 1 if outcome == "4"
+replace admin_close = 1 if outcome == "15"
+replace admin_close = 1 if outcome == "16"
+replace admin_close = 1 if outcome == "17"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "2"
+replace withdraw = 1 if outcome == "7"
+replace withdraw = 1 if enfclosurecode == "Withdrawn"
 
 // Court
 g court = 0
