@@ -103,6 +103,18 @@ replace settle = 1 if outcome == "Conciliation/settlement successful"
 replace settle = 1 if outcome == "FHAP judicial consent order"
 replace settle = 1 if outcome == "Complaint withdrawn by complainant after resolution" & relief_summary != ""
 
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "Complainant failed to cooperate"
+replace admin_close = 1 if outcome == "Dismissed for lack of jurisdiction"
+replace admin_close = 1 if outcome == "Unable to locate complainant"
+replace admin_close = 1 if outcome == "Untimely Filed"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "Complaint withdrawn by complainant after resolution"
+replace withdraw = 1 if outcome == "Complaint withdrawn by complainant without resolution"
+
 // Court
 g court = 0
 replace court = 1 if outcome == "FHAP judicial consent order"

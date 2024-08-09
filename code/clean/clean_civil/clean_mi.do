@@ -73,6 +73,37 @@ replace settle = 1 if outcome == "I01 - Insufficient evidence - adjusted" & reli
 replace settle = 1 if outcome == "I11 - Withdrawn adjusted" & relief != .
 replace settle = 1 if outcome == "M02 - Withdrawn adjusted" & relief != .
 
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "C01 - Signed/notarized complaint not returned"
+replace admin_close = 1 if outcome == "C02 - Allegations contained in duplicate EEOC case"
+replace admin_close = 1 if outcome == "CO1 - Post-Investigation Administrative closure"
+replace admin_close = 1 if outcome == "CO3 - Post-Investigation Legal Determination of Inability to proceed"
+replace admin_close = 1 if outcome == "E02 - Lack of jurisdiction for MDCR"
+replace admin_close = 1 if outcome == "E03 - Untimely for MDCR and / or EEOC"
+replace admin_close = 1 if outcome == "E05 - EEOC assumed jurisdiction - no adjustment"
+replace admin_close = 1 if outcome == "I04 - Unable to locate claimant"
+replace admin_close = 1 if outcome == "I05 - Claimant failure to cooperate"
+replace admin_close = 1 if outcome == "I06 - Wrong respondent"
+replace admin_close = 1 if outcome == "I08 - Respondent out of business"
+replace admin_close = 1 if outcome == "I09 - Duplicate complaint"
+replace admin_close = 1 if outcome == "I10 - Federal agency assumed jurisdiction"
+replace admin_close = 1 if outcome == "L01 - Post-Investigation Administrative closure"
+replace admin_close = 1 if outcome == "L03 - Post-Investigation Legal Determination of Inability to proceed"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "I11 - Withdrawn adjusted"
+replace withdraw = 1 if outcome == "I14 - Withdrawn - Not interested in pursuing"
+replace withdraw = 1 if outcome == "I15 - Withdrawn - pursue with EEOC"
+replace withdraw = 1 if outcome == "M02 - Withdrawn adjusted"
+replace withdraw = 1 if outcome == "M03 - Withdrawn - not interested in pursuing"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if outcome == "A7 - Administrative Dismissal"
+replace dismissed = 1 if outcome == "C5 - Administrative Dismissal"
+
 // Duration 
 g duration = charge_res_date - charge_file_date
 

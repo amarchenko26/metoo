@@ -126,8 +126,12 @@ drop closure*
 
 // Probable cause
 g win = .
-replace win = 1 if inlist(outcome, "Probable Cause", "Charge Issued", "Settled after Charge Issued")
-replace win = 0 if inlist(outcome, "EEOC=NJ & NDHRA=NPC", "No Probable Cause", "No Reasonable Cause")
+replace win = 1 if outcome == "Probable Cause"
+replace win = 1 if outcome == "Charge Issued"
+replace win = 1 if outcome == "Settled after Charge Issued"
+replace win = 0 if outcome == "EEOC=NJ & NDHRA=NPC"
+replace win = 0 if outcome == "No Probable Cause"
+replace win = 0 if outcome == "No Reasonable Cause"
 
 // Settle
 g settle = 0 
@@ -137,8 +141,21 @@ replace settle = 1 if outcome == "Settled after Charge Issued"
 replace settle = 1 if outcome == "Successful Conciliation"
 replace settle = 1 if outcome == "Withdrawn With Resolution"
 
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "Closed at Intake"
+replace admin_close = 1 if outcome == "Failure to Cooperate"
+replace admin_close = 1 if outcome == "Lack of Jurisdiction"
+replace admin_close = 1 if outcome == "Transferred to EEOC"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "Withdrawn With Resolution"
+replace withdraw = 1 if outcome == "Withdrawn Without Resolution"
+
 // Court
-g court = . // currently have this marked as missing bc North Dakota doesn't track this
+g court = 0
+replace court = 1 if outcome == "Notice of Right to Sue"
 
 
 /*******************************************************************************

@@ -66,12 +66,17 @@ g missing_relief = (relief == .)
 
 // Probable cause
 g win = .
-replace win = 1 if inlist(outcome, "PC DETERMINATION", "SPLIT DETERMINATION")
-replace win = 0 if inlist(outcome, "NPC DETERMINATION")
+replace win = 1 if outcome == "PC DETERMINATION"
+replace win = 1 if outcome == "SPLIT DETERMINATION"
+replace win = 0 if outcome == "NPC DETERMINATION"
 
 // Settle
 g settle = 0 
 replace settle = 1 if outcome == "ADR SETTLEMENT"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if outcome == "DISMISSAL"
 
 // Court
 g court = .

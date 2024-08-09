@@ -89,11 +89,31 @@ replace win = 0 if outcome == "No Cause Finding Issued"
 // Court
 g court = (!missing(court_file_date))
 replace court = 1 if outcome == "NRTS Issued At CP Request" //CP is charging party, Notice of Right to Sue
+replace court = 1 if outcome == "CP Filed Suit"
+replace court = 1 if outcome == "Closed Due To Court Decision"
 
 // Settle
 g settle = 0 
 replace settle = 1 if outcome == "Settlement With Benefits"
 replace settle = 1 if outcome == "Withdrawal With Benefits"
+replace settle = 1 if outcome == "Case Settled By Legal Unit"
+replace settle = 1 if outcome == "Successful Conciliation"
+
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "ADEA Sect. 7(D) Closure"
+replace admin_close = 1 if outcome == "Administrative Closure"
+replace admin_close = 1 if outcome == "CP Failed To Cooperate"
+replace admin_close = 1 if outcome == "CP Failed To Respond To 30-Day Letter"
+replace admin_close = 1 if outcome == "Failure To Locate Charging Party"
+replace admin_close = 1 if outcome == "No Jurisdiction"
+replace admin_close = 1 if outcome == "Remand - Failure To Prosecute"
+replace admin_close = 1 if outcome == "Respondent Bankruptcy"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "CP Withdrawal - No Ben."
+replace withdraw = 1 if outcome == "Withdrawal With Benefits"
 
 // Duration 
 g duration = charge_res_date - charge_file_date
