@@ -47,6 +47,9 @@ g duration = charge_res_date - charge_file_date
 // Jurisdiction
 g juris = "Unspecified"
 
+// Multi-category
+g multi_cat = 0
+
 // Basis
 g basis = "Sex" 				if strpos(basis_raw, "SEX") > 0
 replace basis = "LGBTQ"         if inlist(basis_raw, "BISEXUAL", "GEN/IDENTITY", "HETEROSEXUAL", "HOMOSEXUAL", "PERCEIVED SEX", "TRANSGENDER")

@@ -31,6 +31,22 @@ g duration = charge_res_date - charge_file_date
 // Jurisdiction
 keep if inlist(juris, "Employment", "Housing", "Public Accommodation")
 
+// Multi-category
+g sumsex = max(basissex, basispregnancy)
+g sumlgbtq = max(basissexualorientation, basisgenderidentity)
+g sumreligion = basisreligion
+g sumrace = max(basisrace, basiscolor)
+g sumnationality = basisnationalorigin
+g sumdisability = max(basismentaldisability, basisphysicaldisability)
+g sumage = basisage
+g sumretaliation = max(basisretaliation, basisretaliationforfilingac)
+g sumother = max(basismaritalstatus, basischangeinmaritalstatus, basisparenthood)
+egen sum = rowtotal(sum*)
+g multi_cat = 0 if sum == 1
+replace multi_cat = 1 if sum != 1
+replace multi_cat = . if sum == 0 //missing basis
+drop sum*
+
 // Basis
 local basis race sex nationalorigin maritalstatus color changeinmaritalstatus religion pregnancy mentaldisability parenthood physicaldisability retaliation age retaliationforfilingac sexualorientation genderidentity
 g basis_raw = ""

@@ -107,6 +107,21 @@ replace dismissed = 1 if outcome == "C5 - Administrative Dismissal"
 // Duration 
 g duration = charge_res_date - charge_file_date
 
+// Multi-category
+g sumsex = 1 if regexm(basis_raw, "Sex")
+g sumreligion = 1 if regexm(basis_raw, "Religion")
+g sumrace = 1 if regexm(basis_raw, "Race|Color")
+g sumnationality = 1 if regexm(basis_raw, "National Origin")
+g sumdisability = 1 if regexm(basis_raw, "Disability")
+g sumage = 1 if regexm(basis_raw, "Age")
+g sumretaliation = 1 if regexm(basis_raw, "Retaliation")
+g sumother = 1 if regexm(basis_raw, "Arrest Record|Familial Status|Height|Marital Status|Weight")
+egen sum = rowtotal(sum*)
+g multi_cat = 0 if sum == 1
+replace multi_cat = 1 if sum != 1
+replace multi_cat = . if sum == 0 //missing basis
+drop sum*
+
 // Clean basis (general)
 split basis_raw, parse(;)
 

@@ -62,6 +62,9 @@ g juris = "Employment"
 Clean outcomes
 *******************************************************************************/
 
+// Multi-category
+g multi_cat = 0
+
 // Clean basis 
 g basis = "Sex" 				if regexm(basis_raw, "Equal Pay") | regexm(basis_raw, "Sex")
 replace basis = "LGBTQ" 		if basis_raw == "Sex-Gender Identity/Transgender"

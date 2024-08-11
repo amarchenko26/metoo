@@ -42,6 +42,9 @@ replace juris = "Employment" if strpos(juris, "Employment") > 0
 replace juris = "Public Accommodation" if strpos(juris, "Public Accommodation") > 0
 replace juris = "Housing" if strpos(juris, "Housing") > 0
 
+// Multi-category
+g multi_cat = 0
+
 // Basis
 g basis = "Sex" 				if basis_raw == "Sex"
 replace basis = "LGBTQ"			if basis_raw == "Sexual Orientation"

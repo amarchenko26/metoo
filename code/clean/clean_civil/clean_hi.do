@@ -39,6 +39,21 @@ replace juris = "Employment" if juris == "FE"
 replace juris = "Public Accommodation" if juris == "PA"
 replace juris = "Housing" if juris == "RE"
 
+// Multi-category
+g sumsex = 1 if regexm(basis_raw, "BRE|DSV|SEX|SEX-H|SEX-P")
+g sumlgbtq = 1 if regexm(basis_raw, "SEX-I|SOR")
+g sumreligion = 1 if regexm(basis_raw, "REL")
+g sumrace = 1 if regexm(basis_raw, "RAC|COL")
+g sumnationality = 1 if regexm(basis_raw, "NOR")
+g sumdisability = 1 if regexm(basis_raw, "DIS")
+g sumage = 1 if regexm(basis_raw, "AGE")
+g sumretaliation = 1 if regexm(basis_raw, "RET")
+g sumother = 1 if regexm(basis_raw, "ANC|ARR|CHI|CRE|FAM|MAR|NAT")
+egen sum = rowtotal(sum*)
+g multi_cat = 0 if sum == 1
+replace multi_cat = 1 if sum != 1
+drop sum*
+
 // Basis
 split basis_raw, parse()
 g basis = "Sex" 				if inlist(basis_raw1, "BRE", "DSV", "SEX", "SEX-H", "SEX-P")

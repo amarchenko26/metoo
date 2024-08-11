@@ -72,9 +72,25 @@ replace juris = "Housing" if juris == "Housing Complaint"
 replace juris = "Public Accommodation" if juris == "Other Human Rights Complaint"
 drop discriminationtype
 
+// Multi-category
+g sumsex = 1 if (sex != "" & strpos(sex, "Sexual Orientation") == 0) | pregnancy == "Yes"
+g sumlgbtq = 1 if strpos(sex, "Sexual Orientation") > 0
+g sumreligion = 1 if religion != ""
+g sumrace = 1 if race != "" | color != ""
+g sumnationality = 1 if nationalorigin != ""
+g sumdisability = 1 if disability != ""
+g sumage = 1 if age != .
+g sumretaliation = 1 if retaliation == "Yes"
+g sumother = 1 if familialstatus != "" | maritalstatus != "" | publicassistance != "" | lawfulactivity == "Yes"
+egen sum = rowtotal(sum*)
+g multi_cat = 0 if sum == 1
+replace multi_cat = 1 if sum != 1
+replace multi_cat = . if sum == 0 //missing basis
+drop sum*
+
 // Basis
 g basis = ""
-replace basis = "Other" 		if  familialstatus != "" | maritalstatus != "" | publicassistance != "" | lawfulactivity == "Yes"
+replace basis = "Other" 		if familialstatus != "" | maritalstatus != "" | publicassistance != "" | lawfulactivity == "Yes"
 replace basis = "Age"			if age != .
 replace basis = "Retaliation"	if retaliation == "Yes"
 replace basis = "Nationality"	if nationalorigin != ""
@@ -97,7 +113,7 @@ replace basis_raw = basis_raw + "Lawful Activity; " if lawfulactivity == "Yes"
 drop lawfulactivity
 replace basis_raw = basis_raw + "Retaliation; " if retaliation == "Yes"
 drop retaliation
-replace basis_raw = basis_raw + "Sex: Pregnancy" if pregnancy == "Yes"
+replace basis_raw = basis_raw + "Sex: Pregnancy; " if pregnancy == "Yes"
 drop pregnancy
 replace basis_raw = substr(basis_raw, 1, strlen(basis_raw) - 2)
 
