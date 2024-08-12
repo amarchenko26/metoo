@@ -42,6 +42,9 @@ replace juris = "Employment" if strpos(juris, "Employment") > 0
 replace juris = "Public Accommodation" if strpos(juris, "Public Accommodation") > 0
 replace juris = "Housing" if strpos(juris, "Housing") > 0
 
+// Multi-category
+g multi_cat = 0
+
 // Basis
 g basis = "Sex" 				if basis_raw == "Sex"
 replace basis = "LGBTQ"			if basis_raw == "Sexual Orientation"
@@ -66,12 +69,17 @@ g missing_relief = (relief == .)
 
 // Probable cause
 g win = .
-replace win = 1 if inlist(outcome, "PC DETERMINATION", "SPLIT DETERMINATION")
-replace win = 0 if inlist(outcome, "NPC DETERMINATION")
+replace win = 1 if outcome == "PC DETERMINATION"
+replace win = 1 if outcome == "SPLIT DETERMINATION"
+replace win = 0 if outcome == "NPC DETERMINATION"
 
 // Settle
 g settle = 0 
 replace settle = 1 if outcome == "ADR SETTLEMENT"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if outcome == "DISMISSAL"
 
 // Court
 g court = .

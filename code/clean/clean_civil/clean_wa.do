@@ -46,8 +46,13 @@ drop charge_res_date
 rename *2 *
 g duration = charge_res_date - charge_file_date
 
-// Basis
+// Multi-category
 split basis_raw, parse(,)
+g multi_cat = 0 if basis_raw2 == ""
+replace multi_cat = 1 if basis_raw2 != ""
+replace multi_cat = . if basis_raw1 == "" //missing basis
+
+// Basis
 g basis = "Sex" 				if basis_raw1 == "Sex"
 replace basis = "LGBTQ"         if basis_raw1 == "Sexual Orientation/Gender Identity"
 replace basis = "Race"		    if basis_raw1 == "Race"
@@ -80,6 +85,7 @@ g missing_relief = (relief == .)
 // Probable cause
 g win = .
 replace win = 1 if cause != ""
+replace win = 1 if outcome == "DF"
 replace win = 0 if outcome == "No Reasonable Cause"
 drop cause
 
@@ -89,9 +95,27 @@ replace settle = 1 if outcome == "Pre-finding Settlement"
 replace settle = 1 if outcome == "Successful Conciliation"
 replace settle = 1 if outcome == "Withdrawal with Benefits"
 
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "AC: General"
+replace admin_close = 1 if outcome == "Duplicate"
+replace admin_close = 1 if outcome == "Failure to Cooperate"
+replace admin_close = 1 if outcome == "Failure to Locate"
+replace admin_close = 1 if outcome == "Non-jurisdictional"
+replace admin_close = 1 if outcome == "RP Bankruptcy"
+replace admin_close = 1 if outcome == "Transfer to EEOC (Closed at Commission)"
+replace admin_close = 1 if outcome == "Transfer to EEOC at Intake"
+replace admin_close = 1 if outcome == "Transfer to Tacoma"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "Withdrawal"
+replace withdraw = 1 if outcome == "Withdrawal with Benefits"
+
 // Court
 g court = 0
 replace court = 1 if outcome == "CP Filed Private Lawsuit"
+replace court = 1 if outcome == "Right to Sue"
 
 
 /*******************************************************************************

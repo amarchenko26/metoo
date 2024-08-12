@@ -217,6 +217,10 @@ drop if ym > 765
 // Drop missing bases (N=10 obs in PA) 
 cap drop if basis == ""
 
+// Drop cases removed to EEOC
+di tm(2017m9)
+drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC") & ym < 692
+
 /*******************************************************************************
 Label all variables
 *******************************************************************************/

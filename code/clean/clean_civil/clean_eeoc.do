@@ -19,7 +19,7 @@ ren resolutiondate resolution_date_temp
 ren relief relief
 ren allegations basis_raw
 
-gen state = "Federal"
+gen state = substr(court_name, -2, 2)
 gen juris = "Employment"
 
 
@@ -68,6 +68,9 @@ Clean EEOC court case data to match state files
 format court_file_date %td
 
 format court_res_date %td
+
+// Multi-category
+g multi_cat = 0
 
 // Clean basis 
 g basis = "Sex" if regexm(basis_raw, "^Title VII / Sex")  | regexm(basis_raw, "^EPA / Equal Pay-Female") 

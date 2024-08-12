@@ -47,6 +47,9 @@ g duration = charge_res_date - charge_file_date
 // Jurisdiction
 g juris = "Unspecified"
 
+// Multi-category
+g multi_cat = 0
+
 // Basis
 g basis = "Sex" 				if strpos(basis_raw, "SEX") > 0
 replace basis = "LGBTQ"         if inlist(basis_raw, "BISEXUAL", "GEN/IDENTITY", "HETEROSEXUAL", "HOMOSEXUAL", "PERCEIVED SEX", "TRANSGENDER")
@@ -82,6 +85,24 @@ replace win = 0 if outcome == "LSE"
 g settle = 0 
 replace settle = 1 if outcome == "AT"
 replace settle = 1 if outcome == "AW" & relief != .
+
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "ACL"
+replace admin_close = 1 if outcome == "DUP"
+replace admin_close = 1 if outcome == "EXP"
+replace admin_close = 1 if outcome == "FTP"
+replace admin_close = 1 if outcome == "LOJ"
+replace admin_close = 1 if outcome == "LOS"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "AW"
+replace withdraw = 1 if strpos(outcome, "WD") > 0
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if outcome == "ADM"
 
 // Court
 g court = . //currently have this marked as missing bc Illinois doesn't track this

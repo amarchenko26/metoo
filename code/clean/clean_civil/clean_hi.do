@@ -39,6 +39,21 @@ replace juris = "Employment" if juris == "FE"
 replace juris = "Public Accommodation" if juris == "PA"
 replace juris = "Housing" if juris == "RE"
 
+// Multi-category
+g sumsex = 1 if regexm(basis_raw, "BRE|DSV|SEX|SEX-H|SEX-P")
+g sumlgbtq = 1 if regexm(basis_raw, "SEX-I|SOR")
+g sumreligion = 1 if regexm(basis_raw, "REL")
+g sumrace = 1 if regexm(basis_raw, "RAC|COL")
+g sumnationality = 1 if regexm(basis_raw, "NOR")
+g sumdisability = 1 if regexm(basis_raw, "DIS")
+g sumage = 1 if regexm(basis_raw, "AGE")
+g sumretaliation = 1 if regexm(basis_raw, "RET")
+g sumother = 1 if regexm(basis_raw, "ANC|ARR|CHI|CRE|FAM|MAR|NAT")
+egen sum = rowtotal(sum*)
+g multi_cat = 0 if sum == 1
+replace multi_cat = 1 if sum != 1
+drop sum*
+
 // Basis
 split basis_raw, parse()
 g basis = "Sex" 				if inlist(basis_raw1, "BRE", "DSV", "SEX", "SEX-H", "SEX-P")
@@ -67,7 +82,7 @@ g missing_relief = (relief == .)
 g win = .
 replace win = 1 if outcome == "CA"
 replace win = 0 if enfclosurecode == "Order" & relief == . 
-replace win = 0 if outcome == "CA" & enfclosurecode == "No Cause"
+replace win = 0 if enfclosurecode == "No Cause"
 replace win = 0 if outcome == "13"
 
 // Settle
@@ -75,6 +90,21 @@ g settle = 0
 replace settle = 1 if outcome == "9"
 replace settle = 1 if outcome == "7" & relief != .
 replace settle = 1 if enfclosurecode == "Settled"
+
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "1"
+replace admin_close = 1 if outcome == "3"
+replace admin_close = 1 if outcome == "4"
+replace admin_close = 1 if outcome == "15"
+replace admin_close = 1 if outcome == "16"
+replace admin_close = 1 if outcome == "17"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "2"
+replace withdraw = 1 if outcome == "7"
+replace withdraw = 1 if enfclosurecode == "Withdrawn"
 
 // Court
 g court = 0

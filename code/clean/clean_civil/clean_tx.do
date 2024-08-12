@@ -66,16 +66,30 @@ g duration = charge_res_date - charge_file_date
 // Jurisdiction
 gen juris = "Housing"
 
+// Multi-category
+g sumsex = 1 if regexm(basis_raw, "Sex")
+g sumreligion = 1 if regexm(basis_raw, "Religion")
+g sumrace = 1 if regexm(basis_raw, "Race|Color")
+g sumnationality = 1 if regexm(basis_raw, "National Origin")
+g sumdisability = 1 if regexm(basis_raw, "Disability")
+g sumretaliation = 1 if regexm(basis_raw, "Retaliation")
+g sumother = 1 if regexm(basis_raw, "Familial Status")
+egen sum = rowtotal(sum*)
+g multi_cat = 0 if sum == 1
+replace multi_cat = 1 if sum != 1
+replace multi_cat = . if sum == 0 //missing basis
+drop sum*
+
 // Basis
 replace basis_raw = subinstr(basis_raw, ", ", ",", .)
 split basis_raw, parse(,)
 g basis = "Sex" 				if basis_raw1 == "Sex"
 replace basis = "Religion" 	    if basis_raw1 == "Religion"
-replace basis = "Race"		    if basis_raw1 == "Race"
+replace basis = "Race"		    if inlist(basis_raw1, "Race", "Color")
 replace basis = "Nationality"   if basis_raw1 == "National Origin"
 replace basis = "Disability"    if basis_raw1 == "Disability"
 replace basis = "Retaliation"   if basis_raw1 == "Retaliation"
-replace basis = "Other" 		if inlist(basis_raw1, "Color", "Familial Status", "")
+replace basis = "Other" 		if inlist(basis_raw1, "Familial Status", "")
 drop basis_raw?
 
 // SH
@@ -102,6 +116,18 @@ g settle = 0
 replace settle = 1 if outcome == "Conciliation/settlement successful"
 replace settle = 1 if outcome == "FHAP judicial consent order"
 replace settle = 1 if outcome == "Complaint withdrawn by complainant after resolution" & relief_summary != ""
+
+// Administrative closure
+g admin_close = 0
+replace admin_close = 1 if outcome == "Complainant failed to cooperate"
+replace admin_close = 1 if outcome == "Dismissed for lack of jurisdiction"
+replace admin_close = 1 if outcome == "Unable to locate complainant"
+replace admin_close = 1 if outcome == "Untimely Filed"
+
+// Withdrawn
+g withdraw = 0
+replace withdraw = 1 if outcome == "Complaint withdrawn by complainant after resolution"
+replace withdraw = 1 if outcome == "Complaint withdrawn by complainant without resolution"
 
 // Court
 g court = 0
