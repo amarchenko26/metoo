@@ -84,6 +84,7 @@ do "$droot/code/clean/clean_civil/clean_pa.do"
 do "$droot/code/clean/clean_civil/clean_ri.do"
 do "$droot/code/clean/clean_civil/clean_tx.do"
 do "$droot/code/clean/clean_civil/clean_wa.do"
+do "$droot/code/clean/clean_civil/clean_wi.do"
 do "$droot/code/clean/clean_civil/merge_all.do"
 
 // analysis files
