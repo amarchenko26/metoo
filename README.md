@@ -85,6 +85,18 @@ The following variables are cleaned altogether, after state and federal data is 
 
 ## Description of datasets
 
+**$raw_data/WI/wi_raw_cases.dta**  
+These data contain all education, employment, housing, and public accommodation/public service cases filed in Wisconsin from June 1, 2017 to June 30, 2023.
+- N: 26436
+- SH: 1071
+- casenumber: unique identifier for each case
+- respondentname: respondent name
+- initialinquirydate: date case was filed
+- lawname: jurisdiction
+- basisname: basis of discrimination
+- issuename: whether the case contained the issue of sexual harassment
+- closedate: date case was closed
+
 **$raw_data/AK/ak_raw_cases.csv**  
 These data contain all employment, housing, and public accommodation/public service cases filed in Alaska from June 1, 2010 to June 1, 2023.
 - N: 3611
