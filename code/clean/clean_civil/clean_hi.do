@@ -88,7 +88,7 @@ replace win = 0 if outcome == "13"
 // Settle
 g settle = 0 
 replace settle = 1 if outcome == "9"
-replace settle = 1 if outcome == "7" & relief != .
+replace settle = 1 if outcome == "7"
 replace settle = 1 if enfclosurecode == "Settled"
 
 // Administrative closure
@@ -103,8 +103,11 @@ replace admin_close = 1 if outcome == "17"
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "2"
-replace withdraw = 1 if outcome == "7"
 replace withdraw = 1 if enfclosurecode == "Withdrawn"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if admin_close == 1 | withdraw == 1
 
 // Court
 g court = 0

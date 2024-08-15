@@ -18,6 +18,9 @@ ren dateclosed charge_res_date
 ren closurereason outcome
 ren monetaryaward relief
 
+// Dropping open cases
+drop if casestatus == "Open" & outcome == "" & investigationsense == ""
+
 
 /*******************************************************************************
 Clean outcomes
@@ -94,6 +97,7 @@ g missing_relief = (relief == .)
 g win = .
 replace win = 1 if investigationsense == "SE"
 replace win = 1 if outcome == "C1 - Hearing Decision for Complainant"
+replace win = 1 if outcome == "B4 - Conciliation Finalized"
 replace win = 0 if investigationsense == "NSE"
 replace win = 0 if outcome == "B3 - Not Substantial Evidence (Exception)"
 replace win = 0 if outcome == "C2 - Hearing Decision for Respondent"
@@ -103,7 +107,6 @@ g settle = 0
 replace settle = 1 if outcome == "B1 - Successful Settlement"
 replace settle = 1 if outcome == "B2 - Predetermination Settlement (PDS)"
 replace settle = 1 if outcome == "B2a - Predetermined Settlement"
-replace settle = 1 if outcome == "B4 - Conciliation Finalized"
 replace settle = 1 if outcome == "C4 - Pre-Hearing Settlement"
 replace settle = 1 if outcome == "M1 - Mediation Successful"
 replace settle = 1 if outcome == "M2 - CP Withdrawn with Settlement"
@@ -125,13 +128,12 @@ replace admin_close = 1 if outcome == "A8 - Tribal Sovereign Immunity"
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "A1 - Complaint Withdrawn"
-replace withdraw = 1 if outcome == "M2 - CP Withdrawn with Settlement"
-replace withdraw = 1 if outcome == "M3 - Complaint Withdrawn in Mediation"
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if outcome == "A7 - Administrative Dismissal"
 replace dismissed = 1 if outcome == "C5 - Administrative Dismissal"
+replace dismissed = 1 if admin_close == 1 | withdraw == 1
 
 // Court
 g court = 0
