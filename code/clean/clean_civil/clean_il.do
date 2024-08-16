@@ -84,7 +84,7 @@ replace win = 0 if outcome == "LSE"
 // Settle
 g settle = 0 
 replace settle = 1 if outcome == "AT"
-replace settle = 1 if outcome == "AW" & relief != .
+replace settle = 1 if outcome == "AW"
 
 // Administrative closure
 g admin_close = 0
@@ -97,12 +97,12 @@ replace admin_close = 1 if outcome == "LOS"
 
 // Withdrawn
 g withdraw = 0
-replace withdraw = 1 if outcome == "AW"
 replace withdraw = 1 if strpos(outcome, "WD") > 0
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if outcome == "ADM"
+replace dismissed = 1 if admin_close == 1 | withdraw == 1
 
 // Court
 g court = . //currently have this marked as missing bc Illinois doesn't track this

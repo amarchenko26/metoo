@@ -86,13 +86,14 @@ g missing_relief = (relief == .)
 g win = .
 replace win = 1 if cause != ""
 replace win = 1 if outcome == "DF"
+replace win = 1 if outcome == "Successful Conciliation"
+replace win = 1 if outcome == "Conciliation Failure"
 replace win = 0 if outcome == "No Reasonable Cause"
 drop cause
 
 // Settle
 g settle = 0 
 replace settle = 1 if outcome == "Pre-finding Settlement"
-replace settle = 1 if outcome == "Successful Conciliation"
 replace settle = 1 if outcome == "Withdrawal with Benefits"
 
 // Administrative closure
@@ -110,7 +111,10 @@ replace admin_close = 1 if outcome == "Transfer to Tacoma"
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "Withdrawal"
-replace withdraw = 1 if outcome == "Withdrawal with Benefits"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if admin_close == 1 | withdraw == 1
 
 // Court
 g court = 0

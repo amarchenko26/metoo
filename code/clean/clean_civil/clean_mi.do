@@ -66,12 +66,12 @@ replace court = 1 if outcome == "I18 - Decided by Court – no adjustment"
 g settle = 0 
 replace settle = 1 if outcome == "CO2 - Post-Investigation Settlement Agreement"
 replace settle = 1 if outcome == "I03 - Settlement Agreement"
+replace settle = 1 if outcome == "I11 - Withdrawn adjusted"
 replace settle = 1 if outcome == "L02 - Post-Investigation Settlement Agreement"
 replace settle = 1 if outcome == "M01 - Settlement Agreement"
+replace settle = 1 if outcome == "M02 - Withdrawn adjusted"
 replace settle = 1 if outcome == "P02 - Post-Charge Settlement Agreement"
 replace settle = 1 if outcome == "I01 - Insufficient evidence - adjusted" & relief != .
-replace settle = 1 if outcome == "I11 - Withdrawn adjusted" & relief != .
-replace settle = 1 if outcome == "M02 - Withdrawn adjusted" & relief != .
 
 // Administrative closure
 g admin_close = 0
@@ -93,16 +93,15 @@ replace admin_close = 1 if outcome == "L03 - Post-Investigation Legal Determinat
 
 // Withdrawn
 g withdraw = 0
-replace withdraw = 1 if outcome == "I11 - Withdrawn adjusted"
 replace withdraw = 1 if outcome == "I14 - Withdrawn - Not interested in pursuing"
 replace withdraw = 1 if outcome == "I15 - Withdrawn - pursue with EEOC"
-replace withdraw = 1 if outcome == "M02 - Withdrawn adjusted"
 replace withdraw = 1 if outcome == "M03 - Withdrawn - not interested in pursuing"
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if outcome == "A7 - Administrative Dismissal"
 replace dismissed = 1 if outcome == "C5 - Administrative Dismissal"
+replace dismissed = 1 if admin_close == 1 | withdraw == 1
 
 // Duration 
 g duration = charge_res_date - charge_file_date

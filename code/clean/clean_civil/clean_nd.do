@@ -144,17 +144,17 @@ drop closure*
 g win = .
 replace win = 1 if outcome == "Probable Cause"
 replace win = 1 if outcome == "Charge Issued"
+replace win = 1 if outcome == "Conciliated Settlement"
 replace win = 1 if outcome == "Settled after Charge Issued"
+replace win = 1 if outcome == "Successful Conciliation"
 replace win = 0 if outcome == "EEOC=NJ & NDHRA=NPC"
 replace win = 0 if outcome == "No Probable Cause"
 replace win = 0 if outcome == "No Reasonable Cause"
 
 // Settle
 g settle = 0 
-replace settle = 1 if outcome == "Conciliated Settlement"
 replace settle = 1 if outcome == "Negotiated Settlement"
 replace settle = 1 if outcome == "Settled after Charge Issued"
-replace settle = 1 if outcome == "Successful Conciliation"
 replace settle = 1 if outcome == "Withdrawn With Resolution"
 
 // Administrative closure
@@ -166,8 +166,11 @@ replace admin_close = 1 if outcome == "Transferred to EEOC"
 
 // Withdrawn
 g withdraw = 0
-replace withdraw = 1 if outcome == "Withdrawn With Resolution"
 replace withdraw = 1 if outcome == "Withdrawn Without Resolution"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if admin_close == 1 | withdraw == 1
 
 // Court
 g court = 0

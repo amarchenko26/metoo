@@ -115,7 +115,7 @@ replace win = 0 if outcome == "No cause determination"
 g settle = 0 
 replace settle = 1 if outcome == "Conciliation/settlement successful"
 replace settle = 1 if outcome == "FHAP judicial consent order"
-replace settle = 1 if outcome == "Complaint withdrawn by complainant after resolution" & relief_summary != ""
+replace settle = 1 if outcome == "Complaint withdrawn by complainant after resolution"
 
 // Administrative closure
 g admin_close = 0
@@ -126,8 +126,11 @@ replace admin_close = 1 if outcome == "Untimely Filed"
 
 // Withdrawn
 g withdraw = 0
-replace withdraw = 1 if outcome == "Complaint withdrawn by complainant after resolution"
 replace withdraw = 1 if outcome == "Complaint withdrawn by complainant without resolution"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if admin_close == 1 | withdraw == 1
 
 // Court
 g court = 0

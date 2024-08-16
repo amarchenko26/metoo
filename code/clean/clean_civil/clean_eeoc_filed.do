@@ -87,6 +87,8 @@ replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not s
 // Probable cause
 g win = .
 replace win = 1 if outcome == "Hearings Discrimination Finding"
+replace win = 1 if outcome == "Successful Conciliation"
+replace win = 1 if outcome == "Conciliation Failure"
 replace win = 0 if outcome == "No Cause Finding Issued"
 
 // Court
@@ -100,7 +102,6 @@ g settle = 0
 replace settle = 1 if outcome == "Settlement With Benefits"
 replace settle = 1 if outcome == "Withdrawal With Benefits"
 replace settle = 1 if outcome == "Case Settled By Legal Unit"
-replace settle = 1 if outcome == "Successful Conciliation"
 
 // Administrative closure
 g admin_close = 0
@@ -116,7 +117,10 @@ replace admin_close = 1 if outcome == "Respondent Bankruptcy"
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "CP Withdrawal - No Ben."
-replace withdraw = 1 if outcome == "Withdrawal With Benefits"
+
+// Dismissal
+g dismissed = 0
+replace dismissed = 1 if admin_close == 1 | withdraw == 1
 
 // Duration 
 g duration = charge_res_date - charge_file_date
