@@ -4,13 +4,13 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_overlap  = 1
+loc run_overlap  = 0
 loc	run_did 	 = 0
 loc run_victim_f_present = 0
 
 loc run_summary  = 0
 loc run_balance  = 0
-loc run_duration = 0
+loc run_duration = 1
 
 
 /*******************************************************************************
@@ -406,9 +406,9 @@ if `run_duration' == 1 {
 		mgroups("Settle" "Win" "Compensation", pattern(1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none)
-		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 5))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		cells("b(fmt(5)star)" "se(fmt(5)par)") 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		prefoot("\\" "\midrule")
 		postfoot("\bottomrule" "\end{tabular}") ;

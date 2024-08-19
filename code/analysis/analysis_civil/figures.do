@@ -5,12 +5,12 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc run_placebo = 0
-loc run_placebo_f = 1
+loc run_placebo_f = 0
 loc event 	   = 0 // Event study
 loc event_all  = 0 // All cases (eeoc_filed == 1) 
 loc timeseries = 0
 loc diff 	   = 0 
-loc duration   = 0 
+loc duration   = 1 
 
 /*******************************************************************************
 Placebo coef plots 
@@ -393,7 +393,7 @@ if `duration' == 1{
 			 note("Kruskal–Wallis test where Null is equality of distributions: p < 0.336");
 	#delimit cr
 
-	graph save "$figures/duration_by_file.png", replace
+	graph export "$figures/duration_by_file.png", replace
 	restore
 
 }

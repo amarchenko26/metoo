@@ -67,7 +67,7 @@ g multi_cat = 0
 
 // Clean basis 
 g basis = "Sex" 				if regexm(basis_raw, "Equal Pay") | regexm(basis_raw, "Sex")
-replace basis = "LGBTQ" 		if basis_raw == "Sex-Gender Identity/Transgender"
+replace basis = "LGBTQ" 		if basis_raw == "Sex-Gender Identity/Transgender" | basis_raw == "Sex-Sexual Orientation"
 replace basis = "Religion" 	if regexm(basis_raw, "Religion") 
 replace basis = "Race"		if regexm(basis_raw, "Race") | basis_raw == "Color"
 replace basis = "Nationality" if regexm(basis_raw, "National Origin")
