@@ -214,6 +214,9 @@ create_time_to_treat, period(12) period_label("Years relative to MeToo")
 Create consistent sample 
 *******************************************************************************/
 
+// Drop cases resolved before filed
+drop if common_file_date > common_res_date
+
 // Drop obs before Oct 2010
 di tm(2010m10)
 drop if ym < 609
