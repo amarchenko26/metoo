@@ -87,6 +87,11 @@ replace win = 0 if missing_relief == 1 // no probable cause if relief is missing
 
 g court = 1 
 
+g settle = 0 
+g admin_close = 0
+g withdraw = 0
+g dismissed = 0
+
 
 // save dta file to clean data folder
 save "$clean_data/clean_eeoc.dta", replace

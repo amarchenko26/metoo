@@ -6,11 +6,12 @@ use "$clean_data/clean_cases.dta", replace
 
 loc run_overlap  = 0
 loc	run_did 	 = 0
+loc run_did_robust = 1
 loc run_victim_f_present = 0
 
 loc run_summary  = 0
 loc run_balance  = 0
-loc run_duration = 1
+loc run_duration = 0
 
 
 /*******************************************************************************
@@ -206,6 +207,145 @@ if `run_did' == 1 {
 	eststo clear
 
 }
+
+
+/*******************************************************************************
+DiD regression - Robustness Check
+*******************************************************************************/
+
+loc y1 filed_per_year
+loc y2 settle
+loc y3 win
+loc y4 relief_scale
+
+loc outcome_vars y1 y2 y3 y4
+loc i 1
+
+if `run_did_robust' == 1 {
+
+	// DID - Single-tagged ****************************************************/
+	preserve 
+	keep if multi_cat == 0
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+						
+		loc ++i
+	}
+
+	#delimit ;	
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_robust.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Single-tagged cases}} \\ \midrule")
+		fragment
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	restore
+
+	// DID - No retaliation ***************************************************/
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
+
+	preserve 
+	drop if basis == "Retaliation"
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+						
+		loc ++i
+	}
+
+	#delimit ;
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_robust.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{No retaliation cases}} \\ \midrule")
+		fragment
+		append
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+	#delimit cr
+	estimates clear
+	eststo clear
+	restore
+
+	// DID - Employment *******************************************************/
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
+	
+	preserve 
+	keep if juris == "Employment"
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		
+		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+						
+		loc ++i
+	}
+
+	#delimit ;
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_robust.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Employment cases}} \\ \midrule")
+		fragment
+		append
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(feunit fetime feunit_s fetime_s N r2, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+	#delimit cr
+	estimates clear
+	eststo clear
+	restore
+
+}
+
+
+
+
+
+
+
 
 /*******************************************************************************
 Victim female regression - for presentations only, not in paper, generates 
