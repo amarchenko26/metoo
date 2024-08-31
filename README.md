@@ -243,17 +243,17 @@ These data contain all education, employment, housing, and public accommodation/
 - Dept filed Complaint: date department filed a complaint (cases with SE findings)
 - Pro Se Complaint: date complainant decided to appear pro se (represent themselves in court)
 
-**$raw_data/TX/tx_raw_cases.csv**  
+**$raw_data/TX/tx_raw_cases.dta**  
 These data contain all housing cases filed in Texas from June 1, 2010 to June 1, 2023.
-- N: 5018
-- SH:
-- Case Name: complainant v. respondent
-- Closure Reason: how case was closed
-- HUD Filing Date: date case was filed
-- HUD Closure Date: date case was closed
-- Bases: basis of discrimination
-- Relief Summary with Amounts: summary of relief given after case closed (monetary relief, housing, reasonable accommodation, etc.)
-- Compensation Amount: amounts paid directly to the claimant
+- N: 5023
+- SH: 79
+- case_name: complainant v. respondent
+- outcome: how case was closed
+- charge_file_dat: date case was filed
+- charge_res_date: date case was closed
+- basis_raw: basis of discrimination
+- relief_summary: summary of relief given after case closed (monetary relief, housing, reasonable accommodation, etc.)
+- relief: amounts paid directly to the claimant
 
 **$raw_data/HI/hi_raw_cases.xls**  
 These data contain all employment, housing, and public accommodation/public service cases filed in Hawaii from June 1, 2010 to June 1, 2023.
