@@ -77,4 +77,39 @@ try:
     print(f"Data has been successfully extracted from {file_path} and written to '{output_csv_path}'")
 except Exception as e:
     print(f"Error concatenating DataFrames: {e}")
+    
+## Texas SH
+    
+
+file_path = root + '/raw/TX/Sex_Harrassment_Housing_Discrimination_Cases.pdf'
+
+# Initialize an empty list to store all tables
+all_tables = []
+
+with pdfplumber.open(file_path) as pdf:
+    headers = None
+    for page_number, page in enumerate(pdf.pages, start=1):
+        # Extract tables
+        tables = page.extract_tables()
+        for table_number, table in enumerate(tables, start=1):
+            try:
+                if headers is None:
+                    # Extract headers from the first table of the first page
+                    headers = table[0]
+                # Convert table to DataFrame and use extracted headers
+                df = pd.DataFrame(table[1:], columns=headers)
+                all_tables.append(df)
+                print(f"Extracted table {table_number} from page {page_number}")
+            except Exception as e:
+                print(f"Error processing table {table_number} on page {page_number}: {e}")
+
+# Concatenate all DataFrames in the list into a single DataFrame
+try:
+    final_df = pd.concat(all_tables, ignore_index=True)
+    # Save the final DataFrame to a CSV file
+    output_csv_path = root + '/raw/TX/tx_sh_cases.csv'
+    final_df.to_csv(output_csv_path, index=False)
+    print(f"Data has been successfully extracted from {file_path} and written to '{output_csv_path}'")
+except Exception as e:
+    print(f"Error concatenating DataFrames: {e}")
   

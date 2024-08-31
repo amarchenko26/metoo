@@ -4,12 +4,12 @@ Clean Texas cases
 
 *******************************************************************************/
 
-import delimited "$raw_data/TX/tx_raw_cases.csv", varnames(3) bindquote(strict) clear
-
 
 /*******************************************************************************
 Clean vars
 *******************************************************************************/
+
+import delimited "$raw_data/TX/tx_raw_cases.csv", varnames(3) bindquote(strict) clear
 
 // Rename vars
 ren housingdiscriminationcasesfrom1j case_name
@@ -31,6 +31,40 @@ replace charge_res_date = subinstr(charge_res_date, "Closure Date ", "", .)
 replace basis_raw = subinstr(basis_raw, "Bases ", "", .)
 replace relief_summary = subinstr(relief_summary, "with Amounts", "", .)
 replace relief = subinstr(relief, "Amount", "", .)
+
+save "$raw_data/TX/tx_raw_cases.dta", replace
+
+/*******************************************************************************
+Merge SH
+*******************************************************************************/
+
+import delimited "$raw_data/TX/tx_sh_cases.csv", varnames(2) bindquote(strict) clear
+ren sexharrassmenthousingdiscriminat case_name
+ren v2 outcome
+ren v3 charge_file_date
+ren v4 charge_res_date
+ren v5 basis_raw
+ren v6 sh
+ren v7 relief_summary
+ren v8 relief
+
+foreach var of varlist _all {
+	replace `var' = subinstr(subinstr(`var',"`=char(10)'"," ",.),"`=char(13)'"," ",.) //removes line breaks
+}
+
+replace case_name = subinstr(case_name, "Case Name ", "", .)
+replace outcome = subinstr(outcome, "Closure Reason ", "", .)
+replace charge_file_date = subinstr(charge_file_date, "Filing Date ", "", .)
+replace charge_res_date = subinstr(charge_res_date, "Closure Date ", "", .)
+replace basis_raw = subinstr(basis_raw, "Bases ", "", .)
+replace sh = subinstr(sh, "Basis ", "", .)
+replace relief_summary = subinstr(relief_summary, "with Compensation Amounts", "", .)
+replace relief = subinstr(relief, "Amount", "", .)
+
+merge 1:1 case_name charge_file_date using "$raw_data/TX/tx_raw_cases.dta"
+drop _merge
+
+save "$raw_data/TX/tx_raw_cases.dta", replace
 
 
 /*******************************************************************************
@@ -93,7 +127,9 @@ replace basis = "Other" 		if inlist(basis_raw1, "Familial Status", "")
 drop basis_raw?
 
 // SH
-g sh = . //currently have this marked as missing bc waiting on Texas clarification
+replace sh = "1" if sh == "Yes"
+replace sh = "0" if sh == ""
+destring sh, replace
 
 // Sex
 g sex_cases = 0 
