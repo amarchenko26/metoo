@@ -52,7 +52,7 @@ g multi_cat = 0
 
 // Basis
 g basis = "Sex" 				if strpos(basis_raw, "SEX") > 0
-replace basis = "LGBTQ"         if inlist(basis_raw, "BISEXUAL", "GEN/IDENTITY", "HETEROSEXUAL", "HOMOSEXUAL", "PERCEIVED SEX", "TRANSGENDER")
+replace basis = "Sex"         if inlist(basis_raw, "BISEXUAL", "GEN/IDENTITY", "HETEROSEXUAL", "HOMOSEXUAL", "PERCEIVED SEX", "TRANSGENDER")
 replace basis = "Religion" 	    if basis_raw == "RELIGION"
 replace basis = "Race"		    if strpos(basis_raw, "RACE") > 0 | basis_raw == "COLOR"
 replace basis = "Nationality"   if inlist(basis_raw, "CITIZENSHIP", "NATL ORIGIN", "IMMIGRATION STS")

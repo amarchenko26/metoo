@@ -54,7 +54,7 @@ replace multi_cat = . if basis_raw1 == "" //missing basis
 
 // Basis
 g basis = "Sex" 				if basis_raw1 == "Sex"
-replace basis = "LGBTQ"         if basis_raw1 == "Sexual Orientation/Gender Identity"
+replace basis = "Sex"         if basis_raw1 == "Sexual Orientation/Gender Identity"
 replace basis = "Race"		    if basis_raw1 == "Race"
 replace basis = "Nationality"   if basis_raw1 == "National Origin"
 replace basis = "Disability"    if basis_raw1 == "Disability"

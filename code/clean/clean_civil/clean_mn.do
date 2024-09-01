@@ -47,7 +47,7 @@ g multi_cat = 0
 
 // Basis
 g basis = "Sex" 				if basis_raw == "Sex"
-replace basis = "LGBTQ"			if basis_raw == "Sexual Orientation"
+replace basis = "Sex"			if basis_raw == "Sexual Orientation"
 replace basis = "Religion" 	    if basis_raw == "Religion"
 replace basis = "Race"		    if inlist(basis_raw, "Color", "Race")
 replace basis = "Nationality"   if basis_raw == "National Origin"

@@ -404,13 +404,12 @@ la var juris_dummy5 "\hspace{5mm} Unspecified"
 tab basis, gen(basis_dummy)
 la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
 la var basis_dummy2 "\hspace{5mm} Disability"
-la var basis_dummy3 "\hspace{5mm} LGBTQ"
-la var basis_dummy4 "\hspace{5mm} Nationality"
-la var basis_dummy5 "\hspace{5mm} Other"
-la var basis_dummy6 "\hspace{5mm} Race"
-la var basis_dummy7 "\hspace{5mm} Religion"
-la var basis_dummy8 "\hspace{5mm} Retaliation"
-la var basis_dummy9 "\hspace{5mm} Sex"
+la var basis_dummy3 "\hspace{5mm} Nationality"
+la var basis_dummy4 "\hspace{5mm} Other"
+la var basis_dummy5 "\hspace{5mm} Race"
+la var basis_dummy6 "\hspace{5mm} Religion"
+la var basis_dummy7 "\hspace{5mm} Retaliation"
+la var basis_dummy8 "\hspace{5mm} Sex"
 
 
 /*******************************************************************************

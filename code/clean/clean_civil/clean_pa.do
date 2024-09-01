@@ -42,7 +42,7 @@ replace juris = "Public Accommodation" if juris == "Public Accomodation"
 
 // Basis
 replace basis = strproper(basis)
-replace basis = "LGBTQ" if basis == "Lgbtq"
+replace basis = "Sex" if basis == "Lgbtq"
 
 // Sex
 g sex_cases = 0 

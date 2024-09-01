@@ -4,13 +4,13 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_placebo = 0
-loc run_placebo_f = 0
+loc run_placebo = 1
+loc run_placebo_f = 1
 loc event 	   = 0 // Event study
 loc event_all  = 0 // All cases (eeoc_filed == 1) 
 loc timeseries = 0
 loc diff 	   = 0 
-loc duration   = 1 
+loc duration   = 0
 
 /*******************************************************************************
 Placebo coef plots 
@@ -30,7 +30,7 @@ if `run_placebo' == 1 {
 
 	// Placebo treatment effects
 	preserve
-	drop if basis == "Sex" | sh == 1 // drop real treated cases
+	drop if basis == "Sex" | sh == 1 | basis == "Retaliation" // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -62,7 +62,7 @@ if `run_placebo' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "LGBTQ" 4 "Nationality" 5 "Other" 6 "Race" 7 "Religion" 8 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Other" 5 "Race" 6 "Religion" 7 "Sexual harassment", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment", size(medium));
@@ -82,7 +82,7 @@ if `run_placebo_f' == 1 {
 
 	// VICTIM FEMALE Placebo treatment effects
 	preserve
-	drop if basis == "Sex" | sh == 1
+	drop if basis == "Sex" | sh == 1 | basis == "Retaliation" // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -113,7 +113,7 @@ if `run_placebo_f' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "LGBTQ" 4 "Nationality" 5 "Other" 6 "Race" 7 "Religion" 8 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Other" 5 "Race" 6 "Religion" 7 "Sexual harassment", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment for female complainants", size(medium));
@@ -278,13 +278,12 @@ if `timeseries' == 1 {
 	twoway
 		lowess mean_y ym if basis == "Age", color("gs3") lwidth(thick) yaxis(1) 
 		|| lowess mean_y ym if basis == "Race", color("blue") lwidth(thick) yaxis(1) 
-		|| lowess mean_y ym if basis == "LGBTQ", color("green") lwidth(thick) yaxis(1) 
 		|| lowess mean_y ym if basis == "Disability", color("purple") lwidth(thick) yaxis(1) 
 		|| lowess mean_y ym if basis == "Religion", color("red") lwidth(thick) yaxis(1) 
 		|| lowess mean_y ym if basis == "Nationality", color("orange") lwidth(thick) yaxis(1) 
 		|| lowess mean_y ym if basis == "Retaliation", color("brown") lwidth(thick) yaxis(1) 
 		|| lowess mean_y ym if basis == "Sex", color("orange_red") lwidth(thick) yaxis(1)
-	legend(order(1 "Age" 2 "Race" 3 "LGBTQ" 4 "Disability" 5 "Religion" 6 "Nationality" 7 "Retaliation" 8 "Sex") 
+	legend(order(1 "Age" 2 "Race" 3 "Disability" 4 "Religion" 5 "Nationality" 6 "Retaliation" 7 "Sex") 
 		region(lcolor(none)) position(2) ring(0))
 	xtitle("Date filed", size(medium))
 	xline(693, lpattern(solid));

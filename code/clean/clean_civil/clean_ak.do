@@ -60,7 +60,7 @@ replace basis_raw = strtrim(basis_raw)
 split basis_raw
 ren basis_raw1 basis
 replace basis = "Sex"			if inlist(basis, "sex", "pregnancy")
-replace basis = "LGBTQ"			if inlist(basis, "sexualorientation", "genderidentity")
+replace basis = "Sex"			if inlist(basis, "sexualorientation", "genderidentity")
 replace basis = "Religion"		if basis == "religion"
 replace basis = "Race"			if inlist(basis, "race", "color")
 replace basis = "Nationality"	if basis == "nationalorigin"

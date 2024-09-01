@@ -95,10 +95,10 @@ replace basis = "Age"			if age != .
 replace basis = "Retaliation"	if retaliation == "Yes"
 replace basis = "Nationality"	if nationalorigin != ""
 replace basis = "Religion"		if religion != ""
-replace basis = "LGBTQ"			if strpos(sex, "Sexual Orientation") > 0
+replace basis = "Sex"			if strpos(sex, "Sexual Orientation") > 0
 replace basis = "Disability"	if disability != ""
 replace basis = "Race"			if race != "" | color != ""
-replace basis = "Sex" 			if (sex != "" & basis != "LGBTQ") | pregnancy == "Yes"
+replace basis = "Sex" 			if (sex != "") | pregnancy == "Yes"
 replace basis = "Other" 		if basis == ""
 
 gen basis_raw = ""

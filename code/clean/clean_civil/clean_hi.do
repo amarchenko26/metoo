@@ -57,7 +57,7 @@ drop sum*
 // Basis
 split basis_raw, parse()
 g basis = "Sex" 				if inlist(basis_raw1, "BRE", "DSV", "SEX", "SEX-H", "SEX-P")
-replace basis = "LGBTQ"         if inlist(basis_raw1, "SEX-I", "SOR")
+replace basis = "Sex"         if inlist(basis_raw1, "SEX-I", "SOR")
 replace basis = "Religion" 	    if basis_raw1 == "REL"
 replace basis = "Race"		    if inlist(basis_raw1, "RAC", "COL")
 replace basis = "Nationality"   if basis_raw1 == "NOR"

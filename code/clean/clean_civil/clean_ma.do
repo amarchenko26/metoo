@@ -38,7 +38,7 @@ g multi_cat = 0
 
 // Clean basis 
 g basis = "Sex" if regexm(basis_raw, "Sex|Female|Male")
-replace basis = "LGBTQ" if regexm(basis_raw, "Sexual orientation|Gender")
+replace basis = "Sex" if regexm(basis_raw, "Sexual orientation|Gender")
 replace basis = "Religion" if regexm(basis_raw, "Atheist|Catholic|Creed|Orthodox|Islamic|Jehovah's|Jewish|Protestant|Sabbath|Adventist") | regexm(basis_raw, "^Other Religion")| regexm(basis_raw, "^Other religious")| regexm(basis_raw, "^Other specified creed")
 replace basis = "Race" if regexm(basis_raw, "African|Asian|Black|Hispanic|White|hispanic|Race") | regexm(basis_raw, "^Other Race")
 replace basis = "Nationality" if regexm(basis_raw, "American|Arab|Chinese|Caribbean|Indian|European|Filipino|Greek|Italian|Japanese|Korean|Mexican|Middle Eastern|National|Polish|national") | regexm(basis_raw, "^Other European") | regexm(basis_raw, "^Other National")

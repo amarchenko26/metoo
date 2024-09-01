@@ -46,7 +46,7 @@ g multi_cat = 0
 // Basis
 g basis = strtrim(basis_raw)
 replace basis = "Sex"			if basis == "Pregnancy / Maternity"
-replace basis = "LGBTQ"			if inlist(basis, "GENDER IDENTITY/TRANSGENDER", "Sexual Orientation")
+replace basis = "Sex"			if inlist(basis, "GENDER IDENTITY/TRANSGENDER", "Sexual Orientation")
 replace basis = "Religion"		if basis == "Religion/Creed"
 replace basis = "Race"			if basis == "Color"
 replace basis = "Nationality"	if basis == "National Origin/Ancestry"
