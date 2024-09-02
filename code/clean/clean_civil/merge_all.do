@@ -159,10 +159,14 @@ Outcomes for regressions
 // Gen index var for count
 g y = 1
 
-// Gen cases_filed
-bys sh common_year: gen filed_per_year = _N
+// Gen filed_per_year for sh vs non
 bys common_year: gen total_cases_per_year = _N
+bys sh common_year: gen filed_per_year = _N
 replace filed_per_year = filed_per_year / total_cases_per_year
+
+// Gen share_filed_by_basis
+bys basis common_year: gen share_filed_by_basis = _N
+replace share_filed_by_basis = share_filed_by_basis / total_cases_per_year
 
 // Clean relief
 winsor relief, p(.05) gen(relief_w)

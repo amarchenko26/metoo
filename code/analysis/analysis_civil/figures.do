@@ -4,7 +4,7 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_placebo = 1
+loc run_placebo = 0
 loc run_placebo_f = 1
 loc event 	   = 0 // Event study
 loc event_all  = 0 // All cases (eeoc_filed == 1) 
@@ -39,7 +39,7 @@ if `run_placebo' == 1 {
 
 	// placebo treatment effects
 	foreach y of local outcome_vars {
-		forvalues index = 1(1)7 {
+		forvalues index = 1(1)6 {
 			reghdfe ``y'' placebo_treat_`index', absorb(unit_state time_state) vce(cluster basis)
 			eststo s_r_`i'
 			loc ++i
@@ -56,9 +56,9 @@ if `run_placebo' == 1 {
 
 	#delimit ;
 	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 s_r_7 true1, bylabel(Settled)
-		|| s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 s_r_13 s_r_14 true2, bylabel(Won)
-		|| s_r_15 s_r_16 s_r_17 s_r_18 s_r_19 s_r_20 s_r_21 true3, bylabel(Compensation)
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Settled)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Won)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Compensation)
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
@@ -90,7 +90,7 @@ if `run_placebo_f' == 1 {
 	}
 
 	foreach y of local outcome_vars {
-		forvalues index = 1(1)7 {
+		forvalues index = 1(1)6 {
 			reghdfe ``y'' placebo_treat_`index', absorb(unit_state time_state) vce(cluster basis)
 			eststo s_r_`i'
 			loc ++i
@@ -107,9 +107,9 @@ if `run_placebo_f' == 1 {
 
 	#delimit ;
 	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 s_r_7 true1, bylabel(Settled)
-		|| s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 s_r_13 s_r_14 true2, bylabel(Won)
-		|| s_r_15 s_r_16 s_r_17 s_r_18 s_r_19 s_r_20 s_r_21 true3, bylabel(Compensation)
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Settled)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Won)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Compensation)
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
