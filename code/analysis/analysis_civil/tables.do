@@ -6,10 +6,10 @@ use "$clean_data/clean_cases.dta", replace
 
 loc run_overlap  = 0
 loc	run_did 	 = 0
-loc run_did_robust = 1
+loc run_did_robust = 0
 loc run_victim_f_present = 0
 
-loc run_summary  = 0
+loc run_summary  = 1
 loc run_balance  = 0
 loc run_duration = 0
 
@@ -38,7 +38,7 @@ if `run_overlap' == 1 {
 	#delimit ;
 	esttab est1 est2 est3 using "$tables/overlap_panel.tex", style(tex) replace
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: 2 Years Pre-MeToo}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: SH complaints filed within 2 years pre-MeToo}} \\ \midrule")
 		fragment
 		varlabels(overlap_2 "Overlap") keep(overlap_2)
 		mgroups("Settled" "Won" "Compensation", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
@@ -62,7 +62,7 @@ if `run_overlap' == 1 {
 	
 	#delimit ;	
 	esttab est1 est2 est3 using "$tables/overlap_panel.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: All Pre-MeToo}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: All SH complaints filed before MeToo}} \\ \midrule")
 		fragment
 		append
 		varlabels(overlap_all "Overlap") keep(overlap_all)
@@ -390,62 +390,97 @@ if `run_victim_f_present' == 1 {
 	estimates clear
 }
 
-
 /*******************************************************************************
-Prep vars for tables
-*******************************************************************************/
-tab juris, gen(juris_dummy)
-la var juris_dummy1 "\textbf{Jurisdiction} \\ \hspace{5mm} Education"
-la var juris_dummy2 "\hspace{5mm} Employment"
-la var juris_dummy3 "\hspace{5mm} Housing"
-la var juris_dummy4 "\hspace{5mm} Public Accommodation"
-la var juris_dummy5 "\hspace{5mm} Unspecified"
-
-tab basis, gen(basis_dummy)
-la var basis_dummy1 "\textbf{Case type} \\ \hspace{5mm} Age"
-la var basis_dummy2 "\hspace{5mm} Disability"
-la var basis_dummy3 "\hspace{5mm} Nationality"
-la var basis_dummy4 "\hspace{5mm} Other"
-la var basis_dummy5 "\hspace{5mm} Race"
-la var basis_dummy6 "\hspace{5mm} Religion"
-la var basis_dummy7 "\hspace{5mm} Retaliation"
-la var basis_dummy8 "\hspace{5mm} Sex"
-
-
-/*******************************************************************************
-Define locals 
+Summary table
 *******************************************************************************/
 
-loc summary ///
-    sh ///
-	juris_dummy1 ///
-	juris_dummy2 ///
-	juris_dummy3 ///
-	juris_dummy4 ///
-	juris_dummy5 ///
-	basis_dummy1 ///
-	basis_dummy2 ///
-	basis_dummy3 ///
-	basis_dummy4 ///
-	basis_dummy5 ///
-	basis_dummy6 ///
-	basis_dummy7 ///
-	basis_dummy8 ///
-	basis_dummy9 ///
-    charge_file_year ///
-    charge_res_year ///
-	settle ///
-    court ///
-    court_file_year ///
-    court_res_year ///
-    duration ///
-    overlap_2 ///
-    relief ///
-	missing_relief ///
-    win
+if `run_summary' == 1 {
+
+	tab basis, gen(basis_dummy)
+	tab juris, gen(juris_dummy)
+
+	// Define locals 
+	#delimit ;
+	loc summary 
+	// Case chars
+		sh
+		victim_f
+		post 
+		charge_file_year 
+		charge_res_year 
+		duration 
+	// Basis
+		basis_dummy1 
+		basis_dummy2 
+		basis_dummy3 
+		basis_dummy4 
+		basis_dummy5 
+		basis_dummy6 
+		basis_dummy7 
+		basis_dummy8 
+	// Outcomes 
+		dismissed 
+		settle
+		court
+		win
+		relief_scale 
+	// Jurisdiction 
+		juris_dummy1 
+		juris_dummy2 
+		juris_dummy3 
+		juris_dummy4 
+		juris_dummy5; 
+	#delimit cr
+
+	preserve	
+	estpost tabstat `summary', c(stat) stat(mean sd min max n)
+
+	#delimit ;
+	esttab using "$tables/summary.tex", replace 
+		nomtitle nonote noobs nonumbers label booktabs f 
+		cells("mean(fmt(%13.3fc)) sd(fmt(%13.3fc)) min(fmt(a2)) max(fmt(a2)) count(fmt(%15.0fc))") 
+		collabels("Mean" "SD" "Min" "Max" "N") 
+		varlab( 
+			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
+			victim_f "\hspace{5mm} Complainant is female" 
+			post "\hspace{5mm} Filed after MeToo" 
+			charge_file_year "\hspace{5mm} Year filed" 
+			charge_res_year "\hspace{5mm} Year resolved" 
+			duration "\hspace{5mm} Duration (days)" 
+			basis_dummy1 "\textit{Type} \\ \hspace{5mm} Age" 
+			basis_dummy2 "\hspace{5mm} Disability" 
+			basis_dummy3 "\hspace{5mm} Nationality" 
+			basis_dummy4 "\hspace{5mm} Other" 
+			basis_dummy5 "\hspace{5mm} Race" 
+			basis_dummy6 "\hspace{5mm} Religion" 
+			basis_dummy7 "\hspace{5mm} Retaliation" 
+			basis_dummy8 "\hspace{5mm} Sex" 
+			dismissed "\textit{Outcomes} \\ \hspace{5mm} Dismissed" 
+			settle "\hspace{5mm} Settled" 
+			win "\hspace{5mm} Complainant won (in court or investigation)" 
+			court "\hspace{5mm} Went to court" 
+			relief_scale "\hspace{5mm} Compensation, 1000s (in court or investigation)" 
+			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
+			juris_dummy2 "\hspace{5mm} Employment" 
+			juris_dummy3 "\hspace{5mm} Housing" 
+			juris_dummy4 "\hspace{5mm} Public Accommodation" 
+			juris_dummy5 "\hspace{5mm} Unspecified" 
+		) 
+		substitute("\$" "$")
+	;
+	#delimit cr
+	restore
+
+}
 
 
-loc balance ///
+/****************************************************************************
+Balance table
+****************************************************************************/
+
+if `run_balance' == 1 {
+	
+	loc balance ///
     sh ///
 	basis_dummy1 ///
 	basis_dummy2 ///
@@ -469,33 +504,6 @@ loc balance ///
 	missing_relief ///
     win
 
-
-
-/*******************************************************************************
-Summary
-*******************************************************************************/
-if `run_summary' == 1 {
-
-	preserve
-	*keep if eeoc_filed == 0
-	
-	estpost tabstat post `summary', c(stat) stat(mean sd min max n)
-
-	esttab using "$tables/summary.tex", replace ///
-		nomtitle nonote noobs label booktabs f ///
-		cells("mean(fmt(%13.2fc)) sd(fmt(%13.2fc)) min(fmt(a2)) max(fmt(a2)) count(fmt(a2))") ///
-		collabels("Mean" "SD" "Min" "Max" "N")
-	restore
-
-}
-
-
-/****************************************************************************
-Balance table
-****************************************************************************/
-
-if `run_balance' == 1 {
-	
 	preserve 
 
 	// Run overlap_2 on ALL CASES

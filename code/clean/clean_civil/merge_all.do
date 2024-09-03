@@ -250,13 +250,13 @@ la var court_file_date "Court filing date"
 la var court_res_date "Court resolution date"
 la var court_file_year "Year court case filed"
 la var court_res_year "Year court case resolved"
-la var relief "Compensation to plaintiff"
+la var relief "Compensation to complainant"
 la var relief_scale "Compensation"
-la var missing_relief "Missing compensation amount"
+la var missing_relief "Missing compensation"
 la var victim_f "Complainant is female"
-la var eeoc_filed "Indicator for if data from ProPublica request"
+la var eeoc_filed "Data from ProPublica request"
 
-// MA
+// State
 la var charge_file_year "Year filed"
 la var charge_res_year "Year resolved"
 la var outcome "Outcome of charge: no cause finding, hearing, settlement, etc"
@@ -274,10 +274,11 @@ la var treat "Post = 1 and case is SH or overlap"
 la var juris "Employment, housing, public accommodations, or education"
 la var duration "Duration (days)"
 la var overlap_2 "Overlaps with MeToo"
+la var overlap_all "Overlaps with MeToo"
 la var court "Went to court"
 la var filed "Number of cases filed by SH and Post"
 la var common_year "Year of filing"
-la var win "Plaintiff won" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
+la var win "Complainant won" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
 la var settle "Settled"
 
 // Indent all variable labels for tables
