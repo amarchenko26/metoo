@@ -4,13 +4,121 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
+loc state_did  	= 0
 loc run_placebo = 0
-loc run_placebo_f = 1
-loc event 	   = 0 // Event study
-loc event_all  = 0 // All cases (eeoc_filed == 1) 
+loc run_placebo_f = 0
+loc event 	   = 0 
+loc event_all  = 0  
 loc timeseries = 0
 loc diff 	   = 0 
 loc duration   = 0
+
+
+/*******************************************************************************
+State-level DID 
+*******************************************************************************/
+
+	g state_did = treat * state_cat
+
+	***** All cases
+	preserve
+	// Individual state effects
+	reghdfe win i.state_did, absorb(unit_state time_state) vce(cluster basis)
+	eststo A
+
+	// Display overall ATT
+	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis)
+    loc att: display %5.4f _b[treat]
+
+	#delimit ;
+	coefplot 
+		A, 
+		drop(_cons)
+		vertical omitted 
+		ciopts(lwidth(thick) recast(rcap))
+		yline(0, lcolor(black)) 
+		yline(`att', lcolor(blue))
+		ytitle("Treatment effect", size(medium))
+		ylabel(-.5(.25)1, labsize(large))
+		xtitle("State", size(medium))
+		note(`" "ATT (blue line) in all cases sample: `att'" "* indicates omitted state" "', size(med)) 
+		;
+	#delimit cr
+
+    graph export "$figures/state_fx_all.png", replace  
+	restore
+
+if `state_did' == 1 {
+
+	g state_did = treat * state_cat
+
+	******* Estimation sample, no court data
+	preserve
+	// Restrict to `estimation sample' 
+	keep if eeoc_filed == 0 & court_file_year ==.
+
+	// Individual state effects
+	reghdfe win i.state_did, absorb(unit_state time_state) vce(cluster basis)
+	eststo A
+
+	// Display overall ATT
+	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis)
+    loc att: display %5.4f _b[treat]
+
+	#delimit ;
+	coefplot 
+		A, 
+		drop(_cons)
+		vertical omitted
+		ciopts(lwidth(thick) recast(rcap))
+		yline(0, lcolor(black)) 
+		yline(`att', lcolor(blue))
+		ytitle("Treatment effect", size(medium))
+		xtitle("State", size(medium))
+		xlabel(1 "AK" 2 "HI" 3 "IL" 4 "MA" 5 "MI" 6 "MN" 7 "ND" 8 "WA", labsize(medlarge))
+		note("ATT (blue line) in estimation sample (no EEOC court data): `att'", size(med)) 
+		;
+	#delimit cr
+
+    graph export "$figures/state_fx.png", replace  
+	restore
+
+
+	******* Estimation sample
+	preserve
+	// Restrict to `estimation sample' 
+	keep if eeoc_filed == 0
+
+	// Individual state effects
+	reghdfe win i.state_did, absorb(unit_state time_state) vce(cluster basis)
+	eststo A
+
+	// Display overall ATT
+	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis)
+    loc att: display %5.4f _b[treat]
+
+	#delimit ;
+	coefplot 
+		A, 
+		drop(_cons)
+		vertical omitted 
+		ciopts(lwidth(thick) recast(rcap))
+		yline(0, lcolor(black)) 
+		yline(`att', lcolor(blue))
+		ytitle("Treatment effect", size(medium))
+		ylabel(-.5(.25)1, labsize(large))
+		xtitle("State", size(medium))
+		xlabel(1 "AK" 2 "CA" 3 "FL" 4 "GA" 5 "HI" 6 "IL" 7 "LA" 8 "MA" 9 "MD" 10 "MI" 11 "MN*" 12 "MS*" 13 "NC" 14 "ND" 15 "NM" 16 "NY" 17 "PA" 18 "TN" 19 "TX" 20 "VA" 21 "WA", labsize(medium))
+		note(`" "ATT (blue line) in estimation sample: `att'" "* indicates omitted state" "', size(med)) 
+		;
+	#delimit cr
+
+    graph export "$figures/state_fx2.png", replace  
+	restore
+
+}
+
+
 
 /*******************************************************************************
 Placebo coef plots 
@@ -30,7 +138,7 @@ if `run_placebo' == 1 {
 
 	// Placebo treatment effects
 	preserve
-	drop if basis == "Sex" | sh == 1 | basis == "Retaliation" // drop real treated cases
+	drop if basis == "Sex" | sh == 1 // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -82,7 +190,7 @@ if `run_placebo_f' == 1 {
 
 	// VICTIM FEMALE Placebo treatment effects
 	preserve
-	drop if basis == "Sex" | sh == 1 | basis == "Retaliation" // drop real treated cases
+	drop if basis == "Sex" | sh == 1 // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
