@@ -142,7 +142,32 @@ g court_res_year = year(court_res_date)
 replace eeoc_filed = 0 if missing(eeoc_filed)
 
 /*******************************************************************************
-Gen fixed effects  
+Consistent sample 
+*******************************************************************************/
+
+// Drop cases resolved before filed
+drop if common_file_date > common_res_date
+
+// Drop obs before Oct 2010
+di tm(2010m10)
+drop if ym < 609
+
+// Drop obs after Oct 2023
+di tm(2023m10)
+drop if ym > 765
+
+// Drop missing bases (N=10 obs in PA) 
+cap drop if basis == ""
+
+// Drop Other category 
+drop if basis == "Other"
+
+// Drop cases removed to EEOC
+di tm(2017m9)
+drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC") & ym < 692
+
+/*******************************************************************************
+Fixed effects  
 *******************************************************************************/
 
 encode state, g(state_cat)
@@ -153,7 +178,7 @@ g unit_state = basis * state_cat
 g time_state = ym * state_cat
 
 /*******************************************************************************
-Outcomes for regressions
+Outcomes
 *******************************************************************************/
 
 // Gen index var for count
@@ -199,7 +224,9 @@ g treat = post*sh // treat=1 if post =1 and sh=1
 replace treat = . if sex_cases == 1 & sh == 0 
 replace treat = 1 if overlap_2 == 1
 
-g triple_did = victim_f * treat
+g triple_did = treat * victim_f
+
+g state_did = treat * state_cat
 
 /*******************************************************************************
 Create time to treat - 0 is the pre-period before MeToo
@@ -213,28 +240,6 @@ create_time_to_treat, period(6) period_label("Half-years relative to MeToo")
 
 // Create time_to_treat for years
 create_time_to_treat, period(12) period_label("Years relative to MeToo")
-
-/*******************************************************************************
-Create consistent sample 
-*******************************************************************************/
-
-// Drop cases resolved before filed
-drop if common_file_date > common_res_date
-
-// Drop obs before Oct 2010
-di tm(2010m10)
-drop if ym < 609
-
-// Drop obs after Oct 2023
-di tm(2023m10)
-drop if ym > 765
-
-// Drop missing bases (N=10 obs in PA) 
-cap drop if basis == ""
-
-// Drop cases removed to EEOC
-di tm(2017m9)
-drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC") & ym < 692
 
 /*******************************************************************************
 Label all variables

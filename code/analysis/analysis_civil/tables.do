@@ -171,8 +171,6 @@ if `run_did' == 1 {
 	// Victim female **********************************************************/
 	loc outcome_vars y1 y2 y3 y4
 	loc i 1
-
-	g triple_did = victim_f * treat
 	
 	foreach y of local outcome_vars {
 		
@@ -341,12 +339,6 @@ if `run_did_robust' == 1 {
 }
 
 
-
-
-
-
-
-
 /*******************************************************************************
 Victim female regression - for presentations only, not in paper, generates 
 3rd panel of did.tex but separately
@@ -399,13 +391,14 @@ if `run_summary' == 1 {
 	tab basis, gen(basis_dummy)
 	tab juris, gen(juris_dummy)
 
-	// Define locals 
+	// Define local 
 	#delimit ;
 	loc summary 
 	// Case chars
 		sh
 		victim_f
 		post 
+		court
 		charge_file_year 
 		charge_res_year 
 		duration 
@@ -417,11 +410,9 @@ if `run_summary' == 1 {
 		basis_dummy5 
 		basis_dummy6 
 		basis_dummy7 
-		basis_dummy8 
 	// Outcomes 
 		dismissed 
 		settle
-		court
 		win
 		relief_scale 
 	// Jurisdiction 
@@ -444,21 +435,20 @@ if `run_summary' == 1 {
 			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
 			victim_f "\hspace{5mm} Complainant is female" 
 			post "\hspace{5mm} Filed after MeToo" 
+			court "\hspace{5mm} Went to court" 
 			charge_file_year "\hspace{5mm} Year filed" 
 			charge_res_year "\hspace{5mm} Year resolved" 
 			duration "\hspace{5mm} Duration (days)" 
-			basis_dummy1 "\textit{Type} \\ \hspace{5mm} Age" 
+			basis_dummy1 "\textit{Discrimination basis} \\ \hspace{5mm} Age" 
 			basis_dummy2 "\hspace{5mm} Disability" 
 			basis_dummy3 "\hspace{5mm} Nationality" 
-			basis_dummy4 "\hspace{5mm} Other" 
-			basis_dummy5 "\hspace{5mm} Race" 
-			basis_dummy6 "\hspace{5mm} Religion" 
-			basis_dummy7 "\hspace{5mm} Retaliation" 
-			basis_dummy8 "\hspace{5mm} Sex" 
+			basis_dummy4 "\hspace{5mm} Race" 
+			basis_dummy5 "\hspace{5mm} Religion" 
+			basis_dummy6 "\hspace{5mm} Retaliation" 
+			basis_dummy7 "\hspace{5mm} Sex" 
 			dismissed "\textit{Outcomes} \\ \hspace{5mm} Dismissed" 
 			settle "\hspace{5mm} Settled" 
 			win "\hspace{5mm} Complainant won (in court or investigation)" 
-			court "\hspace{5mm} Went to court" 
 			relief_scale "\hspace{5mm} Compensation, 1000s (in court or investigation)" 
 			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
 			juris_dummy2 "\hspace{5mm} Employment" 

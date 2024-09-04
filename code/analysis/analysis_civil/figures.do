@@ -4,7 +4,7 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc state_did  	= 0
+loc state_did  	= 1
 loc run_placebo = 0
 loc run_placebo_f = 0
 loc event 	   = 0 
@@ -18,39 +18,9 @@ loc duration   = 0
 State-level DID 
 *******************************************************************************/
 
-	g state_did = treat * state_cat
-
-	***** All cases
-	preserve
-	// Individual state effects
-	reghdfe win i.state_did, absorb(unit_state time_state) vce(cluster basis)
-	eststo A
-
-	// Display overall ATT
-	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis)
-    loc att: display %5.4f _b[treat]
-
-	#delimit ;
-	coefplot 
-		A, 
-		drop(_cons)
-		vertical omitted 
-		ciopts(lwidth(thick) recast(rcap))
-		yline(0, lcolor(black)) 
-		yline(`att', lcolor(blue))
-		ytitle("Treatment effect", size(medium))
-		ylabel(-.5(.25)1, labsize(large))
-		xtitle("State", size(medium))
-		note(`" "ATT (blue line) in all cases sample: `att'" "* indicates omitted state" "', size(med)) 
-		;
-	#delimit cr
-
-    graph export "$figures/state_fx_all.png", replace  
-	restore
-
 if `state_did' == 1 {
 
-	g state_did = treat * state_cat
+	/* g state_did = treat * state_cat
 
 	******* Estimation sample, no court data
 	preserve
@@ -58,11 +28,11 @@ if `state_did' == 1 {
 	keep if eeoc_filed == 0 & court_file_year ==.
 
 	// Individual state effects
-	reghdfe win i.state_did, absorb(unit_state time_state) vce(cluster basis)
+	reghdfe win i.state_did, absorb(basis ym) vce(cluster basis)
 	eststo A
 
 	// Display overall ATT
-	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis)
+	reghdfe win treat, absorb(basis ym) vce(cluster basis)
     loc att: display %5.4f _b[treat]
 
 	#delimit ;
@@ -81,20 +51,16 @@ if `state_did' == 1 {
 	#delimit cr
 
     graph export "$figures/state_fx.png", replace  
-	restore
+	restore */
 
 
 	******* Estimation sample
-	preserve
-	// Restrict to `estimation sample' 
-	keep if eeoc_filed == 0
-
 	// Individual state effects
-	reghdfe win i.state_did, absorb(unit_state time_state) vce(cluster basis)
+	reghdfe win i.state_did if eeoc_filed == 0, absorb(basis ym) vce(cluster basis)
 	eststo A
 
 	// Display overall ATT
-	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis)
+	reghdfe win treat if eeoc_filed == 0, absorb(basis ym) vce(cluster basis)
     loc att: display %5.4f _b[treat]
 
 	#delimit ;
@@ -105,16 +71,42 @@ if `state_did' == 1 {
 		ciopts(lwidth(thick) recast(rcap))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(blue))
-		ytitle("Treatment effect", size(medium))
+		ytitle("Treatment effect on win", size(medium))
 		ylabel(-.5(.25)1, labsize(large))
 		xtitle("State", size(medium))
-		xlabel(1 "AK" 2 "CA" 3 "FL" 4 "GA" 5 "HI" 6 "IL" 7 "LA" 8 "MA" 9 "MD" 10 "MI" 11 "MN*" 12 "MS*" 13 "NC" 14 "ND" 15 "NM" 16 "NY" 17 "PA" 18 "TN" 19 "TX" 20 "VA" 21 "WA", labsize(medium))
-		note(`" "ATT (blue line) in estimation sample: `att'" "* indicates omitted state" "', size(med)) 
+		xlabel(1 "AK" 2 "CA" 3 "FL" 4 "GA" 5 "HI" 6 "IL" 7 "LA" 8 "MA" 9 "MD" 10 "MI" 11 "MN" 12 "MS" 13 "NC" 14 "ND" 15 "NM" 16 "NY" 17 "PA" 18 "TN" 19 "TX" 20 "VA" 21 "WA", labsize(medium))
+		note("ATT (blue line) in estimation sample: `att'", size(med)) 
 		;
 	#delimit cr
 
     graph export "$figures/state_fx2.png", replace  
-	restore
+
+	***** All cases
+	// Individual state effects
+	reghdfe win i.state_did, absorb(basis ym) vce(cluster basis)
+	eststo A
+
+	// Display overall ATT
+	reghdfe win treat, absorb(basis ym) vce(cluster basis)
+    loc att: display %5.4f _b[treat]
+
+	#delimit ;
+	coefplot 
+		A, 
+		drop(_cons)
+		vertical omitted 
+		ciopts(lwidth(thick) recast(rcap))
+		yline(0, lcolor(black)) 
+		yline(`att', lcolor(blue))
+		ytitle("Treatment effect on win", size(medium))
+		ylabel(-.5(.25)1, labsize(large))
+		xtitle("State", size(medium))
+		xlabel(1 "AK" 2 "AL" 3 "AR" 4 "AZ" 5 "CA" 6 "CO" 7 "CT" 8 "DC" 9 "FL" 10 "GA" 11 "HI" 12 "IA" 13 "ID" 14 "IL" 15 "IN" 16 "KS" 17 "KY" 18 "LA" 19 "MA" 20 "MD" 21 "ME" 22 "MI" 23 "MN" 24 "MO" 25 "MS" 26 "MT" 27 "NC" 28 "ND" 29 "NE" 30 "NH" 31 "NJ" 32 "NM" 33 "NV" 34 "NY" 35 "OH" 36 "OK" 37 "OR" 38 "PA" 39 "RI" 40 "SC" 41 "SD" 42 "TN" 43 "TX" 44 "UT" 45 "VA" 46 "VT" 47 "WA" 48 "WI" 49 "WV", alternate)
+		note("ATT (blue line) in all cases sample: `att'", size(med)) 
+		;
+	#delimit cr
+
+    graph export "$figures/state_fx_all.png", replace  
 
 }
 
@@ -170,7 +162,7 @@ if `run_placebo' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Other" 5 "Race" 6 "Religion" 7 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Sexual harassment", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment", size(medium));
@@ -221,7 +213,7 @@ if `run_placebo_f' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Other" 5 "Race" 6 "Religion" 7 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Sexual harassment", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment for female complainants", size(medium));
