@@ -20,6 +20,129 @@ State-level DID
 
 if `state_did' == 1 {
 
+	** All cases
+	// Static TWFE
+	reghdfe win treat, absorb(basis ym) vce(cluster basis) resid
+		
+	// Estimate residuals
+	predict resid, residuals
+		
+	// Calculate weights
+	g num = treat * resid  // weight numerator
+	egen den = total(num)	 // weights denominator
+	g weights = num / den
+
+	drop num den resid
+
+	* Plot regression weights
+	preserve 
+	collapse (mean) mean_weight = weights, by(state_cat)
+
+	scatter mean_weight state_cat, ///
+		xtitle("State") mlabel(state) ///
+		ytitle("Mean weights") ///
+		title("DiD regression weights on treated observations by state") ///
+		note("Sample is all cases, unit and time FE included", size(med))
+
+	graph export "$figures/weights_all.png", replace 	
+	restore
+	cap drop weights
+
+
+
+**** all cases, state FE
+	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis) resid
+		
+	// Estimate residuals
+	predict resid, residuals
+		
+	// Calculate weights
+	g num = treat * resid  // weight numerator
+	egen den = total(num)	 // weights denominator
+	g weights = num / den
+
+	drop num den resid
+
+	* Plot regression weights
+	preserve 
+	collapse (mean) mean_weight = weights, by(state_cat)
+
+	scatter mean_weight state_cat, ///
+		xtitle("State") mlabel(state) ///
+		ytitle("Mean weights") ///
+		title("DiD regression weights on treated observations by state") ///
+		note("Sample is all cases, unitXstate and timeXstate FE included", size(med)) ///
+
+	graph export "$figures/weights_all_statefe.png", replace 	
+	restore
+	cap drop weights
+
+
+
+
+	** Estimation sample
+	preserve 
+	keep if eeoc_filed == 0
+
+	reghdfe win treat, absorb(basis ym) vce(cluster basis) resid
+		
+	// Estimate residuals
+	predict resid, residuals
+		
+	// Calculate weights
+	g num = treat * resid  // weight numerator
+	egen den = total(num)	 // weights denominator
+	g weights = num / den
+
+	drop num den resid
+
+	* Plot regression weights
+	collapse (mean) mean_weight = weights, by(state_cat)
+
+	scatter mean_weight state_cat, ///
+		xtitle("State") mlabel(state) ///
+		ytitle("Mean weights") ///
+		title("DiD regression weights on treated observations by state") ///
+		note("Sample is estimation sample, unit and time FE included", size(med)) ///
+
+	graph export "$figures/weights.png", replace 	
+	restore
+	cap drop weights
+
+
+	** Estimation sample, state FE
+	preserve 
+	keep if eeoc_filed == 0
+
+	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis) resid
+		
+	// Estimate residuals
+	predict resid, residuals
+		
+	// Calculate weights
+	g num = treat * resid  // weight numerator
+	egen den = total(num)	 // weights denominator
+	g weights = num / den
+
+	drop num den resid
+
+	* Plot regression weights
+	collapse (mean) mean_weight = weights, by(state_cat)
+
+	scatter mean_weight state_cat, ///
+		xtitle("State") mlabel(state) ///
+		ytitle("Mean weights") ///
+		title("DiD regression weights on treated observations by state") ///
+		note("Sample is estimation sample, unit X state and time X state FE included", size(med)) ///
+
+	graph export "$figures/weights_statefe.png", replace 	
+	restore
+	cap drop weights
+}
+
+
+
+
 	/* g state_did = treat * state_cat
 
 	******* Estimation sample, no court data
@@ -74,7 +197,7 @@ if `state_did' == 1 {
 		ytitle("Treatment effect on win", size(medium))
 		ylabel(-.5(.25)1, labsize(large))
 		xtitle("State", size(medium))
-		xlabel(1 "AK" 2 "CA" 3 "FL" 4 "GA" 5 "HI" 6 "IL" 7 "LA" 8 "MA" 9 "MD" 10 "MI" 11 "MN" 12 "MS" 13 "NC" 14 "ND" 15 "NM" 16 "NY" 17 "PA" 18 "TN" 19 "TX" 20 "VA" 21 "WA", labsize(medium))
+		xlabel(1 "AK" 2 "CA" 3 "FL" 4 "GA" 5 "HI" 6 "IL" 7 "LA" 8 "MA" 9 "MD" 10 "MI" 11 "MN" 12 "MS" 13 "NC" 14 "ND" 15 "NM" 16 "NY" 17 "PA" 18 "TN" 19 "TX" 20 "VA" 21 "WA", vertical labsize(medium))
 		note("ATT (blue line) in estimation sample: `att'", size(med)) 
 		;
 	#delimit cr
