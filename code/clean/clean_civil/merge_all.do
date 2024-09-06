@@ -25,6 +25,9 @@ Already merged:
 	
 *******************************************************************************/
 
+clear all
+set maxvar 32767
+
 /*******************************************************************************
 Pull cleaned EEOC court case data
 *******************************************************************************/
@@ -174,8 +177,8 @@ encode state, g(state_cat)
 encode basis, g(basis_cat)
 
 // Gen state/unit and state/time FE
-g unit_state = basis * state_cat
-g time_state = ym * state_cat
+g basis_state = basis_cat * state_cat
+g ym_state 	  = ym * state_cat
 
 /*******************************************************************************
 Outcomes
@@ -231,6 +234,8 @@ g state_did = treat * state_cat
 /*******************************************************************************
 Create time to treat - 0 is the pre-period before MeToo
 *******************************************************************************/
+
+do "$droot/code/programs/programs.do"
 
 // Create quarters
 create_time_to_treat, period(3) period_label("Quarters relative to MeToo")

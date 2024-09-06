@@ -13,6 +13,7 @@ loc timeseries = 0
 loc diff 	   = 0 
 loc duration   = 0
 
+* reg pierre philosophical_ideas timeless_whimsy fluffiness, cluster(hairball)
 
 /*******************************************************************************
 State-level DID 
@@ -20,170 +21,45 @@ State-level DID
 
 if `state_did' == 1 {
 
-	** All cases
-	// Static TWFE
-	reghdfe win treat, absorb(basis ym) vce(cluster basis) resid
-		
-	// Estimate residuals
-	predict resid, residuals
-		
-	// Calculate weights
-	g num = treat * resid  // weight numerator
-	egen den = total(num)	 // weights denominator
+	******* All cases
+	// Full regression, get ATT
+	qui: reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
+
+	// FWL regression
+	qui: reghdfe win, absorb(basis_state ym_state) vce(cluster basis_state) resid
+	predict treat_tilde, residuals
+
+	// ATT2, Should give you ATT = ATT2 
+	qui: reg win treat_tilde, cluster(basis_state)
+
+	// Calculate weights 
+	g num = treat_tilde  // weight numerator
+	egen den = total(treat_tilde * treat_tilde)	 // weights denominator
 	g weights = num / den
 
-	drop num den resid
+	cap drop num den 
 
-	* Plot regression weights
+	// Collapse weights by state and plot
 	preserve 
 	collapse (mean) mean_weight = weights, by(state_cat)
 
 	scatter mean_weight state_cat, ///
-		xtitle("State") mlabel(state) ///
+		xtitle("State") mlabel(state) mlabposition(6) ///
 		ytitle("Mean weights") ///
-		title("DiD regression weights on treated observations by state") ///
-		note("Sample is all cases, unit and time FE included", size(med))
-
-	graph export "$figures/weights_all.png", replace 	
-	restore
-	cap drop weights
-
-
-
-**** all cases, state FE
-	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis) resid
-		
-	// Estimate residuals
-	predict resid, residuals
-		
-	// Calculate weights
-	g num = treat * resid  // weight numerator
-	egen den = total(num)	 // weights denominator
-	g weights = num / den
-
-	drop num den resid
-
-	* Plot regression weights
-	preserve 
-	collapse (mean) mean_weight = weights, by(state_cat)
-
-	scatter mean_weight state_cat, ///
-		xtitle("State") mlabel(state) ///
-		ytitle("Mean weights") ///
-		title("DiD regression weights on treated observations by state") ///
-		note("Sample is all cases, unitXstate and timeXstate FE included", size(med)) ///
+		title("DiD regression weights by state") ///
+		note("Sample is all cases", size(med))
 
 	graph export "$figures/weights_all_statefe.png", replace 	
 	restore
 	cap drop weights
 
 
-
-
-	** Estimation sample
-	preserve 
-	keep if eeoc_filed == 0
-
-	reghdfe win treat, absorb(basis ym) vce(cluster basis) resid
-		
-	// Estimate residuals
-	predict resid, residuals
-		
-	// Calculate weights
-	g num = treat * resid  // weight numerator
-	egen den = total(num)	 // weights denominator
-	g weights = num / den
-
-	drop num den resid
-
-	* Plot regression weights
-	collapse (mean) mean_weight = weights, by(state_cat)
-
-	scatter mean_weight state_cat, ///
-		xtitle("State") mlabel(state) ///
-		ytitle("Mean weights") ///
-		title("DiD regression weights on treated observations by state") ///
-		note("Sample is estimation sample, unit and time FE included", size(med)) ///
-
-	graph export "$figures/weights.png", replace 	
-	restore
-	cap drop weights
-
-
-	** Estimation sample, state FE
-	preserve 
-	keep if eeoc_filed == 0
-
-	reghdfe win treat, absorb(unit_state time_state) vce(cluster basis) resid
-		
-	// Estimate residuals
-	predict resid, residuals
-		
-	// Calculate weights
-	g num = treat * resid  // weight numerator
-	egen den = total(num)	 // weights denominator
-	g weights = num / den
-
-	drop num den resid
-
-	* Plot regression weights
-	collapse (mean) mean_weight = weights, by(state_cat)
-
-	scatter mean_weight state_cat, ///
-		xtitle("State") mlabel(state) ///
-		ytitle("Mean weights") ///
-		title("DiD regression weights on treated observations by state") ///
-		note("Sample is estimation sample, unit X state and time X state FE included", size(med)) ///
-
-	graph export "$figures/weights_statefe.png", replace 	
-	restore
-	cap drop weights
-}
-
-
-
-
-	/* g state_did = treat * state_cat
-
-	******* Estimation sample, no court data
-	preserve
-	// Restrict to `estimation sample' 
-	keep if eeoc_filed == 0 & court_file_year ==.
-
-	// Individual state effects
-	reghdfe win i.state_did, absorb(basis ym) vce(cluster basis)
+	***** Individual state effects
+	reghdfe win treat state_cat#treat, absorb(basis_state ym_state) vce(cluster basis_state)
 	eststo A
 
 	// Display overall ATT
-	reghdfe win treat, absorb(basis ym) vce(cluster basis)
-    loc att: display %5.4f _b[treat]
-
-	#delimit ;
-	coefplot 
-		A, 
-		drop(_cons)
-		vertical omitted
-		ciopts(lwidth(thick) recast(rcap))
-		yline(0, lcolor(black)) 
-		yline(`att', lcolor(blue))
-		ytitle("Treatment effect", size(medium))
-		xtitle("State", size(medium))
-		xlabel(1 "AK" 2 "HI" 3 "IL" 4 "MA" 5 "MI" 6 "MN" 7 "ND" 8 "WA", labsize(medlarge))
-		note("ATT (blue line) in estimation sample (no EEOC court data): `att'", size(med)) 
-		;
-	#delimit cr
-
-    graph export "$figures/state_fx.png", replace  
-	restore */
-
-
-	******* Estimation sample
-	// Individual state effects
-	reghdfe win i.state_did if eeoc_filed == 0, absorb(basis ym) vce(cluster basis)
-	eststo A
-
-	// Display overall ATT
-	reghdfe win treat if eeoc_filed == 0, absorb(basis ym) vce(cluster basis)
+	reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
     loc att: display %5.4f _b[treat]
 
 	#delimit ;
@@ -194,43 +70,77 @@ if `state_did' == 1 {
 		ciopts(lwidth(thick) recast(rcap))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(blue))
+		xlabel( , angle(45))
 		ytitle("Treatment effect on win", size(medium))
-		ylabel(-.5(.25)1, labsize(large))
 		xtitle("State", size(medium))
-		xlabel(1 "AK" 2 "CA" 3 "FL" 4 "GA" 5 "HI" 6 "IL" 7 "LA" 8 "MA" 9 "MD" 10 "MI" 11 "MN" 12 "MS" 13 "NC" 14 "ND" 15 "NM" 16 "NY" 17 "PA" 18 "TN" 19 "TX" 20 "VA" 21 "WA", vertical labsize(medium))
-		note("ATT (blue line) in estimation sample: `att'", size(med)) 
-		;
-	#delimit cr
-
-    graph export "$figures/state_fx2.png", replace  
-
-	***** All cases
-	// Individual state effects
-	reghdfe win i.state_did, absorb(basis ym) vce(cluster basis)
-	eststo A
-
-	// Display overall ATT
-	reghdfe win treat, absorb(basis ym) vce(cluster basis)
-    loc att: display %5.4f _b[treat]
-
-	#delimit ;
-	coefplot 
-		A, 
-		drop(_cons)
-		vertical omitted 
-		ciopts(lwidth(thick) recast(rcap))
-		yline(0, lcolor(black)) 
-		yline(`att', lcolor(blue))
-		ytitle("Treatment effect on win", size(medium))
-		ylabel(-.5(.25)1, labsize(large))
-		xtitle("State", size(medium))
-		xlabel(1 "AK" 2 "AL" 3 "AR" 4 "AZ" 5 "CA" 6 "CO" 7 "CT" 8 "DC" 9 "FL" 10 "GA" 11 "HI" 12 "IA" 13 "ID" 14 "IL" 15 "IN" 16 "KS" 17 "KY" 18 "LA" 19 "MA" 20 "MD" 21 "ME" 22 "MI" 23 "MN" 24 "MO" 25 "MS" 26 "MT" 27 "NC" 28 "ND" 29 "NE" 30 "NH" 31 "NJ" 32 "NM" 33 "NV" 34 "NY" 35 "OH" 36 "OK" 37 "OR" 38 "PA" 39 "RI" 40 "SC" 41 "SD" 42 "TN" 43 "TX" 44 "UT" 45 "VA" 46 "VT" 47 "WA" 48 "WI" 49 "WV", alternate)
-		note("ATT (blue line) in all cases sample: `att'", size(med)) 
+		note("State X Unit and State X Time FE included. ATT (blue line) in all cases sample: `att'", size(small)) 
 		;
 	#delimit cr
 
     graph export "$figures/state_fx_all.png", replace  
 
+
+//		xlabel(1 "AK" 2 "AL" 3 "AR" 4 "AZ" 5 "CA" 6 "CO" 7 "CT" 8 "DC" 9 "FL" 10 "GA" 11 "HI" 12 "IA" 13 "ID" 14 "IL" 15 "IN" 16 "KS" 17 "KY" 18 "LA" 19 "MA" 20 "MD" 21 "ME" 22 "MI" 23 "MN" 24 "MO" 25 "MS" 26 "MT" 27 "NC" 28 "ND" 29 "NE" 30 "NH" 31 "NJ" 32 "NM" 33 "NV" 34 "NY" 35 "OH" 36 "OK" 37 "OR" 38 "PA" 39 "RI" 40 "SC" 41 "SD" 42 "TN" 43 "TX" 44 "UT" 45 "VA" 46 "WA" 47 "WI" 48 "WV", angle(45))
+
+	** Estimation sample
+	preserve 
+	keep if eeoc_filed == 0
+
+	qui: reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
+
+	// FWL regression
+	qui: reghdfe win, absorb(basis_state ym_state) vce(cluster basis_state) resid
+	predict treat_tilde, residuals
+
+	// ATT2, Should give you ATT = ATT2 
+	qui: reg win treat_tilde, cluster(basis_state)
+
+	// Calculate weights 
+	g num = treat_tilde  // weight numerator
+	egen den = total(treat_tilde * treat_tilde)	 // weights denominator
+	g weights = num / den
+
+	cap drop num den 
+
+	// Collapse weights by state and plot
+	collapse (mean) mean_weight = weights, by(state_cat)
+
+	scatter mean_weight state_cat, ///
+		xtitle("State") mlabel(state) mlabposition(6) ///
+		ytitle("Mean weights") ///
+		title("DiD regression weights by state") ///
+		note("Sample is all cases", size(med))
+
+	graph export "$figures/weights_statefe.png", replace 	
+	restore
+
+	***** Individual state effects
+	preserve 
+	keep if eeoc_filed == 0
+	reghdfe win treat state_cat#treat, absorb(basis_state ym_state) vce(cluster basis_state)
+	eststo A
+
+	// Display overall ATT
+	reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
+    loc att: display %5.4f _b[treat]
+
+	#delimit ;
+	coefplot 
+		A, 
+		drop(_cons)
+		vertical omitted 
+		ciopts(lwidth(thick) recast(rcap))
+		yline(0, lcolor(black)) 
+		yline(`att', lcolor(blue))
+		xlabel( , angle(45))
+		ytitle("Treatment effect on win", size(medium))
+		xtitle("State", size(medium))
+		note("State X Unit and State X Time FE included. ATT (blue line) in all cases sample: `att'", size(small)) 
+		;
+	#delimit cr
+
+    graph export "$figures/state_fx.png", replace  
+	restore
 }
 
 
@@ -263,7 +173,7 @@ if `run_placebo' == 1 {
 	// placebo treatment effects
 	foreach y of local outcome_vars {
 		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(unit_state time_state) vce(cluster basis)
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_state) vce(cluster basis)
 			eststo s_r_`i'
 			loc ++i
 		}
@@ -272,7 +182,7 @@ if `run_placebo' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -314,7 +224,7 @@ if `run_placebo_f' == 1 {
 
 	foreach y of local outcome_vars {
 		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(unit_state time_state) vce(cluster basis)
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_state) vce(cluster basis)
 			eststo s_r_`i'
 			loc ++i
 		}
@@ -323,7 +233,7 @@ if `run_placebo_f' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' triple_did, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' triple_did, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
