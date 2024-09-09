@@ -37,8 +37,6 @@ if `state_did' == 1 {
 	egen den = total(treat_tilde * treat_tilde)	 // weights denominator
 	g weights = num / den
 
-	cap drop num den 
-
 	// Collapse weights by state and plot
 	preserve 
 	collapse (mean) mean_weight = weights, by(state_cat)
@@ -51,11 +49,10 @@ if `state_did' == 1 {
 
 	graph export "$figures/weights_all_statefe.png", replace 	
 	restore
-	cap drop weights
-
+	cap drop weights treat_tilde num den
 
 	***** Individual state effects
-	reghdfe win treat state_cat#treat, absorb(basis_state ym_state) vce(cluster basis_state)
+	reghdfe win treat i.state_did, absorb(basis_state ym_state) vce(cluster basis_state)
 	eststo A
 
 	// Display overall ATT
@@ -70,7 +67,7 @@ if `state_did' == 1 {
 		ciopts(lwidth(thick) recast(rcap))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(blue))
-		xlabel( , angle(45))
+		xlabel( , angle(90))
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State", size(medium))
 		note("State X Unit and State X Time FE included. ATT (blue line) in all cases sample: `att'", size(small)) 
@@ -117,7 +114,7 @@ if `state_did' == 1 {
 	***** Individual state effects
 	preserve 
 	keep if eeoc_filed == 0
-	reghdfe win treat state_cat#treat, absorb(basis_state ym_state) vce(cluster basis_state)
+	reghdfe win treat i.state_did, absorb(basis_state ym_state) vce(cluster basis_state)
 	eststo A
 
 	// Display overall ATT
@@ -132,10 +129,10 @@ if `state_did' == 1 {
 		ciopts(lwidth(thick) recast(rcap))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(blue))
-		xlabel( , angle(45))
+		xlabel( , angle(90))
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State", size(medium))
-		note("State X Unit and State X Time FE included. ATT (blue line) in all cases sample: `att'", size(small)) 
+		note("State X Unit and State X Time FE included. ATT (blue line) in estimation sample: `att'", size(small)) 
 		;
 	#delimit cr
 
