@@ -40,8 +40,7 @@ replace juris = "Public Accommodation" if juris == "PA"
 replace juris = "Housing" if juris == "RE"
 
 // Multi-category
-g sumsex = 1 if regexm(basis_raw, "BRE|DSV|SEX|SEX-H|SEX-P")
-g sumlgbtq = 1 if regexm(basis_raw, "SEX-I|SOR")
+g sumsex = 1 if regexm(basis_raw, "BRE|DSV|SEX|SEX-H|SEX-P|SEX-I|SOR")
 g sumreligion = 1 if regexm(basis_raw, "REL")
 g sumrace = 1 if regexm(basis_raw, "RAC|COL")
 g sumnationality = 1 if regexm(basis_raw, "NOR")
@@ -56,8 +55,7 @@ drop sum*
 
 // Basis
 split basis_raw, parse()
-g basis = "Sex" 				if inlist(basis_raw1, "BRE", "DSV", "SEX", "SEX-H", "SEX-P")
-replace basis = "Sex"         if inlist(basis_raw1, "SEX-I", "SOR")
+g basis = "Sex" 				if inlist(basis_raw1, "BRE", "DSV", "SEX", "SEX-H", "SEX-P","SEX-I", "SOR")
 replace basis = "Religion" 	    if basis_raw1 == "REL"
 replace basis = "Race"		    if inlist(basis_raw1, "RAC", "COL")
 replace basis = "Nationality"   if basis_raw1 == "NOR"
@@ -69,11 +67,13 @@ replace basis = "Other" 		if inlist(basis_raw1, "ANC", "ARR", "CHI", "CRE", "FAM
 // SH
 g sh = 0
 replace sh = 1 if basis_raw1 == "SEX-H"
+replace sh = 1 if basis == "Retaliation" & strpos(basis_raw, "SEX-H") > 0
 drop basis_raw?
 
 // Sex
 g sex_cases = 0 
 replace sex_cases = 1 if basis == "Sex"
+replace sex_cases = 1 if basis == "Retaliation" & strpos(basis_raw, "SEX") > 0 & sh == 0
 
 // Relief
 g missing_relief = (relief == .)
@@ -90,6 +90,7 @@ g settle = 0
 replace settle = 1 if outcome == "9"
 replace settle = 1 if outcome == "7"
 replace settle = 1 if enfclosurecode == "Settled"
+replace settle = . if outcome == "5"
 
 // Administrative closure
 g admin_close = 0
@@ -99,19 +100,23 @@ replace admin_close = 1 if outcome == "4"
 replace admin_close = 1 if outcome == "15"
 replace admin_close = 1 if outcome == "16"
 replace admin_close = 1 if outcome == "17"
+replace admin_close = . if outcome == "5"
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "2"
 replace withdraw = 1 if enfclosurecode == "Withdrawn"
+replace withdraw = . if outcome == "5"
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
+replace dismissed = . if outcome == "5"
 
 // Court
 g court = 0
 replace court = 1 if outcome == "6"
+replace court = . if outcome == "5"
 
 // Outcome
 replace outcome = "No Jurisdiction" if outcome == "1"

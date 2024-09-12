@@ -76,13 +76,13 @@ replace basis = "Age" 		if basis_raw == "Age"
 replace basis = "Retaliation" if basis_raw == "Retaliation"
 replace basis = "Other" 		if regexm(basis_raw, "Genetic") | basis_raw == "Other" | basis_raw == "Relationship/Assn." | basis_raw == "Unassigned" | basis_raw == "" // if it's missing
 
+// SH
+g sh = (issue == "Sexual Harassment")
+replace sh = . if basis != "Sex" & basis != "Retaliation" & sh == 1 // remove cases that are SH but not sex-based
+
 // Sex
 g sex_cases = 0 
 replace sex_cases = 1 if basis == "Sex"
-
-// SH
-g sh = (issue == "Sexual Harassment")
-replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not sex-based
 
 // Probable cause
 g win = .
@@ -90,18 +90,21 @@ replace win = 1 if outcome == "Hearings Discrimination Finding"
 replace win = 1 if outcome == "Successful Conciliation"
 replace win = 1 if outcome == "Conciliation Failure"
 replace win = 0 if outcome == "No Cause Finding Issued"
+replace win = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Closed By Legal Activity", "null")
 
 // Court
 g court = (!missing(court_file_date))
 replace court = 1 if outcome == "NRTS Issued At CP Request" //CP is charging party, Notice of Right to Sue
 replace court = 1 if outcome == "CP Filed Suit"
 replace court = 1 if outcome == "Closed Due To Court Decision"
+replace court = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Closed By Legal Activity", "null") & missing(court_file_date)
 
 // Settle
 g settle = 0 
 replace settle = 1 if outcome == "Settlement With Benefits"
 replace settle = 1 if outcome == "Withdrawal With Benefits"
 replace settle = 1 if outcome == "Case Settled By Legal Unit"
+replace settle = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Closed By Legal Activity", "null")
 
 // Administrative closure
 g admin_close = 0
@@ -113,14 +116,17 @@ replace admin_close = 1 if outcome == "Failure To Locate Charging Party"
 replace admin_close = 1 if outcome == "No Jurisdiction"
 replace admin_close = 1 if outcome == "Remand - Failure To Prosecute"
 replace admin_close = 1 if outcome == "Respondent Bankruptcy"
+replace admin_close = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Closed By Legal Activity", "null")
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "CP Withdrawal - No Ben."
+replace withdraw = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Closed By Legal Activity", "null")
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
+replace dismissed = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Closed By Legal Activity", "null")
 
 // Duration 
 g duration = charge_res_date - charge_file_date

@@ -84,8 +84,8 @@ if `run_overlap' == 1 {
 DiD regression
 *******************************************************************************/
 
-loc y1 filed_per_year
-loc y2 settle
+loc y1 settle
+loc y2 dismissed
 loc y3 win
 loc y4 relief_scale
 
@@ -94,7 +94,7 @@ loc i 1
 
 if `run_did' == 1 {
 
-	// DID - No EEOC data **********************************************************/
+	// DID - No EEOC data **********************************************************/ 
 	preserve 
 	keep if eeoc_filed == 0
 	foreach y of local outcome_vars {
@@ -104,7 +104,7 @@ if `run_did' == 1 {
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -119,7 +119,7 @@ if `run_did' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Estimation sample}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
+		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit fetime feunit_s fetime_s N r2, 
@@ -144,7 +144,7 @@ if `run_did' == 1 {
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -179,7 +179,7 @@ if `run_did' == 1 {
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' triple_did, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' triple_did, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -231,7 +231,7 @@ if `run_did_robust' == 1 {
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -272,7 +272,7 @@ if `run_did_robust' == 1 {
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -310,7 +310,7 @@ if `run_did_robust' == 1 {
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -356,7 +356,7 @@ if `run_victim_f_present' == 1 {
 		qui estadd loc feunit "Yes", replace
 		qui estadd loc fetime "Yes", replace
 		
-		reghdfe ``y'' triple_did, absorb(unit_state time_state) vce(cluster basis)
+		reghdfe ``y'' triple_did, absorb(basis_state ymstate) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "Yes", replace
 		qui estadd loc fetime_s "Yes", replace
@@ -398,7 +398,6 @@ if `run_summary' == 1 {
 		sh
 		victim_f
 		post 
-		court
 		charge_file_year 
 		charge_res_year 
 		duration 
@@ -413,7 +412,12 @@ if `run_summary' == 1 {
 	// Outcomes 
 		dismissed 
 		settle
-		win
+		investigation
+		win_investigation
+		lose_investigation
+		court
+		win_court
+		lose_court
 		relief_scale 
 	// Jurisdiction 
 		juris_dummy1 
@@ -435,7 +439,6 @@ if `run_summary' == 1 {
 			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
 			victim_f "\hspace{5mm} Complainant is female" 
 			post "\hspace{5mm} Filed after MeToo" 
-			court "\hspace{5mm} Went to court" 
 			charge_file_year "\hspace{5mm} Year filed" 
 			charge_res_year "\hspace{5mm} Year resolved" 
 			duration "\hspace{5mm} Duration (days)" 
@@ -448,7 +451,12 @@ if `run_summary' == 1 {
 			basis_dummy7 "\hspace{5mm} Sex" 
 			dismissed "\textit{Outcomes} \\ \hspace{5mm} Dismissed" 
 			settle "\hspace{5mm} Settled" 
-			win "\hspace{5mm} Complainant won (in court or investigation)" 
+			investigation "\hspace{5mm} Went to investigation" 
+			win_investigation "\hspace{10mm} Won at investigation" 
+			lose_investigation "\hspace{10mm} Lost at investigation" 
+			court "\hspace{5mm} Went to court" 
+			win_court "\hspace{10mm} Won in court" 
+			lose_court "\hspace{10mm} Lost in court"
 			relief_scale "\hspace{5mm} Compensation, 1000s (in court or investigation)" 
 			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
 			juris_dummy2 "\hspace{5mm} Employment" 

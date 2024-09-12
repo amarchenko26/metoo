@@ -47,11 +47,11 @@ Clean outcomes
 
 // Probable cause
 g win = .
-replace win = 0 if outcome == "I01 - Insufficient evidence - adjusted"
-replace win = 0 if outcome == "I02 - Insufficient evidence"
 replace win = 1 if outcome == "I17 - Decided by Court- w/adjustment"
 replace win = 1 if outcome == "P02 - Post-Charge Settlement Agreement"
 replace win = 1 if outcome == "P03 - Decided by MCRC Order - w/adjustment"
+replace win = 0 if outcome == "I01 - Insufficient evidence - adjusted"
+replace win = 0 if outcome == "I02 - Insufficient evidence"
 
 // Court
 g court = 0
@@ -136,7 +136,6 @@ foreach a of numlist 1/6 {
 // SH
 g sh = 0
 replace sh = 1 if basis_raw11 == "Sexual harassment" | (basis_raw21 == "Sexual harassment" & basis_raw11 == "") | (basis_raw31 == "Sexual harassment" & basis_raw11 == "" & basis_raw21 == "")
-// no cases that are SH but not sex-based
 
 // basis_clean
 foreach a of numlist 1/6 {
@@ -160,9 +159,12 @@ replace basis = "Sex"           if sh == 1
 
 drop basis_raw11-basis_raw61
 
+replace sh = 1 if basis == "Retaliation" & strpos(basis_raw, "Sexual harassment") > 0
+
 // Sex
 g sex_cases = 0 
 replace sex_cases = 1 if basis == "Sex"
+replace sex_cases = 1 if basis == "Retaliation" & strpos(basis_raw, "Sex") > 0 & sh == 0
 
 
 /*******************************************************************************

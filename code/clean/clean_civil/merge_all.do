@@ -29,16 +29,23 @@ clear all
 set maxvar 32767
 
 /*******************************************************************************
-Pull cleaned EEOC court case data
+Pull cleaned EEOC filed data (2010-2017)
 *******************************************************************************/
 
+tempfile temp
 use "$clean_data/clean_eeoc.dta", clear
+duplicates drop civil_action_number court_res_date, force
+replace civil_action_number = subinstr(civil_action_number, "‐", "-", .)
+save "`temp'", replace
+
+use "$clean_data/clean_eeoc_filed.dta", clear
 
 /*******************************************************************************
-Append to EEOC filed data (2010-2017)
+Merge using EEOC court case data
 *******************************************************************************/
 
-append using "$clean_data/clean_eeoc_filed.dta"
+merge m:1 civil_action_number court_res_date using "`temp'"
+drop _merge
 
 /*******************************************************************************
 Append to MA
@@ -200,6 +207,26 @@ replace share_filed_by_basis = share_filed_by_basis / total_cases_per_year
 winsor relief, p(.05) gen(relief_w)
 replace relief = . if missing_relief == 1 // if relief = 0, person lost, so relief is CONDITIONAL ON WINNING 
 g relief_scale = relief_w / 1000
+
+// Investigation
+g investigation = 0 if dismissed != . | settle != . | court != .
+replace investigation = 1 if win != . & court == 0
+
+// Investigation win
+g win_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace win_investigation = 1 if win == 1 & investigation == 1
+
+// Investigation lose
+g lose_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace lose_investigation = 1 if win == 0 & investigation == 1
+
+// Court win/lose
+g win_court = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace win_court = 1 if win == 1 & court == 1
+
+// Court lose
+g lose_court = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace lose_court = 1 if win == 0 & court == 1
 
 /*******************************************************************************
 Overlap
