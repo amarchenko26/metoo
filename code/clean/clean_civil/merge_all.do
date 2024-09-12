@@ -22,6 +22,7 @@ Already merged:
 	- AK
 	- PA
 	- WI
+	- KY
 	
 *******************************************************************************/
 
@@ -120,6 +121,12 @@ Append to WI
 
 append using "$clean_data/clean_wi.dta"
 
+/*******************************************************************************
+Append to KY
+*******************************************************************************/
+
+append using "$clean_data/clean_ky.dta"
+
 
 /*******************************************************************************
 Clean dates
@@ -174,7 +181,7 @@ drop if basis == "Other"
 
 // Drop cases removed to EEOC
 di tm(2017m9)
-drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC") & ym < 692
+drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC", "sent to the EEOC") & ym < 692
 
 /*******************************************************************************
 Fixed effects  
