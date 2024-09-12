@@ -85,6 +85,19 @@ The following variables are cleaned altogether, after state and federal data is 
 
 ## Description of datasets
 
+**$raw_data/KY/Copy of Employment Case Information M Jiang 09112024.xlsx**  
+These data contain all employment cases filed in Kentucky from June 1, 2010 to June 30, 2023. (File name not standardized bc waiting on housing and public accommodations files.)
+- N: 2452
+- SH: 56
+- kchrcaseno: unique identifier for each case
+- respondent: respondent name
+- basis: basis of discrimination
+- issue: whether the case contained the issue of sexual harassment
+- datefiled: date case was filed
+- howresolvedbycommissioners: how case was closed
+- dateofresolution: date case was closed
+- compensation: relief
+
 **$raw_data/WI/wi_raw_cases.dta**  
 These data contain all education, employment, housing, and public accommodation/public service cases filed in Wisconsin from June 1, 2017 to June 30, 2023.
 - N: 26436
