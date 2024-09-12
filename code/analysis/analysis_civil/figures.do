@@ -10,7 +10,6 @@ loc run_placebo_f = 0
 loc event 	   = 0 
 loc event_all  = 0  
 loc timeseries = 0
-loc diff 	   = 0 
 loc duration   = 0
 
 * reg pierre philosophical_ideas timeless_whimsy fluffiness, cluster(hairball)
@@ -67,7 +66,6 @@ if `state_did' == 1 {
 		ciopts(lwidth(thick) recast(rcap))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(blue))
-		xlabel( , angle(90))
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State", size(medium))
 		note("State X Unit and State X Time FE included. ATT (blue line) in all cases sample: `att'", size(small)) 
@@ -129,7 +127,6 @@ if `state_did' == 1 {
 		ciopts(lwidth(thick) recast(rcap))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(blue))
-		xlabel( , angle(90))
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State", size(medium))
 		note("State X Unit and State X Time FE included. ATT (blue line) in estimation sample: `att'", size(small)) 
@@ -454,37 +451,6 @@ if `timeseries' == 1 {
 	restore	
 }
 
-
-// Difference between non-SH and SH cases filed over time
-if `diff' == 1 {
-
-	preserve
-	drop if sh ==.
-	collapse (count) mean_y = y, by(ym sh)
-
-	reshape wide mean_y, j(sh) i(ym)
-	g diff = mean_y0 - mean_y1 // y0 is non-sh
-
-	twoway ///
-		scatter diff ym, mcolor("gs3") /// 
-		|| lowess diff ym, color("gs3") ///
-		legend(off) ///
-		xtitle("Date filed", size(medium)) ytitle("Number of cases", size(medium)) ///
-		xline(693)
-	graph export "$figures/timeseries2.png", replace 	
-
-	// Difference between non-SH and SH cases filed, before Covid-19
-	drop if ym > 721 // if after Feb 2020
-
-	twoway ///
-		scatter diff ym, mcolor("gs3") /// 
-		|| lowess diff ym, color("gs3") ///
-		legend(off) ///
-		xtitle("Date filed", size(medium)) ytitle("Number of cases", size(medium)) ///
-		xline(693)
-	graph export "$figures/timeseries_nocovid.png", replace 	
-	restore	
-}
 
 /*******************************************************************************
 Duration

@@ -4,11 +4,10 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_overlap  = 0
+loc run_overlap  = 1
 loc	run_did 	 = 0
 loc run_did_robust = 0
 loc run_victim_f_present = 0
-
 loc run_summary  = 1
 loc run_balance  = 0
 loc run_duration = 0
@@ -19,10 +18,11 @@ overlap_2 regression
 *******************************************************************************/
 
 loc y1 settle
-loc y2 win
-loc y3 relief_scale
+loc y2 dismissed
+loc y3 win
+loc y4 relief_scale
 
-loc outcome_vars y1 y2 y3
+loc outcome_vars y1 y2 y3 y4
 loc i 1
 
 if `run_overlap' == 1 {
@@ -36,12 +36,12 @@ if `run_overlap' == 1 {
 	}
 	
 	#delimit ;
-	esttab est1 est2 est3 using "$tables/overlap_panel.tex", style(tex) replace
+	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex) replace
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: SH complaints filed within 2 years pre-MeToo}} \\ \midrule")
 		fragment
 		varlabels(overlap_2 "Overlap") keep(overlap_2)
-		mgroups("Settled" "Won" "Compensation", pattern(1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
+		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
@@ -61,7 +61,7 @@ if `run_overlap' == 1 {
 	}
 	
 	#delimit ;	
-	esttab est1 est2 est3 using "$tables/overlap_panel.tex", style(tex)
+	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: All SH complaints filed before MeToo}} \\ \midrule")
 		fragment
 		append
@@ -356,7 +356,7 @@ if `run_victim_f_present' == 1 {
 		qui estadd loc feunit "Yes", replace
 		qui estadd loc fetime "Yes", replace
 		
-		reghdfe ``y'' triple_did, absorb(basis_state ymstate) vce(cluster basis)
+		reghdfe ``y'' triple_did, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "Yes", replace
 		qui estadd loc fetime_s "Yes", replace
