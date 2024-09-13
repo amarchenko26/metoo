@@ -101,8 +101,10 @@ replace sex_cases = 1 if basis == "Retaliation" & strpos(basis_raw, "Sex") > 0 &
 // Relief
 split relief, parse(;)
 split relief1
+drop relief?
 replace relief11 = subinstr(relief11, "$", "", .)
 replace relief = subinstr(relief11, ",", "", .)
+drop relief??
 destring relief, replace force
 g missing_relief = (relief == .)
 

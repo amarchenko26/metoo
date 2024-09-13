@@ -203,12 +203,14 @@ g y = 1
 
 // Gen filed_per_year for sh vs non
 bys common_year: gen total_cases_per_year = _N
-bys sh common_year: gen filed_per_year = _N
-replace filed_per_year = filed_per_year / total_cases_per_year
+bys common_year sh: gen sh_per_year = _N
+bys common_year sh victim_f: gen sh_f_per_year = _N
+g filed_per_year = sh_per_year / total_cases_per_year
+g filed_f_per_year = sh_f_per_year / total_cases_per_year
 
 // Gen share_filed_by_basis
-bys basis common_year: gen share_filed_by_basis = _N
-replace share_filed_by_basis = share_filed_by_basis / total_cases_per_year
+bys basis common_year: gen filed_by_basis = _N
+g share_filed_by_basis = filed_by_basis / total_cases_per_year
 
 // Clean relief
 winsor relief, p(.05) gen(relief_w)
@@ -320,7 +322,7 @@ la var duration "Duration (days)"
 la var overlap_2 "Overlaps with MeToo"
 la var overlap_all "Overlaps with MeToo"
 la var court "Went to court"
-la var filed "Number of cases filed by SH and Post"
+la var filed_per_year "Number of cases filed by SH and Post"
 la var common_year "Year of filing"
 la var win "Complainant won" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
 la var settle "Settled"
