@@ -383,6 +383,67 @@ if `timeseries' == 1 {
 	
 	drop if eeoc_filed == 1
 	drop if sh == . // otherwise it messes up collapse statement
+	
+	// Number of cases
+    preserve
+    collapse (mean) mean_y = filed_per_year, by(common_year sh)
+		lowess mean_y common_year if sh == 0, gen(lowess1) nograph
+		lowess mean_y common_year if sh == 1, gen(lowess2) nograph
+		su lowess1 if sh == 0 & common_year == 2023, meanonly
+		local call text(`r(mean)' 2023 "Other", color("gs3") place(r) size(small))
+		su lowess2 if sh == 1 & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "SH", color("orange_red") place(r) size(small))
+		twoway ///
+		scatter mean_y common_year if sh == 0, mcolor("gs3") ///
+		|| scatter mean_y common_year if sh == 1, mcolor("orange_red") ///
+		|| lowess mean_y common_year if sh == 0, color("gs3") lwidth(thick) ///
+		|| lowess mean_y common_year if sh == 1, color("orange_red") lwidth(thick) ///
+		`call' legend(off) ///
+		xtitle("Date filed", size(medium)) ///
+		ytitle("Proportion of cases", size(medium)) ///
+		xline(2017.79, lpattern(solid))
+    graph export "$figures/timeseries.png", replace
+    restore
+	
+	preserve
+	collapse (mean) mean_y = share_filed_by_basis, by(common_year basis)
+		lowess mean_y common_year if basis == "Age", gen(lowess1) nograph
+		lowess mean_y common_year if basis == "Race", gen(lowess2) nograph
+		lowess mean_y common_year if basis == "Disability", gen(lowess3) nograph
+		lowess mean_y common_year if basis == "Religion", gen(lowess4) nograph
+		lowess mean_y common_year if basis == "Nationality", gen(lowess5) nograph
+		lowess mean_y common_year if basis == "Retaliation", gen(lowess6) nograph
+		lowess mean_y common_year if basis == "Sex", gen(lowess7) nograph
+		su lowess1 if basis == "Age" & common_year == 2023, meanonly
+		local call text(`r(mean)' 2023 "Age", color("gs3") place(r) size(small))
+		su lowess2 if basis == "Race" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Race", color("blue") place(r) size(small)) 
+		su lowess3 if basis == "Disability" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Disability", color("purple") place(r) size(small)) 
+		su lowess4 if basis == "Religion" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Religion", color("red") place(r) size(small)) 
+		su lowess5 if basis == "Nationality" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Nationality", color("orange") place(r) size(small)) 
+		su lowess6 if basis == "Retaliation" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Retaliation", color("brown") place(r) size(small)) 
+		su lowess7 if basis == "Sex" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Sex", color("magenta") place(r) size(small))
+	#delimit ;
+	twoway
+		lowess mean_y common_year if basis == "Age", color("gs3") lwidth(thick)
+		|| lowess mean_y common_year if basis == "Race", color("blue") lwidth(thick) 
+		|| lowess mean_y common_year if basis == "Disability", color("purple") lwidth(thick)
+		|| lowess mean_y common_year if basis == "Religion", color("red") lwidth(thick) 
+		|| lowess mean_y common_year if basis == "Nationality", color("orange") lwidth(thick) 
+		|| lowess mean_y common_year if basis == "Retaliation", color("brown") lwidth(thick)  
+		|| lowess mean_y common_year if basis == "Sex", color("magenta") lwidth(thick) 
+	`call' legend(off)
+	xtitle("Date filed", size(medium))
+	ytitle("Proportion of cases", size(medium)) 
+	xline(2017.79, lpattern(solid));
+	#delimit cr
+    graph export "$figures/timeseries_basis.png", replace
+    restore
 
 	// Number cases settled over time
     preserve
