@@ -104,7 +104,7 @@ split relief1
 drop relief?
 replace relief11 = subinstr(relief11, "$", "", .)
 replace relief = subinstr(relief11, ",", "", .)
-drop relief??
+drop relief1*
 destring relief, replace force
 g missing_relief = (relief == .)
 
