@@ -22,6 +22,7 @@ Already merged:
 	- AK
 	- PA
 	- WI
+	- KY
 	
 *******************************************************************************/
 
@@ -29,16 +30,23 @@ clear all
 set maxvar 32767
 
 /*******************************************************************************
-Pull cleaned EEOC court case data
+Pull cleaned EEOC filed data (2010-2017)
 *******************************************************************************/
 
+tempfile temp
 use "$clean_data/clean_eeoc.dta", clear
+duplicates drop civil_action_number court_res_date, force
+replace civil_action_number = subinstr(civil_action_number, "‐", "-", .)
+save "`temp'", replace
+
+use "$clean_data/clean_eeoc_filed.dta", clear
 
 /*******************************************************************************
-Append to EEOC filed data (2010-2017)
+Merge using EEOC court case data
 *******************************************************************************/
 
-append using "$clean_data/clean_eeoc_filed.dta"
+merge m:1 civil_action_number court_res_date using "`temp'"
+drop _merge
 
 /*******************************************************************************
 Append to MA
@@ -113,6 +121,12 @@ Append to WI
 
 append using "$clean_data/clean_wi.dta"
 
+/*******************************************************************************
+Append to KY
+*******************************************************************************/
+
+append using "$clean_data/clean_ky.dta"
+
 
 /*******************************************************************************
 Clean dates
@@ -167,7 +181,7 @@ drop if basis == "Other"
 
 // Drop cases removed to EEOC
 di tm(2017m9)
-drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC") & ym < 692
+drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC", "sent to the EEOC") & ym < 692
 
 /*******************************************************************************
 Fixed effects  
@@ -189,17 +203,47 @@ g y = 1
 
 // Gen filed_per_year for sh vs non
 bys common_year: gen total_cases_per_year = _N
-bys sh common_year: gen filed_per_year = _N
-replace filed_per_year = filed_per_year / total_cases_per_year
+bys common_year sh: gen sh_per_year = _N
+bys common_year sh victim_f: gen sh_f_per_year = _N
+g filed_per_year = sh_per_year / total_cases_per_year
+g filed_f_per_year = sh_f_per_year / total_cases_per_year
 
 // Gen share_filed_by_basis
-bys basis common_year: gen share_filed_by_basis = _N
-replace share_filed_by_basis = share_filed_by_basis / total_cases_per_year
+bys basis common_year: gen filed_by_basis = _N
+g share_filed_by_basis = filed_by_basis / total_cases_per_year
 
 // Clean relief
 winsor relief, p(.05) gen(relief_w)
 replace relief = . if missing_relief == 1 // if relief = 0, person lost, so relief is CONDITIONAL ON WINNING 
 g relief_scale = relief_w / 1000
+
+// Investigation
+g investigation = 0 if dismissed != . | settle != . | court != .
+replace investigation = 1 if win != . & court == 0
+
+// Investigation win
+g win_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace win_investigation = 1 if win == 1 & investigation == 1
+
+// Investigation lose
+g lose_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace lose_investigation = 1 if win == 0 & investigation == 1
+
+// Investigation unknown
+g unknown_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace unknown_investigation = 1 if win == . & investigation == 1
+
+// Court win/lose
+g win_court = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace win_court = 1 if win == 1 & court == 1
+
+// Court lose
+g lose_court = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace lose_court = 1 if win == 0 & court == 1
+
+// Court unknown
+g unknown_court = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace unknown_court = 1 if win == . & court == 1
 
 /*******************************************************************************
 Overlap
@@ -286,7 +330,7 @@ la var duration "Duration (days)"
 la var overlap_2 "Overlaps with MeToo"
 la var overlap_all "Overlaps with MeToo"
 la var court "Went to court"
-la var filed "Number of cases filed by SH and Post"
+la var filed_per_year "Number of cases filed by SH and Post"
 la var common_year "Year of filing"
 la var win "Complainant won" //1 if cause, 0 if no cause, missing does NOT mean plaintiff lost (court, dismissed, etc)
 la var settle "Settled"

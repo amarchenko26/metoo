@@ -85,6 +85,7 @@ replace win = 0 if outcome == "LSE"
 g settle = 0 
 replace settle = 1 if outcome == "AT"
 replace settle = 1 if outcome == "AW"
+replace settle = . if inlist(outcome, "DEF", "OPT", "STA", "UNK")
 
 // Administrative closure
 g admin_close = 0
@@ -94,15 +95,18 @@ replace admin_close = 1 if outcome == "EXP"
 replace admin_close = 1 if outcome == "FTP"
 replace admin_close = 1 if outcome == "LOJ"
 replace admin_close = 1 if outcome == "LOS"
+replace admin_close = . if inlist(outcome, "DEF", "OPT", "STA", "UNK")
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if strpos(outcome, "WD") > 0
+replace withdraw = . if inlist(outcome, "DEF", "OPT", "STA", "UNK")
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if outcome == "ADM"
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
+replace dismissed = . if inlist(outcome, "DEF", "OPT", "STA", "UNK")
 
 // Court
 g court = . //currently have this marked as missing bc Illinois doesn't track this

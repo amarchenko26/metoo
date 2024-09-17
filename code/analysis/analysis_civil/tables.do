@@ -4,13 +4,60 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_overlap  = 1
+loc run_selection = 1
+loc run_overlap  = 0
 loc	run_did 	 = 0
 loc run_did_robust = 0
 loc run_victim_f_present = 0
-loc run_summary  = 1
+loc run_summary  = 0
 loc run_balance  = 0
 loc run_duration = 0
+
+
+/*******************************************************************************
+Selection table
+*******************************************************************************/
+
+g ln_total = ln(total_cases_per_year)
+
+if `run_selection' == 1 {
+	
+	eststo: reg total_cases_per_year post, r
+
+	eststo: reg ln_total post, r
+
+	eststo: reg sh_per_year post if sh == 1, r
+
+	eststo: reg sh_f_per_year post if sh == 1 & victim_f == 1, r
+
+	eststo:	reg sh_f_per_year post if sh == 1 & victim_f == 0, r
+
+	eststo:	reg filed_per_year post if sh == 1, r
+	
+	eststo: reg filed_f_per_year post if sh == 1 & victim_f == 1, r
+
+	eststo:	reg filed_f_per_year post if sh == 1 & victim_f == 0, r
+	
+	#delimit ;
+	
+	estout _all using "$tables/selection_table.tex", style(tex) replace
+		drop(_cons)
+		varlabels(post "Post-MeToo")
+		mgroups("Cases filed" "Log cases filed" "SH cases filed" "Female SH cases filed" "Male SH cases filed" "Ratio SH cases filed" "Ratio female SH cases filed" "Ratio male SH cases filed", pattern(1 1 1 1 1 1 1 1) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none)
+		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 5))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(5)star)" "se(fmt(5)par)") 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") ;
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	
+}
 
 
 /*******************************************************************************
@@ -84,8 +131,8 @@ if `run_overlap' == 1 {
 DiD regression
 *******************************************************************************/
 
-loc y1 filed_per_year
-loc y2 settle
+loc y1 settle
+loc y2 dismissed
 loc y3 win
 loc y4 relief_scale
 
@@ -94,7 +141,7 @@ loc i 1
 
 if `run_did' == 1 {
 
-	// DID - No EEOC data **********************************************************/
+	// DID - No EEOC data **********************************************************/ 
 	preserve 
 	keep if eeoc_filed == 0
 	foreach y of local outcome_vars {
@@ -119,7 +166,7 @@ if `run_did' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Estimation sample}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
+		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit fetime feunit_s fetime_s N r2, 
@@ -398,7 +445,6 @@ if `run_summary' == 1 {
 		sh
 		victim_f
 		post 
-		court
 		charge_file_year 
 		charge_res_year 
 		duration 
@@ -413,7 +459,14 @@ if `run_summary' == 1 {
 	// Outcomes 
 		dismissed 
 		settle
-		win
+		investigation
+		win_investigation
+		lose_investigation
+		unknown_investigation
+		court
+		win_court
+		lose_court
+		unknown_court
 		relief_scale 
 	// Jurisdiction 
 		juris_dummy1 
@@ -435,7 +488,6 @@ if `run_summary' == 1 {
 			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
 			victim_f "\hspace{5mm} Complainant is female" 
 			post "\hspace{5mm} Filed after MeToo" 
-			court "\hspace{5mm} Went to court" 
 			charge_file_year "\hspace{5mm} Year filed" 
 			charge_res_year "\hspace{5mm} Year resolved" 
 			duration "\hspace{5mm} Duration (days)" 
@@ -448,7 +500,14 @@ if `run_summary' == 1 {
 			basis_dummy7 "\hspace{5mm} Sex" 
 			dismissed "\textit{Outcomes} \\ \hspace{5mm} Dismissed" 
 			settle "\hspace{5mm} Settled" 
-			win "\hspace{5mm} Complainant won (in court or investigation)" 
+			investigation "\hspace{5mm} Went to investigation" 
+			win_investigation "\hspace{10mm} Won at investigation" 
+			lose_investigation "\hspace{10mm} Lost at investigation" 
+			unknown_investigation "\hspace{10mm} Unknown outcome at investigation" 
+			court "\hspace{5mm} Went to court" 
+			win_court "\hspace{10mm} Won in court" 
+			lose_court "\hspace{10mm} Lost in court"
+			unknown_court "\hspace{10mm} Unknown outcome in court"
 			relief_scale "\hspace{5mm} Compensation, 1000s (in court or investigation)" 
 			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
 			juris_dummy2 "\hspace{5mm} Employment" 

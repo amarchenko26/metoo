@@ -73,8 +73,7 @@ replace juris = "Public Accommodation" if juris == "Other Human Rights Complaint
 drop discriminationtype
 
 // Multi-category
-g sumsex = 1 if (sex != "" & strpos(sex, "Sexual Orientation") == 0) | pregnancy == "Yes"
-g sumlgbtq = 1 if strpos(sex, "Sexual Orientation") > 0
+g sumsex = 1 if sex != "" | pregnancy == "Yes"
 g sumreligion = 1 if religion != ""
 g sumrace = 1 if race != "" | color != ""
 g sumnationality = 1 if nationalorigin != ""
@@ -156,6 +155,7 @@ g settle = 0
 replace settle = 1 if outcome == "Negotiated Settlement"
 replace settle = 1 if outcome == "Settled after Charge Issued"
 replace settle = 1 if outcome == "Withdrawn With Resolution"
+replace settle = . if outcome == "Reactivated"
 
 // Administrative closure
 g admin_close = 0
@@ -163,18 +163,22 @@ replace admin_close = 1 if outcome == "Closed at Intake"
 replace admin_close = 1 if outcome == "Failure to Cooperate"
 replace admin_close = 1 if outcome == "Lack of Jurisdiction"
 replace admin_close = 1 if outcome == "Transferred to EEOC"
+replace admin_close = . if outcome == "Reactivated"
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "Withdrawn Without Resolution"
+replace withdraw = . if outcome == "Reactivated"
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
+replace dismissed = . if outcome == "Reactivated"
 
 // Court
 g court = 0
 replace court = 1 if outcome == "Notice of Right to Sue"
+replace court = . if outcome == "Reactivated"
 
 
 /*******************************************************************************

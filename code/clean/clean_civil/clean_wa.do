@@ -95,6 +95,7 @@ drop cause
 g settle = 0 
 replace settle = 1 if outcome == "Pre-finding Settlement"
 replace settle = 1 if outcome == "Withdrawal with Benefits"
+replace settle = . if outcome == "Other"
 
 // Administrative closure
 g admin_close = 0
@@ -107,19 +108,23 @@ replace admin_close = 1 if outcome == "RP Bankruptcy"
 replace admin_close = 1 if outcome == "Transfer to EEOC (Closed at Commission)"
 replace admin_close = 1 if outcome == "Transfer to EEOC at Intake"
 replace admin_close = 1 if outcome == "Transfer to Tacoma"
+replace admin_close = . if outcome == "Other"
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "Withdrawal"
+replace withdraw = . if outcome == "Other"
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
+replace dismissed = . if outcome == "Other"
 
 // Court
 g court = 0
 replace court = 1 if outcome == "CP Filed Private Lawsuit"
 replace court = 1 if outcome == "Right to Sue"
+replace court = . if outcome == "Other"
 
 
 /*******************************************************************************

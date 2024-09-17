@@ -29,11 +29,14 @@ Identify SH cases
 
 g sh = regexm(lower(basis_raw), "sexual harassment")
 
-g sex_cases = regexm(lower(basis_raw), "title vii / sex‐female")
+g sex_cases = regexm(lower(basis_raw), "title vii / sex‐")
+
+g victim_f = 1 if regexm(lower(basis_raw), "title vii / sex‐female")
+replace victim_f = 0 if regexm(lower(basis_raw), "title vii / sex‐male")
 
 // // Total cases of Sexual Harassment
 count if sh == 1
-// // Total cases brought under Title VII / Sex-Female
+// // Total sex-based cases
 count if sex_cases == 1
 
 
@@ -81,6 +84,9 @@ replace basis = "Disability" if regexm(basis_raw, "^ADA") //Americans with Disab
 replace basis = "Age" if regexm(basis_raw, "^ADEA") //Age Discrimination in Employment
 replace basis = "Retaliation" if regexm(basis_raw, "^Title VII / Retaliation") | regexm(basis_raw, "^EPA / Retaliation")
 replace basis = "Other" if regexm(basis_raw, "^Title VII / Other") | regexm(basis_raw, "^GINA") | basis == "" // if it's missing
+
+replace sh = 1 if basis == "Retaliation" & regexm(basis_raw, "Sexual Harassment")
+replace sex_cases = 1 if basis == "Retaliation" & regexm(basis_raw, "Sex") & sh == 0
 
 g win = 1 if missing_relief == 0
 replace win = 0 if missing_relief == 1 // no probable cause if relief is missing

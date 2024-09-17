@@ -57,11 +57,13 @@ replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not s
 /*replace sex_cases = 0 if basis == "Male" //don't count Male discrimination in Sex
 replace sex_cases = 0 if basis == "Male (Paternity-related)" */
 
+gen duration = charge_res_date - charge_file_date
+
 // Gen state var
 gen state = "MA"
 
-// Gen outcome vars
-g win = . 
+// Probable cause
+g win = .
 replace win = 1 if outcome == "Probable Cause Found"
 replace win = 1 if outcome == "Split Decision: PC/LOPC or PC/LOJ"
 replace win = 1 if outcome == "Closed - Conciliated"
@@ -69,13 +71,12 @@ replace win = 1 if outcome == "Closed - Violation/Enforcement"
 replace win = 0 if outcome == "Closed - Lack of Probable Cause"
 replace win = 0 if outcome == "Closed - No Violation"
 
-gen duration = charge_res_date - charge_file_date
-
 // Clean settle
 g settle = 0
 replace settle = 1 if outcome == "Closed - Pre-Determination Settlement"
 replace settle = 1 if outcome == "Closed - Settled At Hearing"
 replace settle = 1 if outcome == "Closed - Withdrawn With Settlement"
+replace settle = . if inlist(outcome, "Closed - Compliance With Order", "Closed - Housing Judicial Review  ", "Closed - Judicial Review")
 
 // Administrative closure
 g admin_close = 0
@@ -84,20 +85,27 @@ replace admin_close = 1 if outcome == "Closed - EEOC-Administrative"
 replace admin_close = 1 if outcome == "Closed - Failure to Cooperate"
 replace admin_close = 1 if outcome == "Closed - Lack of Jurisdiction"
 replace admin_close = 1 if outcome == "Closed - Unable to Locate Complainant"
+replace admin_close = . if inlist(outcome, "Closed - Compliance With Order", "Closed - Housing Judicial Review  ", "Closed - Judicial Review")
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "Closed - Withdrawn"
+replace withdraw = . if inlist(outcome, "Closed - Compliance With Order", "Closed - Housing Judicial Review  ", "Closed - Judicial Review")
+
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if outcome == "Closed - Dismissed"
 replace dismissed = 1 if outcome == "Closed - R&A Dismissal"
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
+replace dismissed = . if inlist(outcome, "Closed - Compliance With Order", "Closed - Housing Judicial Review  ", "Closed - Judicial Review")
+
 
 // Clean court
-g court = 1 if outcome == "Closed - Chapter 478 (removed to court)" 
-replace court = 0 if outcome != "Closed - Chapter 478 (removed to court)" 
+g court = 0
+replace court = 1 if outcome == "Closed - Chapter 478 (removed to court)" 
+replace court = . if inlist(outcome, "Closed - Compliance With Order", "Closed - Housing Judicial Review  ", "Closed - Judicial Review")
+
 
 // Relief
 g relief = .

@@ -35,8 +35,7 @@ g duration = charge_res_date - charge_file_date
 keep if inlist(juris, "Employment", "Housing", "Public Accommodation")
 
 // Multi-category
-g sumsex = max(basissex, basispregnancy)
-g sumlgbtq = max(basissexualorientation, basisgenderidentity)
+g sumsex = max(basissex, basispregnancy, basissexualorientation, basisgenderidentity)
 g sumreligion = basisreligion
 g sumrace = max(basisrace, basiscolor)
 g sumnationality = basisnationalorigin
@@ -59,8 +58,7 @@ foreach var of local basis {
 replace basis_raw = strtrim(basis_raw)
 split basis_raw
 ren basis_raw1 basis
-replace basis = "Sex"			if inlist(basis, "sex", "pregnancy")
-replace basis = "Sex"			if inlist(basis, "sexualorientation", "genderidentity")
+replace basis = "Sex"			if inlist(basis, "sex", "pregnancy", "sexualorientation", "genderidentity")
 replace basis = "Religion"		if basis == "religion"
 replace basis = "Race"			if inlist(basis, "race", "color")
 replace basis = "Nationality"	if basis == "nationalorigin"
@@ -113,6 +111,7 @@ replace settle = 1 if outcome == "M2 - CP Withdrawn with Settlement"
 replace settle = 1 if outcome == "M3 - Complaint Withdrawn in Mediation"
 replace settle = 1 if outcome == "M4 - Mediatin Predetermination Settlement"
 replace settle = 1 if outcome == "RC - Resolution Conference Closure"
+replace settle = . if inlist(outcome, "C6 - Hearing Unit - Other", "D3 - Appeal - Affirmed", "")
 
 // Administrative closure
 g admin_close = 0
@@ -124,20 +123,24 @@ replace admin_close = 1 if outcome == "A4 - Complainent Not Available"
 replace admin_close = 1 if outcome == "A5 - Fail of CP to Proceed or Cooperate"
 replace admin_close = 1 if outcome == "A5 - Failure of CP to Proceed or Cooperate"
 replace admin_close = 1 if outcome == "A8 - Tribal Sovereign Immunity"
+replace admin_close = . if inlist(outcome, "C6 - Hearing Unit - Other", "D3 - Appeal - Affirmed", "")
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "A1 - Complaint Withdrawn"
+replace withdraw = . if inlist(outcome, "C6 - Hearing Unit - Other", "D3 - Appeal - Affirmed", "")
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if outcome == "A7 - Administrative Dismissal"
 replace dismissed = 1 if outcome == "C5 - Administrative Dismissal"
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
+replace dismissed = . if inlist(outcome, "C6 - Hearing Unit - Other", "D3 - Appeal - Affirmed", "")
 
 // Court
 g court = 0
 replace court = 1 if outcome == "A6 - Complainant to Court"
+replace court = . if inlist(outcome, "C6 - Hearing Unit - Other", "D3 - Appeal - Affirmed", "")
 
 
 /*******************************************************************************
