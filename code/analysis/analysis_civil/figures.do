@@ -6,10 +6,12 @@ use "$clean_data/clean_cases.dta", replace
 
 loc state_did  	= 0
 loc run_placebo = 0
+loc run_placebo_single = 1
+loc run_placebo_overlap = 1
 loc run_placebo_f = 0
 loc event 	   = 0 
 loc event_all  = 0  
-loc timeseries = 1
+loc timeseries = 0
 loc duration   = 0
 
 * reg pierre philosophical_ideas timeless_whimsy fluffiness, cluster(hairball)
@@ -189,18 +191,114 @@ if `run_placebo' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sexual harassment", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment", size(medium));
 	#delimit cr
 
-    graph export "$figures/placebo.png", replace  
+    graph export "$figures/placebo.png", replace
+	eststo clear
+	estimates clear
 }
 
-eststo clear
-estimates clear
+if `run_placebo_single' == 1 {
 
+	loc i 1
+	loc j 1
+
+	// Single-tagged placebo treatment effects
+	preserve
+	drop if basis == "Sex" | sh == 1 // drop real treated cases
+
+	levelsof basis_cat, local(levels)
+	foreach l of local levels {
+		g placebo_treat_`l' = (post==1 & basis_cat == `l' & multi_cat==0)
+	}
+
+	foreach y of local outcome_vars {
+		forvalues index = 1(1)6 {
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_state) vce(cluster basis)
+			eststo s_r_`i'
+			loc ++i
+		}
+	}
+	restore
+
+	// True treatment effect 
+	foreach y of local outcome_vars {
+		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
+		eststo true`j'
+		loc ++j
+	}
+
+	#delimit ;
+	coefplot 
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Settled)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Won)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Compensation)
+		|| , drop(_cons)
+		byopts(xrescale legend(off)) // so x-axis is different for all plots
+		ciopts(lwidth(thick) recast(rcap))
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sexual harassment", labsize(medium)) // angle(45)
+		xline(0, lc(gs8) lp(dash))
+		xtitle("Effect of MeToo", size(medium))
+		ytitle("Placebo treatment for single-tagged cases", size(medium));
+	#delimit cr
+
+    graph export "$figures/placebo_single.png", replace  
+	eststo clear
+	estimates clear
+}
+
+if `run_placebo_overlap' == 1 {
+
+	loc i 1
+	loc j 1
+
+	// Single-tagged placebo treatment effects
+	preserve
+	drop if basis == "Sex" | sh == 1 // drop real treated cases
+
+	levelsof basis_cat, local(levels)
+	foreach l of local levels {
+		g placebo_treat_`l' = (post==1 & basis_cat == `l')
+	}
+
+	foreach y of local outcome_vars {
+		forvalues index = 1(1)6 {
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_state) vce(cluster basis)
+			eststo s_r_`i'
+			loc ++i
+		}
+	}
+	restore
+
+	// True treatment effect 
+	foreach y of local outcome_vars {
+		reghdfe ``y'' treat if overlap_2 != ., absorb(basis_state ym_state) vce(cluster basis)
+		eststo true`j'
+		loc ++j
+	}
+
+	#delimit ;
+	coefplot 
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Settled)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Won)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Compensation)
+		|| , drop(_cons)
+		byopts(xrescale legend(off)) // so x-axis is different for all plots
+		ciopts(lwidth(thick) recast(rcap))
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sexual harassment", labsize(medium)) // angle(45)
+		xline(0, lc(gs8) lp(dash))
+		xtitle("Effect of MeToo", size(medium))
+		ytitle("Placebo treatment for overlap cases", size(medium));
+	#delimit cr
+
+    graph export "$figures/placebo_overlap.png", replace  
+	eststo clear
+	estimates clear
+}
 
 if `run_placebo_f' == 1 {
 
@@ -240,7 +338,7 @@ if `run_placebo_f' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sexual harassment", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment for female complainants", size(medium));
