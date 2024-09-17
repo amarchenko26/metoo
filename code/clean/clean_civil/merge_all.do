@@ -229,6 +229,10 @@ replace win_investigation = 1 if win == 1 & investigation == 1
 g lose_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
 replace lose_investigation = 1 if win == 0 & investigation == 1
 
+// Investigation unknown
+g unknown_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace unknown_investigation = 1 if win == . & investigation == 1
+
 // Court win/lose
 g win_court = 0 if dismissed != . | settle != . | court != . | investigation != .
 replace win_court = 1 if win == 1 & court == 1
@@ -236,6 +240,10 @@ replace win_court = 1 if win == 1 & court == 1
 // Court lose
 g lose_court = 0 if dismissed != . | settle != . | court != . | investigation != .
 replace lose_court = 1 if win == 0 & court == 1
+
+// Court unknown
+g unknown_court = 0 if dismissed != . | settle != . | court != . | investigation != .
+replace unknown_court = 1 if win == . & court == 1
 
 /*******************************************************************************
 Overlap
