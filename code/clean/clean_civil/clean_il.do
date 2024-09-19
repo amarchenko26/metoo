@@ -109,7 +109,8 @@ replace dismissed = 1 if admin_close == 1 | withdraw == 1
 replace dismissed = . if inlist(outcome, "DEF", "OPT", "STA", "UNK")
 
 // Court
-g court = . //currently have this marked as missing bc Illinois doesn't track this
+g court = 0
+replace court = . if inlist(outcome, "DEF", "OPT", "STA", "UNK")
 
 // Outcome
 replace outcome = "Administrative Closure" if outcome == "ACL"
