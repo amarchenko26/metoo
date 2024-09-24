@@ -4,10 +4,10 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_selection = 1
+loc run_selection = 0
 loc run_overlap  = 0
-loc	run_did 	 = 0
-loc run_did_robust = 0
+loc	run_did 	 = 1
+loc run_did_robust = 1
 loc run_victim_f_present = 0
 loc run_summary  = 0
 loc run_balance  = 0
@@ -258,8 +258,8 @@ if `run_did' == 1 {
 DiD regression - Robustness Check
 *******************************************************************************/
 
-loc y1 filed_per_year
-loc y2 settle
+loc y1 settle
+loc y2 dismissed
 loc y3 win
 loc y4 relief_scale
 
@@ -292,7 +292,7 @@ if `run_did_robust' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Single-tagged cases}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Filed" "Settled" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
+		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit fetime feunit_s fetime_s N r2, 

@@ -26,13 +26,14 @@ Beta-hat
 * goal is to figure out to what extent different types of cases are being filed before 
 * vs after metoo. so take case characteristics
 
+** MAGGIE WORK HERE - MAKE CONFIDENCE INTERVALS AROUND EACH LINE
 preserve 
-loc y win
-keep if eeoc_filed == 0
+loc y dismissed
+*keep if eeoc_filed == 0
 
 * Fit model on data pre MeToo
 #delimit ;
-reg `y' i.basis_cat i.victim_f sh i.state_cat duration court juris eeoc_filed
+reg `y' i.basis_cat i.victim_f sh i.state_cat duration court
 	if post == 0, cluster(basis_cat);
 #delimit cr
 
