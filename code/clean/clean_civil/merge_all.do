@@ -230,10 +230,6 @@ replace win_investigation = 1 if win == 1 & investigation == 1
 g lose_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
 replace lose_investigation = 1 if win == 0 & investigation == 1
 
-// Investigation unknown
-g unknown_investigation = 0 if dismissed != . | settle != . | court != . | investigation != .
-replace unknown_investigation = 1 if win == . & investigation == 1
-
 // Court win/lose
 g win_court = 0 if dismissed != . | settle != . | court != . | investigation != .
 replace win_court = 1 if win == 1 & court == 1

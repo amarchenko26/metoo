@@ -486,7 +486,6 @@ if `run_summary' == 1 {
 		investigation
 		win_investigation
 		lose_investigation
-		unknown_investigation
 		court
 		win_court
 		lose_court
@@ -530,7 +529,6 @@ if `run_summary' == 1 {
 			investigation "\hspace{5mm} Went to investigation" 
 			win_investigation "\hspace{10mm} Won at investigation" 
 			lose_investigation "\hspace{10mm} Lost at investigation" 
-			unknown_investigation "\hspace{10mm} Unknown outcome at investigation" 
 			court "\hspace{5mm} Went to court" 
 			win_court "\hspace{10mm} Won in court" 
 			lose_court "\hspace{10mm} Lost in court"
@@ -571,7 +569,6 @@ if `run_summary' == 1 {
 			investigation "\hspace{5mm} Went to investigation" 
 			win_investigation "\hspace{10mm} Won at investigation" 
 			lose_investigation "\hspace{10mm} Lost at investigation" 
-			unknown_investigation "\hspace{10mm} Unknown outcome at investigation" 
 			court "\hspace{5mm} Went to court" 
 			win_court "\hspace{10mm} Won in court" 
 			lose_court "\hspace{10mm} Lost in court"
@@ -613,7 +610,6 @@ if `run_summary' == 1 {
 			investigation "\hspace{5mm} Went to investigation" 
 			win_investigation "\hspace{10mm} Won at investigation" 
 			lose_investigation "\hspace{10mm} Lost at investigation" 
-			unknown_investigation "\hspace{10mm} Unknown outcome at investigation" 
 			court "\hspace{5mm} Went to court" 
 			win_court "\hspace{10mm} Won in court" 
 			lose_court "\hspace{10mm} Lost in court"
