@@ -9,7 +9,7 @@ loc run_overlap  = 0
 loc	run_did 	 = 1
 loc run_did_robust = 1
 loc run_victim_f_present = 0
-loc run_summary  = 0
+loc run_summary  = 1
 loc run_balance  = 0
 loc run_duration = 0
 
@@ -110,6 +110,30 @@ if `run_overlap' == 1 {
 	#delimit ;	
 	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: All SH complaints filed before MeToo}} \\ \midrule")
+		fragment
+		append
+		varlabels(overlap_all "Overlap") keep(overlap_all)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+		
+	#delimit cr
+	eststo clear
+	estimates clear
+		
+	// Panel C
+	foreach y of local outcome_vars {
+		eststo: reg ``y'' overlap_all duration if victim_f == 1, r
+		qui: sum ``y'' if overlap_all == 0 & victim_f == 1
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+	
+	#delimit ;	
+	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: All SH complaints filed by women before MeToo}} \\ \midrule")
 		fragment
 		append
 		varlabels(overlap_all "Overlap") keep(overlap_all)
@@ -462,7 +486,6 @@ if `run_summary' == 1 {
 		investigation
 		win_investigation
 		lose_investigation
-		unknown_investigation
 		court
 		win_court
 		lose_court
@@ -475,15 +498,18 @@ if `run_summary' == 1 {
 		juris_dummy4 
 		juris_dummy5; 
 	#delimit cr
-
-	preserve	
-	estpost tabstat `summary', c(stat) stat(mean sd min max n)
-
+	
+	eststo mean_all: estpost tabstat `summary', c(stat) stat(mean sd)
+	eststo mean_state: estpost tabstat `summary' if eeoc_filed == 0, c(stat) stat(mean sd)
+	eststo post_all: estpost ttest `summary', by(post)
+	eststo post_sh: estpost ttest `summary' if sh == 1, by(post)
+	
 	#delimit ;
-	esttab using "$tables/summary.tex", replace 
-		nomtitle nonote noobs nonumbers label booktabs f 
-		cells("mean(fmt(%13.3fc)) sd(fmt(%13.3fc)) min(fmt(a2)) max(fmt(a2)) count(fmt(%15.0fc))") 
-		collabels("Mean" "SD" "Min" "Max" "N") 
+	esttab mean_all mean_state post_all post_sh using "$tables/summary.tex", replace 
+		nonote noobs nonumbers nomtitles label booktabs f 
+		cells("mean(fmt(%13.3fc))" "sd(par)" "b(fmt(%13.3fc)star)" "se(par)") 
+		collabels(none)
+		mlabel("All" "State-only" "All" "SH")
 		varlab( 
 			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
 			victim_f "\hspace{5mm} Complainant is female" 
@@ -503,7 +529,6 @@ if `run_summary' == 1 {
 			investigation "\hspace{5mm} Went to investigation" 
 			win_investigation "\hspace{10mm} Won at investigation" 
 			lose_investigation "\hspace{10mm} Lost at investigation" 
-			unknown_investigation "\hspace{10mm} Unknown outcome at investigation" 
 			court "\hspace{5mm} Went to court" 
 			win_court "\hspace{10mm} Won in court" 
 			lose_court "\hspace{10mm} Lost in court"
@@ -518,8 +543,90 @@ if `run_summary' == 1 {
 		substitute("\$" "$")
 	;
 	#delimit cr
-	restore
-
+	
+	#delimit ;
+	esttab mean_all mean_state using "$tables/summary_1.tex", replace 
+		nonote noobs nonumbers nomtitles label booktabs f 
+		cells("mean(fmt(%13.3fc))" "sd(par)") 
+		collabels(none)
+		mlabel("All" "State-only")
+		varlab( 
+			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
+			victim_f "\hspace{5mm} Complainant is female" 
+			post "\hspace{5mm} Filed after MeToo" 
+			charge_file_year "\hspace{5mm} Year filed" 
+			charge_res_year "\hspace{5mm} Year resolved" 
+			duration "\hspace{5mm} Duration (days)" 
+			basis_dummy1 "\textit{Discrimination basis} \\ \hspace{5mm} Age" 
+			basis_dummy2 "\hspace{5mm} Disability" 
+			basis_dummy3 "\hspace{5mm} Nationality" 
+			basis_dummy4 "\hspace{5mm} Race" 
+			basis_dummy5 "\hspace{5mm} Religion" 
+			basis_dummy6 "\hspace{5mm} Retaliation" 
+			basis_dummy7 "\hspace{5mm} Sex" 
+			dismissed "\textit{Outcomes} \\ \hspace{5mm} Dismissed" 
+			settle "\hspace{5mm} Settled" 
+			investigation "\hspace{5mm} Went to investigation" 
+			win_investigation "\hspace{10mm} Won at investigation" 
+			lose_investigation "\hspace{10mm} Lost at investigation" 
+			court "\hspace{5mm} Went to court" 
+			win_court "\hspace{10mm} Won in court" 
+			lose_court "\hspace{10mm} Lost in court"
+			unknown_court "\hspace{10mm} Unknown outcome in court"
+			relief_scale "\hspace{5mm} Compensation, 1000s (in court or investigation)" 
+			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
+			juris_dummy2 "\hspace{5mm} Employment" 
+			juris_dummy3 "\hspace{5mm} Housing" 
+			juris_dummy4 "\hspace{5mm} Public Accommodation" 
+			juris_dummy5 "\hspace{5mm} Unspecified" 
+		) 
+		substitute("\$" "$")
+	;
+	#delimit cr
+	
+	#delimit ;
+	esttab post_all post_sh using "$tables/summary_2.tex", replace 
+		nonote noobs nonumbers nomtitles label booktabs f 
+		cells("b(fmt(%13.3fc)star)" "se(par)") 
+		collabels(none)
+		mlabel("All" "SH")
+		starlevels(* 0.10 ** 0.05 *** 0.01)
+		varlab( 
+			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
+			victim_f "\hspace{5mm} Complainant is female" 
+			post "\hspace{5mm} Filed after MeToo" 
+			charge_file_year "\hspace{5mm} Year filed" 
+			charge_res_year "\hspace{5mm} Year resolved" 
+			duration "\hspace{5mm} Duration (days)" 
+			basis_dummy1 "\textit{Discrimination basis} \\ \hspace{5mm} Age" 
+			basis_dummy2 "\hspace{5mm} Disability" 
+			basis_dummy3 "\hspace{5mm} Nationality" 
+			basis_dummy4 "\hspace{5mm} Race" 
+			basis_dummy5 "\hspace{5mm} Religion" 
+			basis_dummy6 "\hspace{5mm} Retaliation" 
+			basis_dummy7 "\hspace{5mm} Sex" 
+			dismissed "\textit{Outcomes} \\ \hspace{5mm} Dismissed" 
+			settle "\hspace{5mm} Settled" 
+			investigation "\hspace{5mm} Went to investigation" 
+			win_investigation "\hspace{10mm} Won at investigation" 
+			lose_investigation "\hspace{10mm} Lost at investigation" 
+			court "\hspace{5mm} Went to court" 
+			win_court "\hspace{10mm} Won in court" 
+			lose_court "\hspace{10mm} Lost in court"
+			unknown_court "\hspace{10mm} Unknown outcome in court"
+			relief_scale "\hspace{5mm} Compensation, 1000s (in court or investigation)" 
+			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
+			juris_dummy2 "\hspace{5mm} Employment" 
+			juris_dummy3 "\hspace{5mm} Housing" 
+			juris_dummy4 "\hspace{5mm} Public Accommodation" 
+			juris_dummy5 "\hspace{5mm} Unspecified" 
+		) 
+		substitute("\$" "$")
+	;
+	#delimit cr
+	estimates clear
+	eststo clear
+	
 }
 
 
