@@ -203,10 +203,11 @@ g y = 1
 
 // Gen filed_per_year for sh vs non
 bys common_year: gen total_cases_per_year = _N
+bys common_year: egen total_gender_cases_per_year = sum(y) if victim_f != .
 bys common_year sh: gen sh_per_year = _N
 bys common_year sh victim_f: gen sh_f_per_year = _N
 g filed_per_year = sh_per_year / total_cases_per_year
-g filed_f_per_year = sh_f_per_year / total_cases_per_year
+g filed_f_per_year = sh_f_per_year / total_gender_cases_per_year
 
 // Gen share_filed_by_basis
 bys basis common_year: gen filed_by_basis = _N
