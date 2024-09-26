@@ -23,32 +23,27 @@ Beta-hat
 * generate a beta-hat 
 * multiply beta-hat times the covariates in the post period 
 * plot predicted y-hat versus actual y-hat 
-* goal is to figure out to what extent different types of cases are being filed before 
-* vs after metoo. so take case characteristics
 
-** MAGGIE WORK HERE - MAKE CONFIDENCE INTERVALS AROUND EACH LINE
+* how good is the prediction? in terms of R2 
 preserve 
-loc y dismissed
-*keep if eeoc_filed == 0
+loc y win
+keep if eeoc_filed == 0
 
 * Fit model on data pre MeToo
 #delimit ;
-reg `y' i.basis_cat i.victim_f sh i.state_cat duration court
+reg `y' i.basis_cat i.victim_f i.state_cat duration court
 	if post == 0, cluster(basis_cat);
 #delimit cr
 
-* Predict for data only after MeToo
-predict `y'_hat if post == 1, xb 		// prediction 
-predict `y'_hat_sd if post == 1, stdp 	// SE of prediction
+* Predict for pre-post MeToo
+predict `y'_hat, xb 		// prediction 
 
 collapse (mean) `y'_hat `y', by(months_to_treat_6)
-
-* generate a graph with SE!! 
 
 #delimit ; 
 twoway line `y'_hat `y' months_to_treat_6,
 	xtitle("6 month intervals before and after MeToo")
-	ytitle("Probability of win") 
+	ytitle("Probability of `y'") 
 	title("")
 	xline(0, lc(gs8) lp(dash))
 	legend(ring(0) pos(2) order(2 1) 
@@ -58,7 +53,6 @@ twoway line `y'_hat `y' months_to_treat_6,
 
 graph export "$figures/y_hat_`y'.png", replace 	
 
-*twoway (lowess winhat ym) || (lowess win ym)
 restore 
 
 

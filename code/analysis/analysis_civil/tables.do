@@ -503,11 +503,12 @@ if `run_summary' == 1 {
 	eststo mean_state: estpost tabstat `summary' if eeoc_filed == 0, c(stat) stat(mean sd)
 	eststo post_all: estpost ttest `summary', by(post)
 	eststo post_sh: estpost ttest `summary' if sh == 1, by(post)
-	
+
 	#delimit ;
 	esttab mean_all mean_state post_all post_sh using "$tables/summary.tex", replace 
 		nonote nonumbers label booktabs f 
-		cells("mean(fmt(%13.3fc))" "sd(par)" "b(fmt(%13.3fc)star)" "se(par)") 
+		cells("mean(fmt(%13.3fc)) b(star fmt(%13.3fc))" 
+				"sd(fmt(2) par([ ])) se(par fmt(%15.2gc))")
 		collabels(none)
     	mgroups("\shortstack{Summary stats\\in sample}" 
 				"\shortstack{Difference in means\\pre/post MeToo}", 
@@ -544,11 +545,50 @@ if `run_summary' == 1 {
 			juris_dummy5 "\hspace{5mm} Unspecified" 
 		) 
 		substitute("\$" "$")
+		stats(N, layout("@ @" "@ @") labels("Observations") fmt("%15.0fc %15.0fc" "%15.0fc %15.0fc"))
 	;
 	#delimit cr
 	
 }
 
+*stats(N1 N2 p_joint, layout("@ @" ". @") labels("Observations" "Joint \textit{p}-value" ) fmt("%15.0fc %15.0fc" 2 2))	///
+
+/*******************************************************************************
+Correlation b/w duration and outcomes
+*******************************************************************************/
+if `run_duration' == 1 {
+
+	eststo: reg settle duration, r
+
+	eststo: reg settle duration if sh == 1, r
+
+	eststo: reg win duration, r
+
+	eststo: reg win duration if sh == 1, r
+
+	eststo:	reg relief_scale duration, r
+
+	eststo:	reg relief_scale duration if sh == 1, r
+
+	#delimit ;
+	
+	estout _all using "$tables/duration_corr.tex", style(tex) replace
+		drop(_cons)
+		varlabels(duration "Duration")
+		mgroups("Settle" "Win" "Compensation", pattern(1 0 1 0 1 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none)
+		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 5))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(5)star)" "se(fmt(5)par)") 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") ;
+
+	#delimit cr
+	estimates clear
+	eststo clear
+}
 
 /****************************************************************************
 Balance table
@@ -601,42 +641,4 @@ if `run_balance' == 1 {
     balancetable_program `balance', sample(common_res_date < covid) using("$tables/balance_res_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
 	restore
-}
-
-
-/*******************************************************************************
-Correlation b/w duration and outcomes
-*******************************************************************************/
-if `run_duration' == 1 {
-
-	eststo: reg settle duration, r
-
-	eststo: reg settle duration if sh == 1, r
-
-	eststo: reg win duration, r
-
-	eststo: reg win duration if sh == 1, r
-
-	eststo:	reg relief_scale duration, r
-
-	eststo:	reg relief_scale duration if sh == 1, r
-
-	#delimit ;
-	
-	estout _all using "$tables/duration_corr.tex", style(tex) replace
-		drop(_cons)
-		varlabels(duration "Duration")
-		mgroups("Settle" "Win" "Compensation", pattern(1 0 1 0 1 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
-		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 5))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(5)star)" "se(fmt(5)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") ;
-
-	#delimit cr
-	estimates clear
-	eststo clear
 }
