@@ -9,7 +9,7 @@ loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f = 0
-loc event 	   = 0 
+loc event 	   = 0
 loc event_all  = 0  
 loc timeseries = 1
 loc duration   = 0
@@ -26,7 +26,7 @@ Beta-hat
 
 * how good is the prediction? in terms of R2 
 preserve 
-loc y win
+loc y settle
 keep if eeoc_filed == 0
 
 * Fit model on data pre MeToo
@@ -518,10 +518,16 @@ Cases/outcomes over time
 *******************************************************************************/
 
 if `timeseries' == 1 {
-	
-	drop if eeoc_filed == 1
 	drop if sh == . // otherwise it messes up collapse statement
 	
+	plot_lpolyci settle ym, title("Settlement Over Time") ylabel("Probability of settlement")
+
+	plot_lpolyci dismissed ym, title("Dismissal Over Time") ylabel("Probability of settlement")
+
+	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
+
+	plot_lpolyci relief_scale ym, title("Compensation paid to complainant (conditional on winning)") ylabel("Compensation in $1000s")
+
 	// Number of cases
     preserve
     collapse (mean) mean_y = filed_per_year, by(common_year sh)
@@ -600,7 +606,7 @@ if `timeseries' == 1 {
 		xtitle("Date filed", size(medium)) ///
 		xline(693, lpattern(solid))
     graph export "$figures/timeseries_settle.png", replace
-    restore
+	restore
 	
 	preserve
 	collapse (mean) mean_settle = settle, by(ym basis)
