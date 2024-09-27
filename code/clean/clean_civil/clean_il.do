@@ -4,7 +4,7 @@ Clean Illinois cases
 
 *******************************************************************************/
 
-import delimited "$raw_data/IL/il_raw_cases_gender.csv", varnames(3) bindquote(strict) clear
+import delimited "$raw_data/IL/il_raw_cases_gender.csv", varnames(2) bindquote(strict) clear
 
 
 /*******************************************************************************
@@ -12,7 +12,7 @@ Clean vars
 *******************************************************************************/
 
 // Dropping random vars
-drop v1 first_name
+drop v1
 drop if charge == ""
 
 // Rename vars
@@ -24,9 +24,16 @@ ren closedate charge_res_date
 ren finding outcome
 ren settle relief
 ren basis basis_raw
+ren genderprobabilitybphra victim_f_probability
 
 // Victim female
-destring victim_f, replace force
+destring victim_f_original victim_f_bph_ra, replace force
+
+// Count how often the two methods agree
+gen equal = (victim_f_original == victim_f_bph_ra) if victim_f_original !=.
+
+rename victim_f_bph_ra victim_f
+drop victim_f_original
 
 /*******************************************************************************
 Clean outcomes
@@ -137,7 +144,7 @@ Export data
 *******************************************************************************/
 
 // Drop variables we don't use 
-drop id issue deptfiledcomplaint prosecomplaint rpaddess rpcity rpstate rpzip requestforreview
+drop id issue deptfiledcomplaint prosecomplaint rpaddess rpcity rpstate rpzip requestforreview genderbphra
 
 save "$clean_data/clean_il.dta", replace
 

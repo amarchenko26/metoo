@@ -11,7 +11,7 @@ loc run_placebo_overlap = 0
 loc run_placebo_f = 0
 loc event 	   = 0
 loc event_all  = 0  
-loc timeseries = 1
+loc timeseries = 0
 loc duration   = 0
 
 * reg pierre philosophical_ideas timeless_whimsy fluffiness, cluster(hairball)
@@ -519,16 +519,21 @@ Cases/outcomes over time
 
 if `timeseries' == 1 {
 
+	* Women winning vs men winning vs. other complaints 
+	plot_lpolyci_gender win ym, title("Probability of Winning by Complainant Gender") ylabel("Probability of win")
+
+	* Plot outcomes over time 
 	plot_lpolyci ln_total_cases_per_month_by_sh ym, title("Number Complaints Filed Over Time") ylabel("Ln(count of complaints filed)")
 
-	plot_lpolyci settle ym, title("Settlement Over Time") ylabel("Probability complaint settled")
+	plot_lpolyci settle ym, title("Probability Complainant Settles Over Time") ylabel("Probability settled")
 
-	plot_lpolyci dismissed ym, title("Dismissal Over Time") ylabel("Probability complaint dismissed")
+	plot_lpolyci dismissed ym, title("Probability Complaint Dismissed Over Time") ylabel("Probability dismissed")
 
-	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability complainant wins")
+	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
 
 	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
 
+	* Plot outcomes over time by basis
 	// Number of cases
     preserve
     collapse (mean) mean_y = filed_per_year, by(common_year sh)
@@ -588,26 +593,6 @@ if `timeseries' == 1 {
 	#delimit cr
     graph export "$figures/timeseries_basis.png", replace
     restore
-
-	// Number cases settled over time
-    preserve
-    collapse (mean) mean_settle = settle, by(ym sh)
-		lowess mean_settle ym if sh == 0, gen(lowess1) nograph
-		lowess mean_settle ym if sh == 1, gen(lowess2) nograph
-		su lowess1 if sh == 0 & ym == 765, meanonly
-		local call text(`r(mean)' 765 "Other", color("gs3") place(r) size(small))
-		su lowess2 if sh == 1 & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "SH", color("orange_red") place(r) size(small)) 
-		twoway ///
-		scatter mean_settle ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Probability of Settling Other Cases", axis(1)) ///
-		|| scatter mean_settle ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Probability of Settling Sexual Harassment Cases", axis(2)) ///
-		|| lowess mean_settle ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
-		|| lowess mean_settle ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
-		`call' legend(off) ///
-		xtitle("Date filed", size(medium)) ///
-		xline(693, lpattern(solid))
-    graph export "$figures/timeseries_settle.png", replace
-	restore
 	
 	preserve
 	collapse (mean) mean_settle = settle, by(ym basis)
@@ -647,26 +632,6 @@ if `timeseries' == 1 {
 	xline(693, lpattern(solid));
 	#delimit cr
     graph export "$figures/timeseries_basis_settle.png", replace
-    restore
-	
-	// Number cases dismissed over time
-    preserve
-    collapse (mean) mean_dismissed = dismissed, by(ym sh)
-		lowess mean_dismissed ym if sh == 0, gen(lowess1) nograph
-		lowess mean_dismissed ym if sh == 1, gen(lowess2) nograph
-		su lowess1 if sh == 0 & ym == 765, meanonly
-		local call text(`r(mean)' 765 "Other", color("gs3") place(r) size(small))
-		su lowess2 if sh == 1 & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "SH", color("orange_red") place(r) size(small)) 
-		twoway ///
-		scatter mean_dismissed ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Proabability of Settling Other Cases", axis(1)) ///
-		|| scatter mean_dismissed ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Probability of Settling Sexual Harassment Cases", axis(2)) ///
-		|| lowess mean_dismissed ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
-		|| lowess mean_dismissed ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
-		`call' legend(off) ///
-		xtitle("Date filed", size(medium)) ///
-		xline(693, lpattern(solid))
-    graph export "$figures/timeseries_dismissed.png", replace
     restore
 	
 	preserve
@@ -709,26 +674,6 @@ if `timeseries' == 1 {
     graph export "$figures/timeseries_basis_dismissed.png", replace
     restore
 	
-	// Damages over time
-	preserve 
-	collapse (mean) mean_relief = relief_w, by(ym sh)
-		lowess mean_relief ym if sh == 0, gen(lowess1) nograph
-		lowess mean_relief ym if sh == 1, gen(lowess2) nograph
-		su lowess1 if sh == 0 & ym == 765, meanonly
-		local call text(`r(mean)' 765 "Other", color("gs3") place(r) size(small))
-		su lowess2 if sh == 1 & ym == 759, meanonly
-		local call `call' text(`r(mean)' 759 "SH", color("orange_red") place(r) size(small)) 
-		twoway ///
-			scatter mean_relief ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Compensation for Other Cases", axis(1)) /// 
-			|| scatter mean_relief ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Compensation for Sexual Harassment Cases", axis(2)) ///
-			|| lowess mean_relief ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
-			|| lowess mean_relief ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
-			`call' legend(off) ///
-			xtitle("Date filed",size(medium)) ///
-			xline(693, lpattern(solid))
-		graph export "$figures/timeseries_relief.png", replace 	
-	restore
-	
 	preserve
 	collapse (mean) mean_relief = relief_w, by(ym basis)
 		lowess mean_relief ym if basis == "Age", gen(lowess1) nograph
@@ -768,26 +713,6 @@ if `timeseries' == 1 {
 	#delimit cr
     graph export "$figures/timeseries_basis_relief.png", replace
     restore
-
-	// Win over time
-	preserve 
-	collapse (mean) mean_prob_cause = win, by(ym sh)
-		lowess mean_prob_cause ym if sh == 0, gen(lowess1) nograph
-		lowess mean_prob_cause ym if sh == 1, gen(lowess2) nograph
-		su lowess1 if sh == 0 & ym == 765, meanonly
-		local call text(`r(mean)' 765 "Other", color("gs3") place(r) size(small))
-		su lowess2 if sh == 1 & ym == 763, meanonly
-		local call `call' text(`r(mean)' 763 "SH", color("orange_red") place(r) size(small)) 
-		twoway ///
-			scatter mean_prob_cause ym if sh == 0, mcolor("gs3") yaxis(1) ytitle("Probability of Winning Other Cases", axis(1)) /// 
-			|| scatter mean_prob_cause ym if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Proabability of Winning Sexual Harassment Cases", axis(2)) ///
-			|| lowess mean_prob_cause ym if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
-			|| lowess mean_prob_cause ym if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
-			`call' legend(off) ///
-			xtitle("Date filed", size(medium)) ///
-			xline(693, lpattern(solid))
-	graph export "$figures/timeseries_win.png", replace 	
-	restore	
 	
 	preserve
 	collapse (mean) mean_prob_cause = win, by(ym basis)
