@@ -202,6 +202,9 @@ Outcomes
 g y = 1
 
 // Gen filed_per_year for sh vs non
+bys ym sh: egen total_cases_per_month_sh = total(y)
+g ln_total_cases_per_month_by_sh = ln(total_cases_per_month_sh)
+
 bys common_year: gen total_cases_per_year = _N
 bys common_year: egen total_gender_cases_per_year = sum(y) if victim_f != .
 bys common_year sh: gen sh_per_year = _N

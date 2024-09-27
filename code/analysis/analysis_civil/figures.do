@@ -518,15 +518,16 @@ Cases/outcomes over time
 *******************************************************************************/
 
 if `timeseries' == 1 {
-	drop if sh == . // otherwise it messes up collapse statement
-	
-	plot_lpolyci settle ym, title("Settlement Over Time") ylabel("Probability of settlement")
 
-	plot_lpolyci dismissed ym, title("Dismissal Over Time") ylabel("Probability of settlement")
+	plot_lpolyci ln_total_cases_per_month_by_sh ym, title("Number Complaints Filed Over Time") ylabel("Ln(count of complaints filed)")
 
-	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
+	plot_lpolyci settle ym, title("Settlement Over Time") ylabel("Probability complaint settled")
 
-	plot_lpolyci relief_scale ym, title("Compensation paid to complainant (conditional on winning)") ylabel("Compensation in $1000s")
+	plot_lpolyci dismissed ym, title("Dismissal Over Time") ylabel("Probability complaint dismissed")
+
+	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability complainant wins")
+
+	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
 
 	// Number of cases
     preserve

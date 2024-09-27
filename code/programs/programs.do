@@ -10,7 +10,7 @@ program define plot_lpolyci
     local Xvar : word 2 of `varlist'
 
     preserve
-    collapse (mean) mean_settle = `Yvar', by(`Xvar' sh)
+    collapse (mean) mean_y = `Yvar', by(`Xvar' sh)
     
     * Get the min and max values of the x-axis variable
     summarize `Xvar', detail
@@ -20,17 +20,17 @@ program define plot_lpolyci
     * Create the x-axis label with proper formatting
     local xlabel_cmd `"xlabel(`xmin'(6)`xmax', angle(45) format(%tm))"'
 
-    twoway (lpolyci mean_settle `Xvar' if sh == 0, acolor("gs3 %65")) ///
-           (lpolyci mean_settle `Xvar' if sh == 1, acolor("orange_red %65") ///
+    twoway (lpolyci mean_y `Xvar' if sh == 0, acolor("gs3 %65")) ///
+           (lpolyci mean_y `Xvar' if sh == 1, acolor("orange_red %65") ///
            clpattern(dash) clcolor(black) ///
-           legend(order(3 1) lab(1 "Other, 95% CI") lab(3 "Sexual harassment, 95% CI") size(medium) ring(0) pos(11)) ///
+           legend(order(3 1) lab(1 "Other complaints, 95% CI") lab(3 "Sexual harassment, 95% CI") size(medium) ring(0) pos(11) rows(2)) ///
            xtitle("Date filed", size(medium)) ///
            xline(693, lpattern(solid)) ///
            `xlabel_cmd' ///
            ytitle(`"`ylabel'"') title(`"`title'"'))
 
     local filename = "timeseries_`Yvar'_smooth.png"
-    graph save "$figures/`filename'", replace
+    graph export "$figures/`filename'", replace
     restore
 end
 
