@@ -6,10 +6,10 @@ use "$clean_data/clean_cases.dta", replace
 
 loc run_selection = 0
 loc run_overlap  = 0
-loc	run_did 	 = 0
+loc	run_did 	 = 1
 loc run_did_robust = 0
-loc run_victim_f_present = 0
-loc run_summary  = 0
+loc run_victim_f_present = 1
+loc run_summary  = 1
 loc run_balance  = 0
 loc run_duration = 0
 

@@ -2,7 +2,7 @@
 /*******************************************************************************
 Plots timeseries lpolyci with confidence intervals for two groups by GENDER
 *******************************************************************************/
-program drop plot_lpolyci_gender
+cap program drop plot_lpolyci_gender
 program define plot_lpolyci_gender
     syntax varlist(min=2 max=2) [, TITLE(string) YLABEL(string)]
 
@@ -41,7 +41,7 @@ end
 /*******************************************************************************
 Plots timeseries lpolyci with confidence intervals for two groups
 *******************************************************************************/
-program drop plot_lpolyci
+cap program drop plot_lpolyci
 program define plot_lpolyci
     syntax varlist(min=2 max=2) [, TITLE(string) YLABEL(string)]
 
