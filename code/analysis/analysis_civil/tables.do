@@ -6,9 +6,9 @@ use "$clean_data/clean_cases.dta", replace
 
 loc run_selection = 0
 loc run_overlap  = 0
-loc	run_did 	 = 1
+loc	run_did 	 = 0
 loc run_did_robust = 0
-loc run_victim_f_present = 1
+loc run_victim_f_present = 0
 loc run_summary  = 1
 loc run_balance  = 0
 loc run_duration = 0
@@ -174,11 +174,15 @@ if `run_did' == 1 {
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if treat == 0
+		estadd scalar control_mean = `r(mean)'
 		
 		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if treat == 0
+		estadd scalar control_mean = `r(mean)'
 						
 		loc ++i
 	}
@@ -193,8 +197,8 @@ if `run_did' == 1 {
 		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
-		stats(feunit fetime feunit_s fetime_s N r2, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
 		prefoot("\\" "\midrule");
@@ -214,11 +218,15 @@ if `run_did' == 1 {
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if treat == 0
+		estadd scalar control_mean = `r(mean)'
 		
 		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if treat == 0
+		estadd scalar control_mean = `r(mean)'
 						
 		loc ++i
 	}
@@ -230,8 +238,8 @@ if `run_did' == 1 {
 		append
 		varlabels(treat "SH $\times$ Post") keep(treat)
 		mlabel(none) nomtitles nonumbers nolines
-		stats(feunit fetime feunit_s fetime_s N r2, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
 		prefoot("\\" "\midrule");
@@ -249,11 +257,15 @@ if `run_did' == 1 {
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if treat == 0
+		estadd scalar control_mean = `r(mean)'
 		
 		reghdfe ``y'' triple_did, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if treat == 0
+		estadd scalar control_mean = `r(mean)'
 						
 		loc ++i
 	}
@@ -265,8 +277,47 @@ if `run_did' == 1 {
 		append
 		varlabels(triple_did "Female $\times$ SH $\times$ Post") keep(triple_did)
 		mlabel(none) nomtitles nonumbers nolines
-		stats(feunit fetime feunit_s fetime_s N r2, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+	#delimit cr
+	estimates clear
+	eststo clear
+	
+	// Overlap cases **********************************************************/
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
+	
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat_did, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if treat_did == 0
+		estadd scalar control_mean = `r(mean)'
+		
+		reghdfe ``y'' treat_did, absorb(basis_state ym_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if treat_did == 0
+		estadd scalar control_mean = `r(mean)'
+						
+		loc ++i
+	}
+
+	#delimit ;	// DID - All data
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{All overlap cases}} \\ \midrule")
+		fragment
+		append
+		varlabels(treat_did "SH $\times$ Overlap") keep(treat_did)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
 		prefoot("\\" "\midrule")
@@ -464,7 +515,7 @@ if `run_summary' == 1 {
 
 	// Define local 
 	#delimit ;
-	loc summary 
+	loc summary_1
 	// Case chars
 		sh
 		victim_f
@@ -499,10 +550,75 @@ if `run_summary' == 1 {
 		juris_dummy5; 
 	#delimit cr
 	
-	eststo mean_all: estpost tabstat `summary', c(stat) stat(mean sd)
-	eststo mean_state: estpost tabstat `summary' if eeoc_filed == 0, c(stat) stat(mean sd)
-	eststo post_all: estpost ttest `summary', by(post)
-	eststo post_sh: estpost ttest `summary' if sh == 1, by(post)
+	#delimit ;
+	loc summary_2 
+	// Case chars
+		sh
+		victim_f
+		duration 
+	// Basis
+		basis_dummy1 
+		basis_dummy2 
+		basis_dummy3 
+		basis_dummy4 
+		basis_dummy5 
+		basis_dummy6 
+		basis_dummy7 
+	// Outcomes 
+		dismissed 
+		settle
+		investigation
+		win_investigation
+		lose_investigation
+		court
+		win_court
+		lose_court
+		unknown_court
+		relief_scale 
+	// Jurisdiction 
+		juris_dummy1 
+		juris_dummy2 
+		juris_dummy3 
+		juris_dummy4 
+		juris_dummy5; 
+	#delimit cr
+	
+	#delimit ;
+	loc summary_3 
+	// Case chars
+		victim_f 
+		duration 
+	// Basis
+		basis_dummy1 
+		basis_dummy2 
+		basis_dummy3 
+		basis_dummy4 
+		basis_dummy5 
+		basis_dummy6 
+		basis_dummy7 
+	// Outcomes 
+		dismissed 
+		settle
+		investigation
+		win_investigation
+		lose_investigation
+		court
+		win_court
+		lose_court
+		unknown_court
+		relief_scale 
+	// Jurisdiction 
+		juris_dummy1 
+		juris_dummy2 
+		juris_dummy3 
+		juris_dummy4 
+		juris_dummy5; 
+	#delimit cr
+	
+	eststo mean_all: estpost tabstat `summary_1', c(stat) stat(mean sd)
+	eststo mean_state: estpost tabstat `summary_1' if eeoc_filed == 0, c(stat) stat(mean sd)
+	eststo post_all: estpost ttest `summary_2', by(post)
+	eststo post_sh: estpost ttest `summary_3' if sh == 1, by(post)
 
 	#delimit ;
 	esttab mean_all mean_state post_all post_sh using "$tables/summary.tex", replace 

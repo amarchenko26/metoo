@@ -271,6 +271,9 @@ g treat = post*sh // treat=1 if post =1 and sh=1
 replace treat = . if sex_cases == 1 & sh == 0 
 replace treat = 1 if overlap_2 == 1
 
+g treat_did = 0 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY")
+replace treat_did = 1 if treat_did == 0 & sh == 1
+
 g triple_did = treat * victim_f
 
 g state_did = treat * state_cat
