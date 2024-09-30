@@ -9,8 +9,8 @@ loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f = 0
-loc event 	   = 0
-loc event_all  = 0  
+loc event 	   = 1
+loc event_all  = 1  
 loc timeseries = 0
 loc duration   = 0
 
@@ -185,12 +185,12 @@ if `state_did' == 1 {
 Placebo coef plots 
 *******************************************************************************/
 
-*loc y1 filed_per_year
+loc y1 dismissed
 loc y2 settle
 loc y3 win
 loc y4 relief_scale
 
-loc outcome_vars y2 y3 y4
+loc outcome_vars y1 y2 y3 y4
 
 if `run_placebo' == 1 {
 
@@ -225,9 +225,10 @@ if `run_placebo' == 1 {
 
 	#delimit ;
 	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Settled)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Won)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Compensation)
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
+		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
@@ -274,9 +275,10 @@ if `run_placebo_single' == 1 {
 
 	#delimit ;
 	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Settled)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Won)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Compensation)
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
+		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
@@ -323,9 +325,10 @@ if `run_placebo_overlap' == 1 {
 
 	#delimit ;
 	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Settled)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Won)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Compensation)
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
+		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
@@ -372,9 +375,10 @@ if `run_placebo_f' == 1 {
 
 	#delimit ;
 	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Settled)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Won)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Compensation)
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
+		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
@@ -421,10 +425,18 @@ if `event_all' == 1 {
 			}
 
 			// Run dynamic DiD
+			if "`y'" == "win"{
+				reghdfe `y' duration ib`omit'.`horizon'_pos##sh, ///
+				absorb(basis `horizon'_pos) ///
+				vce(cluster basis) noconstant
+				estimates store TWFE
+			}
+			else{
 			reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
 				absorb(basis `horizon'_pos) ///
 				vce(cluster basis) noconstant
-			estimates store TWFE
+				estimates store TWFE
+			}
 			
 			// Run Rambachan & Roth (2021)
 			honestdid, numpre(`xline') omit ///
@@ -480,10 +492,18 @@ if `event' == 1 {
 			}
 
 			// Run dynamic DiD
-			reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
+			if "`y'" == "win"{
+				reghdfe `y' duration ib`omit'.`horizon'_pos##sh, ///
 				absorb(basis `horizon'_pos) ///
 				vce(cluster basis) noconstant
-			estimates store TWFE
+				estimates store TWFE
+			}
+			else{
+				reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
+				absorb(basis `horizon'_pos) ///
+				vce(cluster basis) noconstant
+				estimates store TWFE
+			}
 			
 			// Run Rambachan & Roth (2021)
 			honestdid, numpre(`xline') omit ///
