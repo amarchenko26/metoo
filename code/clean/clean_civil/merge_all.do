@@ -167,13 +167,13 @@ Consistent sample
 // Drop cases resolved before filed
 drop if common_file_date > common_res_date
 
-// Drop obs before Oct 2010
-di tm(2010m10)
-drop if ym < 609
+// Drop obs before Jun 1 2010
+di tm(2010m6) // 605
+drop if ym < 605
 
-// Drop obs after Oct 2023
-di tm(2023m10)
-drop if ym > 765
+// Drop obs after June 1 2023 (our FOIA cutoff)
+di tm(2023m6)
+drop if ym > 761
 
 // Drop missing bases (N=10 obs in PA) 
 cap drop if basis == ""

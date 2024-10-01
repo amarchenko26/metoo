@@ -4,14 +4,15 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
+loc yhat		= 0
 loc state_did  	= 0
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f = 0
 loc event 	   = 1
-loc event_all  = 0
-loc timeseries = 0
+loc event_all  = 1
+loc timeseries = 1
 loc duration   = 0
 
 * reg pierre philosophical_ideas timeless_whimsy fluffiness, cluster(hairball)
@@ -23,37 +24,38 @@ Beta-hat
 * generate a beta-hat 
 * multiply beta-hat times the covariates in the post period 
 * plot predicted y-hat versus actual y-hat 
+* how good is the prediction? in terms of R2
 
-* how good is the prediction? in terms of R2 
-preserve 
-loc y settle
-keep if eeoc_filed == 0
+if `yhat' == 1{
+	preserve 
+	loc y settle
+	keep if eeoc_filed == 0
 
-* Fit model on data pre MeToo
-#delimit ;
-reg `y' i.basis_cat i.victim_f i.state_cat duration court
-	if post == 0, cluster(basis_cat);
-#delimit cr
+	* Fit model on data pre MeToo
+	#delimit ;
+	reg `y' i.basis_cat i.victim_f i.state_cat duration court
+		if post == 0, cluster(basis_cat);
+	#delimit cr
 
-* Predict for pre-post MeToo
-predict `y'_hat, xb 		// prediction 
+	* Predict for pre-post MeToo
+	predict `y'_hat, xb 		// prediction 
 
-collapse (mean) `y'_hat `y', by(months_to_treat_6)
+	collapse (mean) `y'_hat `y', by(months_to_treat_6)
 
-#delimit ; 
-twoway line `y'_hat `y' months_to_treat_6,
-	xtitle("6 month intervals before and after MeToo")
-	ytitle("Probability of `y'") 
-	title("")
-	xline(0, lc(gs8) lp(dash))
-	legend(ring(0) pos(2) order(2 1) 
-		label(1 "Predicted y") label(2 "Actual y")
-		size(medium));
-#delimit cr
+	#delimit ; 
+	twoway line `y'_hat `y' months_to_treat_6,
+		xtitle("6 month intervals before and after MeToo")
+		ytitle("Probability of `y'") 
+		title("")
+		xline(0, lc(gs8) lp(dash))
+		legend(ring(0) pos(2) order(2 1) 
+			label(1 "Predicted y") label(2 "Actual y")
+			size(medium));
+	#delimit cr
 
-graph export "$figures/y_hat_`y'.png", replace 	
-
-restore 
+	graph export "$figures/y_hat_`y'.png", replace 	
+	restore 
+}
 
 
 /*******************************************************************************
@@ -426,7 +428,7 @@ if `event_all' == 1 {
 
 			// Run dynamic DiD
 			if "`y'" == "win"{
-				reghdfe `y' duration ib`omit'.`horizon'_pos##sh, ///
+				reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
 				absorb(basis `horizon'_pos) ///
 				vce(cluster basis) noconstant
 				estimates store TWFE
@@ -493,7 +495,7 @@ if `event' == 1 {
 
 			// Run dynamic DiD
 			if "`y'" == "win"{
-				reghdfe `y' duration ib`omit'.`horizon'_pos##sh, ///
+				reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
 				absorb(basis `horizon'_pos) ///
 				vce(cluster basis) noconstant
 				estimates store TWFE
@@ -543,7 +545,10 @@ if `timeseries' == 1 {
 	plot_lpolyci_gender win ym, title("Probability of Winning by Complainant Gender") ylabel("Probability of win")
 
 	* Plot outcomes over time 
+	preserve
+	keep if eeoc_filed == 0
 	plot_lpolyci ln_total_cases_per_month_by_sh ym, title("Number Complaints Filed Over Time") ylabel("Ln(count of complaints filed)")
+	restore
 
 	plot_lpolyci settle ym, title("Probability Complainant Settles Over Time") ylabel("Probability settled")
 
