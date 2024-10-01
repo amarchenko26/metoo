@@ -26,19 +26,20 @@ if `run_selection' == 1 {
 
 	eststo B: reg sh_per_year post if sh == 1, r
 
-	eststo C: reg sh_f_per_year post if sh == 1 & victim_f == 1, r
+	bys months_to_treat_12: egen months_to_treat_12_count = total(y) if sh == 0
+	eststo C: reg months_to_treat_12_count post if sh == 0 & inlist(months_to_treat_12, -1, 0), r
 
-	eststo D: reg sh_f_per_year post if sh == 1 & victim_f == 0, r
-
+	bys months_to_treat_12 sh: egen months_to_treat_12_count_sh = total(y)
+	eststo D: reg months_to_treat_12_count_sh post if sh == 1 & inlist(months_to_treat_12, -1, 0), r
 	
 	#delimit ;
 	
 	esttab A B C D using "$tables/selection_table.tex", style(tex) replace
 		drop(_cons)
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule" "\multicolumn{@span}{c}{\textbf{Counts}} \\ \midrule")
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule" "\multicolumn{@span}{c}{\textbf{Counts (per year)}} \\ \midrule")
 		fragment
 		varlabels(post "Post MeToo")
-		mlabel("\# filed" "\# SH filed" "\shortstack{\# SH filed\\by women}" "\shortstack{\# SH filed\\by men}")
+		mlabel("\# filed" "\# SH filed" "\shortstack{\# Control filed in 12 months\\before vs after MeToo}" "\shortstack{\# SH filed in 12 months\\before vs after MeToo}" )
 		nomtitles nonumbers
 		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
@@ -49,8 +50,6 @@ if `run_selection' == 1 {
 	estimates clear
 	eststo clear
 
-	eststo A: reg total_cases_per_year post if common_file_date < date("01mar2020", "DMY"), r
-
 	eststo B: reg filed_per_year post if sh == 1, r 
 	
 	eststo C: reg filed_f_per_year post if sh == 1 & victim_f == 1, r
@@ -59,13 +58,13 @@ if `run_selection' == 1 {
 
 	#delimit ;
 	
-	esttab A1 B C D using "$tables/selection_table.tex", style(tex)
+	esttab B B C D using "$tables/selection_table.tex", style(tex)
 		prehead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")		
 		fragment 
 		append
 		drop(_cons)
 		varlabels(post "Post MeToo")
-		mlabel("Test" "\shortstack{Share SH filed\\of total cases}" "\shortstack{Share SH filed\\by women}" "\shortstack{Share SH filed\\by men}")
+		mlabel("DELETE ME" "\shortstack{Share SH filed\\of total cases}" "\shortstack{Share SH filed\\by women}" "\shortstack{Share SH filed\\by men}")
 		nomtitles nonumbers
 		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
