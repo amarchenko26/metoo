@@ -6,7 +6,7 @@ use "$clean_data/clean_cases.dta", replace
 
 loc run_selection = 1
 loc run_overlap  = 0
-loc	run_did 	 = 0
+loc	run_did 	 = 1
 loc run_did_robust = 0
 loc run_victim_f_present = 0
 loc run_summary  = 0
@@ -18,10 +18,10 @@ loc run_duration = 0
 Selection table
 *******************************************************************************/
 
-g ln_total = ln(total_cases_per_year)
-
 if `run_selection' == 1 {
 	
+	preserve 
+	keep if eeoc_filed == 0 // exclude EEOC cases  
 	eststo A: reg total_cases_per_year post, r
 
 	eststo B: reg sh_per_year post if sh == 1, r
@@ -36,10 +36,10 @@ if `run_selection' == 1 {
 	esttab A B C D using "$tables/selection_table.tex", style(tex) replace
 		drop(_cons)
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Counts}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Counts (per year)}} \\ \midrule")
 		fragment
 		varlabels(post "Post MeToo")
-		mlabel("\# filed" "\# SH filed" "\# SH filed by women" "\# SH filed by men")
+		mlabel("\# filed" "\# SH filed" "\shortstack{\# SH filed\\by women}" "\shortstack{\# SH filed\\by men}")
 		nomtitles nonumbers
 		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
@@ -50,17 +50,17 @@ if `run_selection' == 1 {
 	estimates clear
 	eststo clear
 
-	eststo A1: reg total_cases_per_year post, r
+	eststo A: reg total_cases_per_year post if common_file_date < date("01mar2020", "DMY"), r
 
-	eststo A: reg filed_per_year post if sh == 1, r 
+	eststo B: reg filed_per_year post if sh == 1, r 
 	
-	eststo B: reg filed_f_per_year post if sh == 1 & victim_f == 1, r
+	eststo C: reg filed_f_per_year post if sh == 1 & victim_f == 1, r
 
-	eststo C: reg filed_f_per_year post if sh == 1 & victim_f == 0, r
+	eststo D: reg filed_f_per_year post if sh == 1 & victim_f == 0, r
 
 	#delimit ;
 	
-	esttab A1 A B C using "$tables/selection_table.tex", style(tex)
+	esttab A B C D using "$tables/selection_table.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")
 		fragment 
 		append
@@ -77,6 +77,8 @@ if `run_selection' == 1 {
 	#delimit cr
 	estimates clear
 	eststo clear	
+
+	restore
 }
 
 

@@ -10,7 +10,7 @@ loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f = 0
 loc event 	   = 1
-loc event_all  = 1  
+loc event_all  = 0
 loc timeseries = 0
 loc duration   = 0
 
@@ -398,7 +398,7 @@ Event-study
 *******************************************************************************/
 
 local horizons "months_to_treat_12"
-local outcomes "relief_w win settle"
+local outcomes "relief_scale win settle"
 
 if `event_all' == 1 {
 		
@@ -472,7 +472,7 @@ if `event' == 1 {
 		foreach y in `outcomes' {
 			
 			preserve 
-			drop if eeoc_filed == 1
+			keep if eeoc_filed == 0
 			drop if `horizon' == 5 | `horizon' == -8
 			
 			sum `horizon'
@@ -695,7 +695,7 @@ if `timeseries' == 1 {
     restore
 	
 	preserve
-	collapse (mean) mean_relief = relief_w, by(ym basis)
+	collapse (mean) mean_relief = relief_scale, by(ym basis)
 		lowess mean_relief ym if basis == "Age", gen(lowess1) nograph
 		lowess mean_relief ym if basis == "Race", gen(lowess2) nograph
 		lowess mean_relief ym if basis == "Disability", gen(lowess3) nograph

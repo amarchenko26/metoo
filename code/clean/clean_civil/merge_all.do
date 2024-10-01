@@ -157,6 +157,8 @@ g court_file_year = year(court_file_date)
 g court_res_year = year(court_res_date)
 
 replace eeoc_filed = 0 if missing(eeoc_filed)
+replace civil_action_number = "" if civil_action_number == "null"
+replace eeoc_filed = 1 if civil_action_number != "" // make 1 if part of court EEOC data
 
 /*******************************************************************************
 Consistent sample 
@@ -220,6 +222,7 @@ g share_filed_by_basis = filed_by_basis / total_cases_per_year
 winsor relief, p(.05) gen(relief_w)
 replace relief = . if missing_relief == 1 // if relief = 0, person lost, so relief is CONDITIONAL ON WINNING 
 g relief_scale = relief_w / 1000
+drop relief_w 
 
 // Investigation
 g investigation = 0 if dismissed != . | settle != . | court != .
