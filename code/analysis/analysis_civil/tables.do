@@ -59,7 +59,7 @@ if `run_selection' == 1 {
 
 	#delimit ;
 	
-	esttab A B C D using "$tables/selection_table.tex", style(tex)
+	esttab A1 B C D using "$tables/selection_table.tex", style(tex)
 		prehead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")		
 		fragment 
 		append
