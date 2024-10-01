@@ -35,8 +35,7 @@ if `run_selection' == 1 {
 	
 	esttab A B C D using "$tables/selection_table.tex", style(tex) replace
 		drop(_cons)
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Counts}} \\ \midrule")
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule" "\multicolumn{@span}{c}{\textbf{Counts}} \\ \midrule")
 		fragment
 		varlabels(post "Post MeToo")
 		mlabel("\# filed" "\# SH filed" "\# SH filed by women" "\# SH filed by men")
@@ -61,7 +60,7 @@ if `run_selection' == 1 {
 	#delimit ;
 	
 	esttab A1 A B C using "$tables/selection_table.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")
+		prehead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")
 		fragment 
 		append
 		drop(_cons)
