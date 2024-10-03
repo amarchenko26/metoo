@@ -84,6 +84,9 @@ replace sh = . if basis != "Sex" & basis != "Retaliation" & sh == 1 // remove ca
 g sex_cases = 0 
 replace sex_cases = 1 if basis == "Sex"
 
+// Clean missings 
+replace outcome = "" if outcome == "null"
+
 // Probable cause
 g win = .
 replace win = 1 if outcome == "Hearings Discrimination Finding"
@@ -93,11 +96,18 @@ replace win = 0 if outcome == "No Cause Finding Issued"
 replace win = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Closed By Legal Activity", "null")
 
 // Court
+replace civil_action_number = "" if civil_action_number =="null"
+
+// Court = 1 if either CP or EEOC took case to court
 g court = (!missing(court_file_date))
+replace court = 1 if civil_action_number != ""
 replace court = 1 if outcome == "NRTS Issued At CP Request" //CP is charging party, Notice of Right to Sue
 replace court = 1 if outcome == "CP Filed Suit"
 replace court = 1 if outcome == "Closed Due To Court Decision"
 replace court = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Closed By Legal Activity", "null") & missing(court_file_date)
+
+// Gen eeoc_took_to_court = 1 if EEOC took case to court
+g eeoc_took_to_court = (civil_action_number != "" & outcome == "Conciliation Failure")
 
 // Settle
 g settle = 0 

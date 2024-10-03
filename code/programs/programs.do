@@ -49,6 +49,7 @@ program define plot_lpolyci
     local Xvar : word 2 of `varlist'
 
     preserve
+    keep if eeoc_took_to_court ==1
     collapse (mean) mean_y = `Yvar', by(`Xvar' sh)
     
     * Get the min and max values of the x-axis variable
@@ -72,8 +73,8 @@ program define plot_lpolyci
            ytitle(`"`ylabel'"', size(medium)) title(`"`title'"')
     ;
     #delimit cr
-    local filename = "timeseries_`Yvar'.png"
-    graph export "$figures/`filename'", replace
+    *local filename = "timeseries_`Yvar'.png"
+    *graph export "$figures/`filename'", replace
     restore
 end
 

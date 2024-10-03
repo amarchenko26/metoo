@@ -12,7 +12,7 @@ loc run_placebo_overlap = 0
 loc run_placebo_f = 0
 loc event 	   = 1
 loc event_all  = 1
-loc timeseries = 1
+loc timeseries = 0
 loc duration   = 0
 
 * reg pierre philosophical_ideas timeless_whimsy fluffiness, cluster(hairball)
@@ -399,140 +399,85 @@ if `run_placebo_f' == 1 {
 Event-study
 *******************************************************************************/
 
-local horizons "months_to_treat_12"
 local outcomes "relief_scale win settle"
 
 if `event_all' == 1 {
 		
-	foreach horizon in `horizons' {
-		foreach y in `outcomes' {
-			
-			preserve
-			drop if `horizon' == 5 | `horizon' == -8
-			
-			sum `horizon'
-			loc min_val = r(min)
-			loc max_val = r(max)
-			loc num_points = `max_val' - `min_val' + 1
+	foreach y in `outcomes' {
+		
+		preserve		
+		g event = months_to_treat_12 * sh
+		replace event = event + 9 // dummies can't be negative
 
-			gen `horizon'_pos = `horizon' - `min_val'
-			loc omit = -1 - `min_val'
-			loc xline = `omit' + 2
+		// Run dynamic DiD
+		reghdfe `y' ib8.event, ///
+			absorb(basis ym) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+		
+		// Run Rambachan & Roth (2021)
+		honestdid, numpre(9) omit ///
+			coefplot xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honestdid_`y'_all.png", replace
 
-			// Generate dynamic labels for the x-axis
-			local xlabel_str = ""
-			forval i = 1/`num_points' {
-				local label_val = `i' + `min_val' - 1
-				local xlabel_str `xlabel_str' `i' "`label_val'"
-			}
-
-			// Run dynamic DiD
-			if "`y'" == "win"{
-				reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
-				absorb(basis `horizon'_pos) ///
-				vce(cluster basis) noconstant
-				estimates store TWFE
-			}
-			else{
-			reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
-				absorb(basis `horizon'_pos) ///
-				vce(cluster basis) noconstant
-				estimates store TWFE
-			}
-			
-			// Run Rambachan & Roth (2021)
-			honestdid, numpre(`xline') omit ///
-				coefplot xtitle(Mbar) ytitle(95% Robust CI)
-			graph export "$figures/honestdid_`y'_`horizon'_all.png", replace
-
-			// Make graph
-			coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
-				addplot(line @b @at, lcolor(orange_red*0.8)) ///
-				ciopts(recast(rcap) msize(medium) color(orange_red)) ///
-				yline(0, lc(gs8) lp(dash)) ///
-				xline(`xline', lp(dash) lc(gs4)) ///
-				ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
-				ytitle("Effect of MeToo", size(medium)) ///
-				xtitle("Time relative to treatment", size(medium)) ///
-				xlabel(`xlabel_str', labsize(medium))
-						
-			graph export "$figures/eventstudy_`y'_`horizon'_all.png", replace 
-			
-			// Clean up
-			estimates clear
-			drop `horizon'_pos 
-			restore
-		}
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash))
+			xline(9)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_`y'_all.png", replace 
+		
+		estimates clear
+		restore
 	}
-	
 }
 
-
 if `event' == 1 {
+	foreach y in `outcomes' {
+		
+		preserve
+		keep if eeoc_filed == 0
+		
+		g event = months_to_treat_12 * sh
+		replace event = event + 9 // dummies can't be negative
 
-	foreach horizon in `horizons' {
-		foreach y in `outcomes' {
-			
-			preserve 
-			keep if eeoc_filed == 0
-			drop if `horizon' == 5 | `horizon' == -8
-			
-			sum `horizon'
-			loc min_val = r(min)
-			loc max_val = r(max)
-			loc num_points = `max_val' - `min_val' + 1
+		// Run dynamic DiD
+		reghdfe `y' ib8.event, ///
+			absorb(basis ym) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+		
+		// Run Rambachan & Roth (2021)
+		honestdid, numpre(9) omit ///
+			coefplot xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honestdid_`y'_state.png", replace
 
-			gen `horizon'_pos = `horizon' - `min_val'
-			loc omit = -1 - `min_val'
-			loc xline = `omit' + 2
-
-			// Generate dynamic labels for the x-axis
-			local xlabel_str = ""
-			forval i = 1/`num_points' {
-				local label_val = `i' + `min_val' - 1
-				local xlabel_str `xlabel_str' `i' "`label_val'"
-			}
-
-			// Run dynamic DiD
-			if "`y'" == "win"{
-				reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
-				absorb(basis `horizon'_pos) ///
-				vce(cluster basis) noconstant
-				estimates store TWFE
-			}
-			else{
-				reghdfe `y' ib`omit'.`horizon'_pos##sh, ///
-				absorb(basis `horizon'_pos) ///
-				vce(cluster basis) noconstant
-				estimates store TWFE
-			}
-			
-			// Run Rambachan & Roth (2021)
-			honestdid, numpre(`xline') omit ///
-				coefplot xtitle(Mbar) ytitle(95% Robust CI)
-			graph export "$figures/honestdid_`y'_`horizon'.png", replace
-
-			// Make graph
-			coefplot (TWFE, omitted baselevel), keep(*.`horizon'_pos#1.sh) vertical ///
-				addplot(line @b @at, lcolor(orange_red*0.8)) ///
-				ciopts(recast(rcap) msize(medium) color(orange_red)) ///
-				yline(0, lc(gs8) lp(dash)) ///
-				xline(`xline', lp(dash) lc(gs4)) ///
-				ylabel(`ylab_`y'', labsize(medium) angle(0)) ///
-				ytitle("Effect of MeToo", size(medium)) ///
-				xtitle("Time relative to treatment", size(medium)) ///
-				xlabel(`xlabel_str', labsize(medium))
-						
-			graph export "$figures/eventstudy_`y'_`horizon'.png", replace 
-			
-			// Clean up
-			estimates clear
-			drop `horizon'_pos 
-			
-			restore 
-		}
-	}
-	
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash))
+			xline(9)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_`y'_state.png", replace 
+		
+		estimates clear
+		restore
+	}	
 }
 
 /*******************************************************************************
