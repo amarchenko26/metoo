@@ -146,6 +146,7 @@ g duration_court = court_file_date - court_res_date
 g victim_f = 1 if sex == "F"
 replace victim_f = 0 if sex == "M"
 
+g eeoc = 1
 g eeoc_filed = 1
 
 /*******************************************************************************

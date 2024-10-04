@@ -35,8 +35,6 @@ Pull cleaned EEOC filed data (2010-2017)
 
 tempfile temp
 use "$clean_data/clean_eeoc.dta", clear
-duplicates drop civil_action_number court_res_date, force
-replace civil_action_number = subinstr(civil_action_number, "‐", "-", .)
 save "`temp'", replace
 
 use "$clean_data/clean_eeoc_filed.dta", clear
@@ -156,9 +154,13 @@ g charge_res_year = year(charge_res_date)
 g court_file_year = year(court_file_date)
 g court_res_year = year(court_res_date)
 
-replace eeoc_filed = 0 if missing(eeoc_filed)
+// Standardize EEOC flags 
+replace eeoc = 0 if missing(eeoc) // 0 if state data
+replace eeoc_foia = 0 if missing(eeoc_foia) // 0 if state data
+replace eeoc_filed = 0 if missing(eeoc_filed) // 0 if state data
+replace eeoc_took_to_court = 0 if eeoc == 0 // Make sure to make eeoc_took_to_court = 0 for state data
+
 replace civil_action_number = "" if civil_action_number == "null"
-replace eeoc_filed = 1 if civil_action_number != "" // make 1 if part of court EEOC data
 
 /*******************************************************************************
 Consistent sample 
@@ -286,9 +288,6 @@ Create time to treat - 0 is the pre-period before MeToo
 *******************************************************************************/
 
 do "$droot/code/programs/programs.do"
-
-// Create quarters
-create_time_to_treat, period(3) period_label("Quarters relative to MeToo")
 
 // Create time_to_treat for half-years
 create_time_to_treat, period(6) period_label("Half-years relative to MeToo")

@@ -1,62 +1,356 @@
+* reg pierre philosophical_ideas timeless_whimsy fluffiness, cluster(hairball)
 /*******************************************************************************
 Figures for MeToo project
 *******************************************************************************/
 
 use "$clean_data/clean_cases.dta", replace
 
-loc yhat		= 0
+loc event_all  = 0
+loc event 	   = 1
+loc timeseries = 0
 loc state_did  	= 0
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f = 0
-loc event 	   = 1
-loc event_all  = 1
-loc timeseries = 0
 loc duration   = 0
-
-* reg pierre philosophical_ideas timeless_whimsy fluffiness, cluster(hairball)
+loc yhat		= 0
 
 /*******************************************************************************
-Beta-hat
+Event-study
 *******************************************************************************/
-* Take covariates that predict the outcome in the pre period
-* generate a beta-hat 
-* multiply beta-hat times the covariates in the post period 
-* plot predicted y-hat versus actual y-hat 
-* how good is the prediction? in terms of R2
 
-if `yhat' == 1{
-	preserve 
-	loc y settle
-	keep if eeoc_filed == 0
+local outcomes "relief_scale win settle"
 
-	* Fit model on data pre MeToo
-	#delimit ;
-	reg `y' i.basis_cat i.victim_f i.state_cat duration court
-		if post == 0, cluster(basis_cat);
-	#delimit cr
+if `event_all' == 1 {
+		
+	foreach y in `outcomes' {
+		
+		preserve		
+		drop if eeoc_took_to_court == 1 & eeoc_filed == 1
 
-	* Predict for pre-post MeToo
-	predict `y'_hat, xb 		// prediction 
+		g event = months_to_treat_12 * sh
+		replace event = event + 9 // dummies can't be negative
 
-	collapse (mean) `y'_hat `y', by(months_to_treat_6)
+		// Run dynamic DiD
+		reghdfe `y' ib8.event, ///
+			absorb(basis ym) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+		
+		// Run Rambachan & Roth (2021)
+		/* honestdid, numpre(9) omit ///
+			coefplot xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honestdid_`y'_all.png", replace */
 
-	#delimit ; 
-	twoway line `y'_hat `y' months_to_treat_6,
-		xtitle("6 month intervals before and after MeToo")
-		ytitle("Probability of `y'") 
-		title("")
-		xline(0, lc(gs8) lp(dash))
-		legend(ring(0) pos(2) order(2 1) 
-			label(1 "Predicted y") label(2 "Actual y")
-			size(medium));
-	#delimit cr
-
-	graph export "$figures/y_hat_`y'.png", replace 	
-	restore 
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash))
+			xline(9)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_`y'_all.png", replace 
+		
+		estimates clear
+		restore
+	}
 }
 
+if `event' == 1 {
+	foreach y in `outcomes' {
+		
+		preserve
+		keep if eeoc == 0
+		
+		g event = months_to_treat_12 * sh
+		replace event = event + 9 // dummies can't be negative
+
+		// Run dynamic DiD
+		reghdfe `y' ib8.event, ///
+			absorb(basis ym) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+		
+		// Run Rambachan & Roth (2021)
+		honestdid, numpre(9) omit ///
+			coefplot xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honestdid_`y'_state.png", replace
+
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash))
+			xline(9)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_`y'_state.png", replace 
+		
+		estimates clear
+		restore
+	}	
+}
+
+
+/*******************************************************************************
+Cases/outcomes over time 
+*******************************************************************************/
+
+if `timeseries' == 1 {
+
+	* Women winning vs men winning vs. other complaints 
+	plot_lpolyci_gender win ym, title("Probability of Winning by Complainant Gender") ylabel("Probability of win")
+
+	* Plot outcomes over time 
+	preserve
+	keep if eeoc == 0
+	plot_lpolyci ln_total_cases_per_month_by_sh ym, title("Number Complaints Filed Over Time") ylabel("Ln(count of complaints filed)")
+	restore
+
+	plot_lpolyci settle ym, title("Probability Complainant Settles Over Time") ylabel("Probability settled")
+
+	plot_lpolyci dismissed ym, title("Probability Complaint Dismissed Over Time") ylabel("Probability dismissed")
+
+	preserve 
+	keep if eeoc_took_to_court == 0
+	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
+	restore
+
+	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
+
+	* Plot outcomes over time by basis
+	// Number of cases
+    preserve
+    collapse (mean) mean_y = filed_per_year, by(common_year sh)
+		lowess mean_y common_year if sh == 0, gen(lowess1) nograph
+		lowess mean_y common_year if sh == 1, gen(lowess2) nograph
+		su lowess1 if sh == 0 & common_year == 2023, meanonly
+		local call text(`r(mean)' 2023 "Other", color("gs3") place(r) size(small))
+		su lowess2 if sh == 1 & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "SH", color("orange_red") place(r) size(small))
+		twoway ///
+		scatter mean_y common_year if sh == 0, mcolor("gs3") yaxis(1) ytitle("Proportion of Other Cases", axis(1)) ///
+		|| scatter mean_y common_year if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Proportion of Sexual Harassment Cases", axis(2)) ///
+		|| lowess mean_y common_year if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
+		|| lowess mean_y common_year if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
+		`call' legend(off) ///
+		xtitle("Date filed", size(medium)) ///
+		xline(2017.79, lpattern(solid))
+    graph export "$figures/timeseries.png", replace
+    restore
+	
+	preserve
+	collapse (mean) mean_y = share_filed_by_basis, by(common_year basis)
+		lowess mean_y common_year if basis == "Age", gen(lowess1) nograph
+		lowess mean_y common_year if basis == "Race", gen(lowess2) nograph
+		lowess mean_y common_year if basis == "Disability", gen(lowess3) nograph
+		lowess mean_y common_year if basis == "Religion", gen(lowess4) nograph
+		lowess mean_y common_year if basis == "Nationality", gen(lowess5) nograph
+		lowess mean_y common_year if basis == "Retaliation", gen(lowess6) nograph
+		lowess mean_y common_year if basis == "Sex", gen(lowess7) nograph
+		su lowess1 if basis == "Age" & common_year == 2023, meanonly
+		local call text(`r(mean)' 2023 "Age", color("gs3") place(r) size(small))
+		su lowess2 if basis == "Race" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Race", color("blue") place(r) size(small)) 
+		su lowess3 if basis == "Disability" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Disability", color("purple") place(r) size(small)) 
+		su lowess4 if basis == "Religion" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Religion", color("red") place(r) size(small)) 
+		su lowess5 if basis == "Nationality" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Nationality", color("orange") place(r) size(small)) 
+		su lowess6 if basis == "Retaliation" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Retaliation", color("brown") place(r) size(small)) 
+		su lowess7 if basis == "Sex" & common_year == 2023, meanonly
+		local call `call' text(`r(mean)' 2023 "Sex", color("magenta") place(r) size(small))
+	#delimit ;
+	twoway
+		lowess mean_y common_year if basis == "Age", color("gs3") lwidth(thick)
+		|| lowess mean_y common_year if basis == "Race", color("blue") lwidth(thick) 
+		|| lowess mean_y common_year if basis == "Disability", color("purple") lwidth(thick)
+		|| lowess mean_y common_year if basis == "Religion", color("red") lwidth(thick) 
+		|| lowess mean_y common_year if basis == "Nationality", color("orange") lwidth(thick) 
+		|| lowess mean_y common_year if basis == "Retaliation", color("brown") lwidth(thick)  
+		|| lowess mean_y common_year if basis == "Sex", color("magenta") lwidth(thick) 
+	`call' legend(off)
+	xtitle("Date filed", size(medium))
+	ytitle("Proportion of cases", size(medium)) 
+	xline(2017.79, lpattern(solid));
+	#delimit cr
+    graph export "$figures/timeseries_basis.png", replace
+    restore
+	
+	preserve
+	collapse (mean) mean_settle = settle, by(ym basis)
+		lowess mean_settle ym if basis == "Age", gen(lowess1) nograph
+		lowess mean_settle ym if basis == "Race", gen(lowess2) nograph
+		lowess mean_settle ym if basis == "Disability", gen(lowess3) nograph
+		lowess mean_settle ym if basis == "Religion", gen(lowess4) nograph
+		lowess mean_settle ym if basis == "Nationality", gen(lowess5) nograph
+		lowess mean_settle ym if basis == "Retaliation", gen(lowess6) nograph
+		lowess mean_settle ym if basis == "Sex", gen(lowess7) nograph
+		su lowess1 if basis == "Age" & ym == 765, meanonly
+		local call text(`r(mean)' 765 "Age", color("gs3") place(r) size(small))
+		su lowess2 if basis == "Race" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Race", color("blue") place(r) size(small)) 
+		su lowess3 if basis == "Disability" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Disability", color("purple") place(r) size(small)) 
+		su lowess4 if basis == "Religion" & ym == 763, meanonly
+		local call `call' text(`r(mean)' 763 "Religion", color("red") place(r) size(small)) 
+		su lowess5 if basis == "Nationality" & ym == 764, meanonly
+		local call `call' text(`r(mean)' 764 "Nationality", color("orange") place(r) size(small)) 
+		su lowess6 if basis == "Retaliation" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Retaliation", color("brown") place(r) size(small)) 
+		su lowess7 if basis == "Sex" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Sex", color("magenta") place(r) size(small))
+	#delimit ;
+	twoway
+		lowess mean_settle ym if basis == "Age", color("gs3") lwidth(thick)
+		|| lowess mean_settle ym if basis == "Race", color("blue") lwidth(thick) 
+		|| lowess mean_settle ym if basis == "Disability", color("purple") lwidth(thick)
+		|| lowess mean_settle ym if basis == "Religion", color("red") lwidth(thick) 
+		|| lowess mean_settle ym if basis == "Nationality", color("orange") lwidth(thick) 
+		|| lowess mean_settle ym if basis == "Retaliation", color("brown") lwidth(thick)  
+		|| lowess mean_settle ym if basis == "Sex", color("magenta") lwidth(thick) 
+	`call' legend(off)
+	xtitle("Date filed", size(medium))
+	ytitle("Probability of settling", size(medium)) 
+	xline(693, lpattern(solid));
+	#delimit cr
+    graph export "$figures/timeseries_basis_settle.png", replace
+    restore
+	
+	preserve
+	collapse (mean) mean_dismissed = dismiss, by(ym basis)
+		lowess mean_dismissed ym if basis == "Age", gen(lowess1) nograph
+		lowess mean_dismissed ym if basis == "Race", gen(lowess2) nograph
+		lowess mean_dismissed ym if basis == "Disability", gen(lowess3) nograph
+		lowess mean_dismissed ym if basis == "Religion", gen(lowess4) nograph
+		lowess mean_dismissed ym if basis == "Nationality", gen(lowess5) nograph
+		lowess mean_dismissed ym if basis == "Retaliation", gen(lowess6) nograph
+		lowess mean_dismissed ym if basis == "Sex", gen(lowess7) nograph
+		su lowess1 if basis == "Age" & ym == 765, meanonly
+		local call text(`r(mean)' 765 "Age", color("gs3") place(r) size(small))
+		su lowess2 if basis == "Race" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Race", color("blue") place(r) size(small)) 
+		su lowess3 if basis == "Disability" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Disability", color("purple") place(r) size(small)) 
+		su lowess4 if basis == "Religion" & ym == 763, meanonly
+		local call `call' text(`r(mean)' 763 "Religion", color("red") place(r) size(small)) 
+		su lowess5 if basis == "Nationality" & ym == 764, meanonly
+		local call `call' text(`r(mean)' 764 "Nationality", color("orange") place(r) size(small)) 
+		su lowess6 if basis == "Retaliation" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Retaliation", color("brown") place(r) size(small)) 
+		su lowess7 if basis == "Sex" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Sex", color("magenta") place(r) size(small))
+	#delimit ;
+	twoway
+		lowess mean_dismissed ym if basis == "Age", color("gs3") lwidth(thick)
+		|| lowess mean_dismissed ym if basis == "Race", color("blue") lwidth(thick) 
+		|| lowess mean_dismissed ym if basis == "Disability", color("purple") lwidth(thick)
+		|| lowess mean_dismissed ym if basis == "Religion", color("red") lwidth(thick)
+		|| lowess mean_dismissed ym if basis == "Nationality", color("orange") lwidth(thick)
+		|| lowess mean_dismissed ym if basis == "Retaliation", color("brown") lwidth(thick)
+		|| lowess mean_dismissed ym if basis == "Sex", color("magenta") lwidth(thick)
+	`call' legend(off)
+	xtitle("Date filed", size(medium))
+	ytitle("Probability of dismissal", size(medium))
+	xline(693, lpattern(solid));
+	#delimit cr
+    graph export "$figures/timeseries_basis_dismissed.png", replace
+    restore
+	
+	preserve
+	collapse (mean) mean_relief = relief_scale, by(ym basis)
+		lowess mean_relief ym if basis == "Age", gen(lowess1) nograph
+		lowess mean_relief ym if basis == "Race", gen(lowess2) nograph
+		lowess mean_relief ym if basis == "Disability", gen(lowess3) nograph
+		lowess mean_relief ym if basis == "Religion", gen(lowess4) nograph
+		lowess mean_relief ym if basis == "Nationality", gen(lowess5) nograph
+		lowess mean_relief ym if basis == "Retaliation", gen(lowess6) nograph
+		lowess mean_relief ym if basis == "Sex", gen(lowess7) nograph
+		su lowess1 if basis == "Age" & ym == 765, meanonly
+		local call text(`r(mean)' 765 "Age", color("gs3") place(r) size(small))
+		su lowess2 if basis == "Race" & ym == 761, meanonly
+		local call `call' text(`r(mean)' 761 "Race", color("blue") place(r) size(small)) 
+		su lowess3 if basis == "Disability" & ym == 764, meanonly
+		local call `call' text(`r(mean)' 764 "Disability", color("purple") place(r) size(small)) 
+		su lowess4 if basis == "Religion" & ym == 759, meanonly
+		local call `call' text(`r(mean)' 759 "Religion", color("red") place(r) size(small)) 
+		su lowess5 if basis == "Nationality" & ym == 759, meanonly
+		local call `call' text(`r(mean)' 759 "Nationality", color("orange") place(r) size(small)) 
+		su lowess6 if basis == "Retaliation" & ym == 764, meanonly
+		local call `call' text(`r(mean)' 764 "Retaliation", color("brown") place(r) size(small)) 
+		su lowess7 if basis == "Sex" & ym == 764, meanonly
+		local call `call' text(`r(mean)' 764 "Sex", color("magenta") place(r) size(small)) 
+	#delimit ;
+	twoway
+		lowess mean_relief ym if basis == "Age", color("gs3") lwidth(thick)
+		|| lowess mean_relief ym if basis == "Race", color("blue") lwidth(thick)
+		|| lowess mean_relief ym if basis == "Disability", color("purple") lwidth(thick)
+		|| lowess mean_relief ym if basis == "Religion", color("red") lwidth(thick)
+		|| lowess mean_relief ym if basis == "Nationality", color("orange") lwidth(thick)
+		|| lowess mean_relief ym if basis == "Retaliation", color("brown") lwidth(thick)
+		|| lowess mean_relief ym if basis == "Sex", color("magenta") lwidth(thick)
+	`call' legend(off)
+	xtitle("Date filed", size(medium))
+	ytitle("Compensation", size(medium))
+	xline(693, lpattern(solid));
+	#delimit cr
+    graph export "$figures/timeseries_basis_relief.png", replace
+    restore
+	
+	preserve
+	collapse (mean) mean_prob_cause = win, by(ym basis)
+		lowess mean_prob_cause ym if basis == "Age", gen(lowess1) nograph
+		lowess mean_prob_cause ym if basis == "Race", gen(lowess2) nograph
+		lowess mean_prob_cause ym if basis == "Disability", gen(lowess3) nograph
+		lowess mean_prob_cause ym if basis == "Religion", gen(lowess4) nograph
+		lowess mean_prob_cause ym if basis == "Nationality", gen(lowess5) nograph
+		lowess mean_prob_cause ym if basis == "Retaliation", gen(lowess6) nograph
+		lowess mean_prob_cause ym if basis == "Sex", gen(lowess7) nograph
+		su lowess1 if basis == "Age" & ym == 765, meanonly
+		local call text(`r(mean)' 765 "Age", color("gs3") place(r) size(small))
+		su lowess2 if basis == "Race" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Race", color("blue") place(r) size(small)) 
+		su lowess3 if basis == "Disability" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Disability", color("purple") place(r) size(small)) 
+		su lowess4 if basis == "Religion" & ym == 763, meanonly
+		local call `call' text(`r(mean)' 763 "Religion", color("red") place(r) size(small)) 
+		su lowess5 if basis == "Nationality" & ym == 760, meanonly
+		local call `call' text(`r(mean)' 760 "Nationality", color("orange") place(r) size(small)) 
+		su lowess6 if basis == "Retaliation" & ym == 765, meanonly
+		local call `call' text(`r(mean)' 765 "Retaliation", color("brown") place(r) size(small)) 
+		su lowess7 if basis == "Sex" & ym == 763, meanonly
+		local call `call' text(`r(mean)' 763 "Sex", color("magenta") place(r) size(small)) 
+	#delimit ;
+	twoway
+		lowess mean_prob_cause ym if basis == "Age", color("gs3") lwidth(thick) 
+		|| lowess mean_prob_cause ym if basis == "Race", color("blue") lwidth(thick)
+		|| lowess mean_prob_cause ym if basis == "Disability", color("purple") lwidth(thick)
+		|| lowess mean_prob_cause ym if basis == "Religion", color("red") lwidth(thick)
+		|| lowess mean_prob_cause ym if basis == "Nationality", color("orange") lwidth(thick)
+		|| lowess mean_prob_cause ym if basis == "Retaliation", color("brown") lwidth(thick)
+		|| lowess mean_prob_cause ym if basis == "Sex", color("magenta") lwidth(thick)
+	`call' legend(off)
+	xtitle("Date filed", size(medium))
+	ytitle("Probability of winning", size(medium))
+	xline(693, lpattern(solid));
+	#delimit cr
+    graph export "$figures/timeseries_basis_win.png", replace
+    restore
+}
 
 /*******************************************************************************
 State-level DID 
@@ -123,7 +417,7 @@ if `state_did' == 1 {
 
 	** Estimation sample
 	preserve 
-	keep if eeoc_filed == 0
+	keep if eeoc == 0
 
 	qui: reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
 
@@ -155,7 +449,7 @@ if `state_did' == 1 {
 
 	***** Individual state effects
 	preserve 
-	keep if eeoc_filed == 0
+	keep if eeoc == 0
 	reghdfe win treat i.state_did, absorb(basis_state ym_state) vce(cluster basis_state)
 	eststo A
 
@@ -394,338 +688,6 @@ if `run_placebo_f' == 1 {
 	eststo clear
 	estimates clear
 }
-
-/*******************************************************************************
-Event-study
-*******************************************************************************/
-
-local outcomes "relief_scale win settle"
-
-if `event_all' == 1 {
-		
-	foreach y in `outcomes' {
-		
-		preserve		
-		g event = months_to_treat_12 * sh
-		replace event = event + 9 // dummies can't be negative
-
-		// Run dynamic DiD
-		reghdfe `y' ib8.event, ///
-			absorb(basis ym) ///
-			vce(cluster basis) noconstant
-		estimates store TWFE
-		
-		// Run Rambachan & Roth (2021)
-		honestdid, numpre(9) omit ///
-			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'_all.png", replace
-
-		// Make graph
-		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical
-			ciopts(recast(rcap) msize(medium) color(orange_red))
-			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash))
-			xline(9)
-			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
-		;
-		#delimit cr
-					
-		graph export "$figures/eventstudy_`y'_all.png", replace 
-		
-		estimates clear
-		restore
-	}
-}
-
-if `event' == 1 {
-	foreach y in `outcomes' {
-		
-		preserve
-		keep if eeoc_filed == 0
-		
-		g event = months_to_treat_12 * sh
-		replace event = event + 9 // dummies can't be negative
-
-		// Run dynamic DiD
-		reghdfe `y' ib8.event, ///
-			absorb(basis ym) ///
-			vce(cluster basis) noconstant
-		estimates store TWFE
-		
-		// Run Rambachan & Roth (2021)
-		honestdid, numpre(9) omit ///
-			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'_state.png", replace
-
-		// Make graph
-		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical
-			ciopts(recast(rcap) msize(medium) color(orange_red))
-			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash))
-			xline(9)
-			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
-		;
-		#delimit cr
-					
-		graph export "$figures/eventstudy_`y'_state.png", replace 
-		
-		estimates clear
-		restore
-	}	
-}
-
-/*******************************************************************************
-Cases/outcomes over time 
-*******************************************************************************/
-
-if `timeseries' == 1 {
-
-	* Women winning vs men winning vs. other complaints 
-	plot_lpolyci_gender win ym, title("Probability of Winning by Complainant Gender") ylabel("Probability of win")
-
-	* Plot outcomes over time 
-	preserve
-	keep if eeoc_filed == 0
-	plot_lpolyci ln_total_cases_per_month_by_sh ym, title("Number Complaints Filed Over Time") ylabel("Ln(count of complaints filed)")
-	restore
-
-	plot_lpolyci settle ym, title("Probability Complainant Settles Over Time") ylabel("Probability settled")
-
-	plot_lpolyci dismissed ym, title("Probability Complaint Dismissed Over Time") ylabel("Probability dismissed")
-
-	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
-
-	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
-
-	* Plot outcomes over time by basis
-	// Number of cases
-    preserve
-    collapse (mean) mean_y = filed_per_year, by(common_year sh)
-		lowess mean_y common_year if sh == 0, gen(lowess1) nograph
-		lowess mean_y common_year if sh == 1, gen(lowess2) nograph
-		su lowess1 if sh == 0 & common_year == 2023, meanonly
-		local call text(`r(mean)' 2023 "Other", color("gs3") place(r) size(small))
-		su lowess2 if sh == 1 & common_year == 2023, meanonly
-		local call `call' text(`r(mean)' 2023 "SH", color("orange_red") place(r) size(small))
-		twoway ///
-		scatter mean_y common_year if sh == 0, mcolor("gs3") yaxis(1) ytitle("Proportion of Other Cases", axis(1)) ///
-		|| scatter mean_y common_year if sh == 1, mcolor("orange_red") yaxis(2) ytitle("Proportion of Sexual Harassment Cases", axis(2)) ///
-		|| lowess mean_y common_year if sh == 0, color("gs3") lwidth(thick) yaxis(1) ///
-		|| lowess mean_y common_year if sh == 1, color("orange_red") lwidth(thick) yaxis(2) ///
-		`call' legend(off) ///
-		xtitle("Date filed", size(medium)) ///
-		xline(2017.79, lpattern(solid))
-    graph export "$figures/timeseries.png", replace
-    restore
-	
-	preserve
-	collapse (mean) mean_y = share_filed_by_basis, by(common_year basis)
-		lowess mean_y common_year if basis == "Age", gen(lowess1) nograph
-		lowess mean_y common_year if basis == "Race", gen(lowess2) nograph
-		lowess mean_y common_year if basis == "Disability", gen(lowess3) nograph
-		lowess mean_y common_year if basis == "Religion", gen(lowess4) nograph
-		lowess mean_y common_year if basis == "Nationality", gen(lowess5) nograph
-		lowess mean_y common_year if basis == "Retaliation", gen(lowess6) nograph
-		lowess mean_y common_year if basis == "Sex", gen(lowess7) nograph
-		su lowess1 if basis == "Age" & common_year == 2023, meanonly
-		local call text(`r(mean)' 2023 "Age", color("gs3") place(r) size(small))
-		su lowess2 if basis == "Race" & common_year == 2023, meanonly
-		local call `call' text(`r(mean)' 2023 "Race", color("blue") place(r) size(small)) 
-		su lowess3 if basis == "Disability" & common_year == 2023, meanonly
-		local call `call' text(`r(mean)' 2023 "Disability", color("purple") place(r) size(small)) 
-		su lowess4 if basis == "Religion" & common_year == 2023, meanonly
-		local call `call' text(`r(mean)' 2023 "Religion", color("red") place(r) size(small)) 
-		su lowess5 if basis == "Nationality" & common_year == 2023, meanonly
-		local call `call' text(`r(mean)' 2023 "Nationality", color("orange") place(r) size(small)) 
-		su lowess6 if basis == "Retaliation" & common_year == 2023, meanonly
-		local call `call' text(`r(mean)' 2023 "Retaliation", color("brown") place(r) size(small)) 
-		su lowess7 if basis == "Sex" & common_year == 2023, meanonly
-		local call `call' text(`r(mean)' 2023 "Sex", color("magenta") place(r) size(small))
-	#delimit ;
-	twoway
-		lowess mean_y common_year if basis == "Age", color("gs3") lwidth(thick)
-		|| lowess mean_y common_year if basis == "Race", color("blue") lwidth(thick) 
-		|| lowess mean_y common_year if basis == "Disability", color("purple") lwidth(thick)
-		|| lowess mean_y common_year if basis == "Religion", color("red") lwidth(thick) 
-		|| lowess mean_y common_year if basis == "Nationality", color("orange") lwidth(thick) 
-		|| lowess mean_y common_year if basis == "Retaliation", color("brown") lwidth(thick)  
-		|| lowess mean_y common_year if basis == "Sex", color("magenta") lwidth(thick) 
-	`call' legend(off)
-	xtitle("Date filed", size(medium))
-	ytitle("Proportion of cases", size(medium)) 
-	xline(2017.79, lpattern(solid));
-	#delimit cr
-    graph export "$figures/timeseries_basis.png", replace
-    restore
-	
-	preserve
-	collapse (mean) mean_settle = settle, by(ym basis)
-		lowess mean_settle ym if basis == "Age", gen(lowess1) nograph
-		lowess mean_settle ym if basis == "Race", gen(lowess2) nograph
-		lowess mean_settle ym if basis == "Disability", gen(lowess3) nograph
-		lowess mean_settle ym if basis == "Religion", gen(lowess4) nograph
-		lowess mean_settle ym if basis == "Nationality", gen(lowess5) nograph
-		lowess mean_settle ym if basis == "Retaliation", gen(lowess6) nograph
-		lowess mean_settle ym if basis == "Sex", gen(lowess7) nograph
-		su lowess1 if basis == "Age" & ym == 765, meanonly
-		local call text(`r(mean)' 765 "Age", color("gs3") place(r) size(small))
-		su lowess2 if basis == "Race" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Race", color("blue") place(r) size(small)) 
-		su lowess3 if basis == "Disability" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Disability", color("purple") place(r) size(small)) 
-		su lowess4 if basis == "Religion" & ym == 763, meanonly
-		local call `call' text(`r(mean)' 763 "Religion", color("red") place(r) size(small)) 
-		su lowess5 if basis == "Nationality" & ym == 764, meanonly
-		local call `call' text(`r(mean)' 764 "Nationality", color("orange") place(r) size(small)) 
-		su lowess6 if basis == "Retaliation" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Retaliation", color("brown") place(r) size(small)) 
-		su lowess7 if basis == "Sex" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Sex", color("magenta") place(r) size(small))
-	#delimit ;
-	twoway
-		lowess mean_settle ym if basis == "Age", color("gs3") lwidth(thick)
-		|| lowess mean_settle ym if basis == "Race", color("blue") lwidth(thick) 
-		|| lowess mean_settle ym if basis == "Disability", color("purple") lwidth(thick)
-		|| lowess mean_settle ym if basis == "Religion", color("red") lwidth(thick) 
-		|| lowess mean_settle ym if basis == "Nationality", color("orange") lwidth(thick) 
-		|| lowess mean_settle ym if basis == "Retaliation", color("brown") lwidth(thick)  
-		|| lowess mean_settle ym if basis == "Sex", color("magenta") lwidth(thick) 
-	`call' legend(off)
-	xtitle("Date filed", size(medium))
-	ytitle("Probability of settling", size(medium)) 
-	xline(693, lpattern(solid));
-	#delimit cr
-    graph export "$figures/timeseries_basis_settle.png", replace
-    restore
-	
-	preserve
-	collapse (mean) mean_dismissed = dismiss, by(ym basis)
-		lowess mean_dismissed ym if basis == "Age", gen(lowess1) nograph
-		lowess mean_dismissed ym if basis == "Race", gen(lowess2) nograph
-		lowess mean_dismissed ym if basis == "Disability", gen(lowess3) nograph
-		lowess mean_dismissed ym if basis == "Religion", gen(lowess4) nograph
-		lowess mean_dismissed ym if basis == "Nationality", gen(lowess5) nograph
-		lowess mean_dismissed ym if basis == "Retaliation", gen(lowess6) nograph
-		lowess mean_dismissed ym if basis == "Sex", gen(lowess7) nograph
-		su lowess1 if basis == "Age" & ym == 765, meanonly
-		local call text(`r(mean)' 765 "Age", color("gs3") place(r) size(small))
-		su lowess2 if basis == "Race" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Race", color("blue") place(r) size(small)) 
-		su lowess3 if basis == "Disability" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Disability", color("purple") place(r) size(small)) 
-		su lowess4 if basis == "Religion" & ym == 763, meanonly
-		local call `call' text(`r(mean)' 763 "Religion", color("red") place(r) size(small)) 
-		su lowess5 if basis == "Nationality" & ym == 764, meanonly
-		local call `call' text(`r(mean)' 764 "Nationality", color("orange") place(r) size(small)) 
-		su lowess6 if basis == "Retaliation" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Retaliation", color("brown") place(r) size(small)) 
-		su lowess7 if basis == "Sex" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Sex", color("magenta") place(r) size(small))
-	#delimit ;
-	twoway
-		lowess mean_dismissed ym if basis == "Age", color("gs3") lwidth(thick)
-		|| lowess mean_dismissed ym if basis == "Race", color("blue") lwidth(thick) 
-		|| lowess mean_dismissed ym if basis == "Disability", color("purple") lwidth(thick)
-		|| lowess mean_dismissed ym if basis == "Religion", color("red") lwidth(thick)
-		|| lowess mean_dismissed ym if basis == "Nationality", color("orange") lwidth(thick)
-		|| lowess mean_dismissed ym if basis == "Retaliation", color("brown") lwidth(thick)
-		|| lowess mean_dismissed ym if basis == "Sex", color("magenta") lwidth(thick)
-	`call' legend(off)
-	xtitle("Date filed", size(medium))
-	ytitle("Probability of dismissal", size(medium))
-	xline(693, lpattern(solid));
-	#delimit cr
-    graph export "$figures/timeseries_basis_dismissed.png", replace
-    restore
-	
-	preserve
-	collapse (mean) mean_relief = relief_scale, by(ym basis)
-		lowess mean_relief ym if basis == "Age", gen(lowess1) nograph
-		lowess mean_relief ym if basis == "Race", gen(lowess2) nograph
-		lowess mean_relief ym if basis == "Disability", gen(lowess3) nograph
-		lowess mean_relief ym if basis == "Religion", gen(lowess4) nograph
-		lowess mean_relief ym if basis == "Nationality", gen(lowess5) nograph
-		lowess mean_relief ym if basis == "Retaliation", gen(lowess6) nograph
-		lowess mean_relief ym if basis == "Sex", gen(lowess7) nograph
-		su lowess1 if basis == "Age" & ym == 765, meanonly
-		local call text(`r(mean)' 765 "Age", color("gs3") place(r) size(small))
-		su lowess2 if basis == "Race" & ym == 761, meanonly
-		local call `call' text(`r(mean)' 761 "Race", color("blue") place(r) size(small)) 
-		su lowess3 if basis == "Disability" & ym == 764, meanonly
-		local call `call' text(`r(mean)' 764 "Disability", color("purple") place(r) size(small)) 
-		su lowess4 if basis == "Religion" & ym == 759, meanonly
-		local call `call' text(`r(mean)' 759 "Religion", color("red") place(r) size(small)) 
-		su lowess5 if basis == "Nationality" & ym == 759, meanonly
-		local call `call' text(`r(mean)' 759 "Nationality", color("orange") place(r) size(small)) 
-		su lowess6 if basis == "Retaliation" & ym == 764, meanonly
-		local call `call' text(`r(mean)' 764 "Retaliation", color("brown") place(r) size(small)) 
-		su lowess7 if basis == "Sex" & ym == 764, meanonly
-		local call `call' text(`r(mean)' 764 "Sex", color("magenta") place(r) size(small)) 
-	#delimit ;
-	twoway
-		lowess mean_relief ym if basis == "Age", color("gs3") lwidth(thick)
-		|| lowess mean_relief ym if basis == "Race", color("blue") lwidth(thick)
-		|| lowess mean_relief ym if basis == "Disability", color("purple") lwidth(thick)
-		|| lowess mean_relief ym if basis == "Religion", color("red") lwidth(thick)
-		|| lowess mean_relief ym if basis == "Nationality", color("orange") lwidth(thick)
-		|| lowess mean_relief ym if basis == "Retaliation", color("brown") lwidth(thick)
-		|| lowess mean_relief ym if basis == "Sex", color("magenta") lwidth(thick)
-	`call' legend(off)
-	xtitle("Date filed", size(medium))
-	ytitle("Compensation", size(medium))
-	xline(693, lpattern(solid));
-	#delimit cr
-    graph export "$figures/timeseries_basis_relief.png", replace
-    restore
-	
-	preserve
-	collapse (mean) mean_prob_cause = win, by(ym basis)
-		lowess mean_prob_cause ym if basis == "Age", gen(lowess1) nograph
-		lowess mean_prob_cause ym if basis == "Race", gen(lowess2) nograph
-		lowess mean_prob_cause ym if basis == "Disability", gen(lowess3) nograph
-		lowess mean_prob_cause ym if basis == "Religion", gen(lowess4) nograph
-		lowess mean_prob_cause ym if basis == "Nationality", gen(lowess5) nograph
-		lowess mean_prob_cause ym if basis == "Retaliation", gen(lowess6) nograph
-		lowess mean_prob_cause ym if basis == "Sex", gen(lowess7) nograph
-		su lowess1 if basis == "Age" & ym == 765, meanonly
-		local call text(`r(mean)' 765 "Age", color("gs3") place(r) size(small))
-		su lowess2 if basis == "Race" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Race", color("blue") place(r) size(small)) 
-		su lowess3 if basis == "Disability" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Disability", color("purple") place(r) size(small)) 
-		su lowess4 if basis == "Religion" & ym == 763, meanonly
-		local call `call' text(`r(mean)' 763 "Religion", color("red") place(r) size(small)) 
-		su lowess5 if basis == "Nationality" & ym == 760, meanonly
-		local call `call' text(`r(mean)' 760 "Nationality", color("orange") place(r) size(small)) 
-		su lowess6 if basis == "Retaliation" & ym == 765, meanonly
-		local call `call' text(`r(mean)' 765 "Retaliation", color("brown") place(r) size(small)) 
-		su lowess7 if basis == "Sex" & ym == 763, meanonly
-		local call `call' text(`r(mean)' 763 "Sex", color("magenta") place(r) size(small)) 
-	#delimit ;
-	twoway
-		lowess mean_prob_cause ym if basis == "Age", color("gs3") lwidth(thick) 
-		|| lowess mean_prob_cause ym if basis == "Race", color("blue") lwidth(thick)
-		|| lowess mean_prob_cause ym if basis == "Disability", color("purple") lwidth(thick)
-		|| lowess mean_prob_cause ym if basis == "Religion", color("red") lwidth(thick)
-		|| lowess mean_prob_cause ym if basis == "Nationality", color("orange") lwidth(thick)
-		|| lowess mean_prob_cause ym if basis == "Retaliation", color("brown") lwidth(thick)
-		|| lowess mean_prob_cause ym if basis == "Sex", color("magenta") lwidth(thick)
-	`call' legend(off)
-	xtitle("Date filed", size(medium))
-	ytitle("Probability of winning", size(medium))
-	xline(693, lpattern(solid));
-	#delimit cr
-    graph export "$figures/timeseries_basis_win.png", replace
-    restore
-}
-
-
 /*******************************************************************************
 Duration
 *******************************************************************************/
@@ -767,5 +729,44 @@ if `duration' == 1{
 
 }
 
+/*******************************************************************************
+Beta-hat
+*******************************************************************************/
+* Take covariates that predict the outcome in the pre period
+* generate a beta-hat 
+* multiply beta-hat times the covariates in the post period 
+* plot predicted y-hat versus actual y-hat 
+* how good is the prediction? in terms of R2
+
+if `yhat' == 1{
+	preserve 
+	loc y settle
+	keep if eeoc == 0
+
+	* Fit model on data pre MeToo
+	#delimit ;
+	reg `y' i.basis_cat i.victim_f i.state_cat duration court
+		if post == 0, cluster(basis_cat);
+	#delimit cr
+
+	* Predict for pre-post MeToo
+	predict `y'_hat, xb 		// prediction 
+
+	collapse (mean) `y'_hat `y', by(months_to_treat_6)
+
+	#delimit ; 
+	twoway line `y'_hat `y' months_to_treat_6,
+		xtitle("6 month intervals before and after MeToo")
+		ytitle("Probability of `y'") 
+		title("")
+		xline(0, lc(gs8) lp(dash))
+		legend(ring(0) pos(2) order(2 1) 
+			label(1 "Predicted y") label(2 "Actual y")
+			size(medium));
+	#delimit cr
+
+	graph export "$figures/y_hat_`y'.png", replace 	
+	restore 
+}
 
 

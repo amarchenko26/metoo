@@ -34,13 +34,6 @@ g sex_cases = regexm(lower(basis_raw), "title vii / sex‐")
 g victim_f = 1 if regexm(lower(basis_raw), "title vii / sex‐female")
 replace victim_f = 0 if regexm(lower(basis_raw), "title vii / sex‐male")
 
-// // Total cases of Sexual Harassment
-count if sh == 1
-// // Total sex-based cases
-count if sex_cases == 1
-
-
-
 /*******************************************************************************
 Clean columns
 *******************************************************************************/
@@ -61,7 +54,8 @@ g missing_relief = missing(relief)
 
 drop court_filing_date_temp resolution_date_temp
 
-
+duplicates drop civil_action_number court_res_date, force
+replace civil_action_number = subinstr(civil_action_number, "‐", "-", .)
 
 /*******************************************************************************
 Clean EEOC court case data to match state files
@@ -92,12 +86,14 @@ g win = 1 if missing_relief == 0
 replace win = 0 if missing_relief == 1 // no probable cause if relief is missing
 
 g court = 1 
-
 g settle = 0 
 g admin_close = 0
 g withdraw = 0
 g dismissed = 0
 
+g eeoc = 1
+g eeoc_foia = 1
+g eeoc_took_to_court = 1
 
 // save dta file to clean data folder
 save "$clean_data/clean_eeoc.dta", replace

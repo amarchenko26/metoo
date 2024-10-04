@@ -13,7 +13,6 @@ loc run_summary  = 0
 loc run_balance  = 0
 loc run_duration = 0
 
-
 /*******************************************************************************
 Selection table
 *******************************************************************************/
@@ -21,7 +20,7 @@ Selection table
 if `run_selection' == 1 {
 	
 	preserve 
-	keep if eeoc_filed == 0 // exclude EEOC cases  
+	keep if eeoc == 0 // exclude EEOC cases  
 	eststo A: reg total_cases_per_year post, r
 
 	eststo B: reg sh_per_year post if sh == 1, r
@@ -187,7 +186,7 @@ if `run_did' == 1 {
 
 	// DID - No EEOC data **********************************************************/ 
 	preserve 
-	keep if eeoc_filed == 0
+	keep if eeoc == 0
 	foreach y of local outcome_vars {
 		
 		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
@@ -211,7 +210,7 @@ if `run_did' == 1 {
 	//use esttab not estout, estout has no fragment option
 	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Estimation sample}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{State only}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
 		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
@@ -347,7 +346,6 @@ if `run_did' == 1 {
 	eststo clear
 
 }
-
 
 /*******************************************************************************
 DiD regression - Robustness Check
@@ -636,7 +634,7 @@ if `run_summary' == 1 {
 	#delimit cr
 	
 	eststo mean_all: estpost tabstat `summary_1', c(stat) stat(mean sd)
-	eststo mean_state: estpost tabstat `summary_1' if eeoc_filed == 0, c(stat) stat(mean sd)
+	eststo mean_state: estpost tabstat `summary_1' if eeoc == 0, c(stat) stat(mean sd)
 	eststo post_all: estpost ttest `summary_2', by(post)
 	eststo post_sh: estpost ttest `summary_3' if sh == 1, by(post)
 
@@ -762,7 +760,7 @@ if `run_balance' == 1 {
     balancetable_program `balance', sample(overlap_2 !=.) using("$tables/balance_overlap_2.tex") ctitles("Before" "overlap_2" "Diff" "p-value") wide(mean diff pval) by(overlap_2) errors(robust)
 
 	// Now restrict sample 
-	keep if eeoc_filed == 0
+	keep if eeoc == 0
 
     balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
