@@ -187,6 +187,9 @@ drop if basis == "Other"
 di tm(2017m9)
 drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC", "sent to the EEOC") & ym < 692
 
+// These are all = 1, they mess up our DID. CHECK HERE ANYA. 
+drop if eeoc_took_to_court == 1 & eeoc_filed == 1
+
 /*******************************************************************************
 Fixed effects  
 *******************************************************************************/

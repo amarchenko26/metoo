@@ -26,9 +26,6 @@ if `event_all' == 1 {
 		
 	foreach y in `outcomes' {
 		
-		preserve		
-		drop if eeoc_took_to_court == 1 & eeoc_filed == 1
-
 		g event = months_to_treat_12 * sh
 		replace event = event + 9 // dummies can't be negative
 
@@ -59,7 +56,6 @@ if `event_all' == 1 {
 		graph export "$figures/eventstudy_`y'_all.png", replace 
 		
 		estimates clear
-		restore
 	}
 }
 
@@ -415,7 +411,7 @@ if `state_did' == 1 {
 
 //		xlabel(1 "AK" 2 "AL" 3 "AR" 4 "AZ" 5 "CA" 6 "CO" 7 "CT" 8 "DC" 9 "FL" 10 "GA" 11 "HI" 12 "IA" 13 "ID" 14 "IL" 15 "IN" 16 "KS" 17 "KY" 18 "LA" 19 "MA" 20 "MD" 21 "ME" 22 "MI" 23 "MN" 24 "MO" 25 "MS" 26 "MT" 27 "NC" 28 "ND" 29 "NE" 30 "NH" 31 "NJ" 32 "NM" 33 "NV" 34 "NY" 35 "OH" 36 "OK" 37 "OR" 38 "PA" 39 "RI" 40 "SC" 41 "SD" 42 "TN" 43 "TX" 44 "UT" 45 "VA" 46 "WA" 47 "WI" 48 "WV", angle(45))
 
-	** Estimation sample
+	** State sample
 	preserve 
 	keep if eeoc == 0
 
@@ -467,7 +463,7 @@ if `state_did' == 1 {
 		yline(`att', lcolor(blue))
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State", size(medium))
-		note("State X Unit and State X Time FE included. ATT (blue line) in estimation sample: `att'", size(small)) 
+		note("State X Unit and State X Time FE included. ATT (blue line) in state sample: `att'", size(small)) 
 		;
 	#delimit cr
 

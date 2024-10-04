@@ -4,172 +4,15 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
+loc	run_did 	 = 1
 loc run_selection = 0
 loc run_overlap  = 0
-loc	run_did 	 = 1
 loc run_did_robust = 0
 loc run_victim_f_present = 0
 loc run_summary  = 0
 loc run_balance  = 0
 loc run_duration = 0
 
-/*******************************************************************************
-Selection table
-*******************************************************************************/
-
-if `run_selection' == 1 {
-	
-	preserve 
-	keep if eeoc == 0 // exclude EEOC cases  
-	eststo A: reg total_cases_per_year post, r
-
-	eststo B: reg sh_per_year post if sh == 1, r
-
-	bys months_to_treat_12: egen months_to_treat_12_count = total(y) if sh == 0
-	eststo C: reg months_to_treat_12_count post if sh == 0 & inlist(months_to_treat_12, -1, 0), r
-
-	bys months_to_treat_12 sh: egen months_to_treat_12_count_sh = total(y)
-	eststo D: reg months_to_treat_12_count_sh post if sh == 1 & inlist(months_to_treat_12, -1, 0), r
-	
-	#delimit ;
-	
-	esttab A B C D using "$tables/selection_table.tex", style(tex) replace
-		drop(_cons)
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule" "\multicolumn{@span}{c}{\textbf{Counts (per year)}} \\ \midrule")
-		fragment
-		varlabels(post "Post MeToo")
-		mlabel("\# filed" "\# SH filed" "\shortstack{\# Control filed in 12 months\\before vs after MeToo}" "\shortstack{\# SH filed in 12 months\\before vs after MeToo}" )
-		nomtitles nonumbers
-		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(a3)star)" "se(fmt(a3)par)") 
-		prefoot("\\" "\midrule");
-
-	#delimit cr
-	estimates clear
-	eststo clear
-
-	eststo B: reg filed_per_year post if sh == 1, r 
-	
-	eststo C: reg filed_f_per_year post if sh == 1 & victim_f == 1, r
-
-	eststo D: reg filed_f_per_year post if sh == 1 & victim_f == 0, r
-
-	#delimit ;
-	
-	esttab B B C D using "$tables/selection_table.tex", style(tex)
-		prehead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")		
-		fragment 
-		append
-		drop(_cons)
-		varlabels(post "Post MeToo")
-		mlabel("DELETE ME" "\shortstack{Share SH filed\\of total cases}" "\shortstack{Share SH filed\\by women}" "\shortstack{Share SH filed\\by men}")
-		nomtitles nonumbers
-		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(a3)star)" "se(fmt(a3)par)") 
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") 
-		;
-	#delimit cr
-	estimates clear
-	eststo clear	
-
-	restore
-}
-
-
-/*******************************************************************************
-overlap_2 regression
-*******************************************************************************/
-
-loc y1 settle
-loc y2 dismissed
-loc y3 win
-loc y4 relief_scale
-
-loc outcome_vars y1 y2 y3 y4
-loc i 1
-
-if `run_overlap' == 1 {
-	
-	// Panel A
-	foreach y of local outcome_vars {
-		eststo: reg ``y'' overlap_2 duration, r
-		qui: sum ``y'' if overlap_2 == 0
-		estadd scalar control_mean = `r(mean)'
-		loc ++i
-	}
-	
-	#delimit ;
-	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex) replace
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: SH complaints filed within 2 years pre-MeToo}} \\ \midrule")
-		fragment
-		varlabels(overlap_2 "Overlap") keep(overlap_2)
-		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
-		mlabel(none) nomtitles
-		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)")
-		prefoot("\\" "\midrule");
-		
-	#delimit cr
-	eststo clear
-	estimates clear
-	
-	// Panel B
-	foreach y of local outcome_vars {
-		eststo: reg ``y'' overlap_all duration, r
-		qui: sum ``y'' if overlap_all == 0
-		estadd scalar control_mean = `r(mean)'
-		loc ++i
-	}
-	
-	#delimit ;	
-	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: All SH complaints filed before MeToo}} \\ \midrule")
-		fragment
-		append
-		varlabels(overlap_all "Overlap") keep(overlap_all)
-		mlabel(none) nomtitles nonumbers nolines
-		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule");
-		
-	#delimit cr
-	eststo clear
-	estimates clear
-		
-	// Panel C
-	foreach y of local outcome_vars {
-		eststo: reg ``y'' overlap_all duration if victim_f == 1, r
-		qui: sum ``y'' if overlap_all == 0 & victim_f == 1
-		estadd scalar control_mean = `r(mean)'
-		loc ++i
-	}
-	
-	#delimit ;	
-	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: All SH complaints filed by women before MeToo}} \\ \midrule")
-		fragment
-		append
-		varlabels(overlap_all "Overlap") keep(overlap_all)
-		mlabel(none) nomtitles nonumbers nolines
-		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}");
-
-	#delimit cr
-	eststo clear
-	estimates clear
-
-}
-
-	
 /*******************************************************************************
 DiD regression
 *******************************************************************************/
@@ -265,7 +108,7 @@ if `run_did' == 1 {
 	#delimit cr
 	estimates clear
 	eststo clear
-
+	
 	// Victim female **********************************************************/
 	loc outcome_vars y1 y2 y3 y4
 	loc i 1
@@ -304,7 +147,7 @@ if `run_did' == 1 {
 	#delimit cr
 	estimates clear
 	eststo clear
-	
+
 	// Overlap cases **********************************************************/
 	loc outcome_vars y1 y2 y3 y4
 	loc i 1
@@ -344,6 +187,161 @@ if `run_did' == 1 {
 	#delimit cr
 	estimates clear
 	eststo clear
+
+}
+
+/*******************************************************************************
+Selection table
+*******************************************************************************/
+
+if `run_selection' == 1 {
+	
+	preserve 
+	keep if eeoc == 0 // exclude EEOC cases  
+	eststo A: reg total_cases_per_year post, r
+
+	eststo B: reg sh_per_year post if sh == 1, r
+
+	bys months_to_treat_12: egen months_to_treat_12_count = total(y) if sh == 0
+	eststo C: reg months_to_treat_12_count post if sh == 0 & inlist(months_to_treat_12, -1, 0), r
+
+	bys months_to_treat_12 sh: egen months_to_treat_12_count_sh = total(y)
+	eststo D: reg months_to_treat_12_count_sh post if sh == 1 & inlist(months_to_treat_12, -1, 0), r
+	
+	#delimit ;
+	
+	esttab A B C D using "$tables/selection_table.tex", style(tex) replace
+		drop(_cons)
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule" "\multicolumn{@span}{c}{\textbf{Counts (per year)}} \\ \midrule")
+		fragment
+		varlabels(post "Post MeToo")
+		mlabel("\# filed" "\# SH filed" "\shortstack{\# Control filed in 12 months\\before vs after MeToo}" "\shortstack{\# SH filed in 12 months\\before vs after MeToo}" )
+		nomtitles nonumbers
+		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(a3)star)" "se(fmt(a3)par)") 
+		prefoot("\\" "\midrule");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+
+	eststo B: reg filed_per_year post if sh == 1, r 
+	
+	eststo C: reg filed_f_per_year post if sh == 1 & victim_f == 1, r
+
+	eststo D: reg filed_f_per_year post if sh == 1 & victim_f == 0, r
+
+	#delimit ;
+	
+	esttab B B C D using "$tables/selection_table.tex", style(tex)
+		prehead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")		
+		fragment 
+		append
+		drop(_cons)
+		varlabels(post "Post MeToo")
+		mlabel("DELETE ME" "\shortstack{Share SH filed\\of total cases}" "\shortstack{Share SH filed\\by women}" "\shortstack{Share SH filed\\by men}")
+		nomtitles nonumbers
+		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(a3)star)" "se(fmt(a3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") 
+		;
+	#delimit cr
+	estimates clear
+	eststo clear	
+
+	restore
+}
+
+/*******************************************************************************
+Overlap regression
+*******************************************************************************/
+
+loc y1 settle
+loc y2 dismissed
+loc y3 win
+loc y4 relief_scale
+
+loc outcome_vars y1 y2 y3 y4
+loc i 1
+
+if `run_overlap' == 1 {
+	
+	// Panel A
+	foreach y of local outcome_vars {
+		eststo: reg ``y'' overlap_2 duration, r
+		qui: sum ``y'' if overlap_2 == 0
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+	
+	#delimit ;
+	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex) replace
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: SH complaints filed within 2 years pre-MeToo}} \\ \midrule")
+		fragment
+		varlabels(overlap_2 "Overlap") keep(overlap_2)
+		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 1 1 1) span prefix(\multicolumn{@span}{c}{) suffix(}) erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles
+		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)")
+		prefoot("\\" "\midrule");
+		
+	#delimit cr
+	eststo clear
+	estimates clear
+	
+	// Panel B
+	foreach y of local outcome_vars {
+		eststo: reg ``y'' overlap_all duration, r
+		qui: sum ``y'' if overlap_all == 0
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+	
+	#delimit ;	
+	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: All SH complaints filed before MeToo}} \\ \midrule")
+		fragment
+		append
+		varlabels(overlap_all "Overlap") keep(overlap_all)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+		
+	#delimit cr
+	eststo clear
+	estimates clear
+		
+	// Panel C
+	foreach y of local outcome_vars {
+		eststo: reg ``y'' overlap_all duration if victim_f == 1, r
+		qui: sum ``y'' if overlap_all == 0 & victim_f == 1
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+	
+	#delimit ;	
+	esttab est1 est2 est3 est4 using "$tables/overlap_panel.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Control: All SH complaints filed by women before MeToo}} \\ \midrule")
+		fragment
+		append
+		varlabels(overlap_all "Overlap") keep(overlap_all)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(N r2 control_mean, label(`"N"' `" \(R^{2}\)"' "Control mean") fmt(%9.0fc 3 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	eststo clear
+	estimates clear
 
 }
 
