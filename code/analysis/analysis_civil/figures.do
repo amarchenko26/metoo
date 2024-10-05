@@ -386,8 +386,6 @@ if `state_did' == 1 {
 
 	***** Individual state effects
 	preserve 
-	drop if state_did == 54 //drop WV bc coefficient is too high 
-
 	g state_label = "AK" if state_did == 1
 	replace state_label = "AL" if state_did == 2
 	replace state_label = "AR" if state_did == 3
@@ -436,6 +434,8 @@ if `state_did' == 1 {
 	replace state_label = "WA" if state_did == 46
 	replace state_label = "WI" if state_did == 47
 	
+	drop if state_did == 54 //drop WV bc coefficient is too high 
+
 	reghdfe win i.state_did, absorb(basis_state ym_state) vce(cluster basis_state)
 	eststo A
 
@@ -451,9 +451,8 @@ if `state_did' == 1 {
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(orange_red))
 		ytitle("Treatment effect on win", size(medium))
-		mlabel(state_label) // fix mlabel here
 		xtitle("State", size(medium))
-		xlabel(1 "AK" 2 "AL" 3 "AR" 4 "AZ" 5 "CA" 6 "CO" 7 "CT" 8 "DC" 9 "FL" 10 "GA" 11 "HI" 12 "IA" 13 "ID" 14 "IL" 15 "IN" 16 "KS" 17 "KY" 18 "LA" 19 "MA" 20 "MD" 21 "ME" 22 "MI" 23 "MN" 24 "MO" 25 "MS" 26 "MT" 27 "NC" 28 "ND" 29 "NE" 30 "NH" 31 "NJ" 32 "NM" 33 "NV" 34 "NY" 35 "OH" 36 "OK" 37 "OR" 38 "PA" 39 "RI" 40 "SC" 41 "SD" 42 "TN" 43 "TX" 44 "UT" 45 "VA" 46 "WA" 47 "WI", alternate)
+		xlabel(1 "AK" 2 "AL" 3 "AR" 4 "AZ" 5 "CA" 6 "CO" 7 "CT" 8 "DC" 9 "FL" 10 "GA" 11 "HI" 12 "IA" 13 "ID" 14 "IL" 15 "IN" 16 "KS" 17 "KY" 18 "LA" 19 "MA" 20 "MD" 21 "ME" 22 "MI" 23 "MN" 24 "MO" 25 "MS" 26 "MT" 27 "NC" 28 "ND" 29 "NE" 30 "NH" 31 "NJ" 32 "NM" 33 "NV" 34 "NY" 35 "OH" 36 "OK" 37 "OR" 38 "PA" 39 "RI" 40 "SC" 41 "SD" 42 "TN" 43 "TX" 44 "UT" 45 "VA" 46 "WA" 47 "WI", alternate) //mlabel(state_label), fix mlabel here
 		note("Controls include state X unit and state X time FE. ATT: `att'", size(small)) 
 		;
 	#delimit cr
