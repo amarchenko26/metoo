@@ -374,6 +374,7 @@ if `state_did' == 1 {
 
 	scatter mean_weight state_cat, ///
 		xtitle("State") mlabel(state) mlabposition(6) ///
+		xlabel(, noticks nolabel nogrid) ///
 		ytitle("Mean weights") ///
 		title("DiD regression weights by state") ///
 		note("Sample is all cases", size(med))
@@ -384,73 +385,76 @@ if `state_did' == 1 {
 
 	***** Individual state effects
 	preserve 
-	g state_label = "AK" if state_did == 1
-	replace state_label = "AL" if state_did == 2
-	replace state_label = "AR" if state_did == 3
-	replace state_label = "AZ" if state_did == 4
-	replace state_label = "CA" if state_did == 5
-	replace state_label = "CO" if state_did == 6
-	replace state_label = "CT" if state_did == 7
-	replace state_label = "DC" if state_did == 8
-	replace state_label = "FL" if state_did == 9
-	replace state_label = "GA" if state_did == 10
-	replace state_label = "HI" if state_did == 11
-	replace state_label = "IA" if state_did == 12
-	replace state_label = "ID" if state_did == 13
-	replace state_label = "IL" if state_did == 14
-	replace state_label = "IN" if state_did == 15
-	replace state_label = "KS" if state_did == 16
-	replace state_label = "KY" if state_did == 17
-	replace state_label = "LA" if state_did == 18
-	replace state_label = "MA" if state_did == 19
-	replace state_label = "MD" if state_did == 20
-	replace state_label = "ME" if state_did == 21
-	replace state_label = "MI" if state_did == 22
-	replace state_label = "MN" if state_did == 23
-	replace state_label = "MO" if state_did == 24
-	replace state_label = "MS" if state_did == 25
-	replace state_label = "MT" if state_did == 26
-	replace state_label = "NC" if state_did == 27
-	replace state_label = "ND" if state_did == 28
-	replace state_label = "NE" if state_did == 29
-	replace state_label = "NH" if state_did == 30
-	replace state_label = "NJ" if state_did == 31
-	replace state_label = "NM" if state_did == 32
-	replace state_label = "NV" if state_did == 33
-	replace state_label = "NY" if state_did == 34
-	replace state_label = "OH" if state_did == 35
-	replace state_label = "OK" if state_did == 36
-	replace state_label = "OR" if state_did == 37
-	replace state_label = "PA" if state_did == 38
-	replace state_label = "RI" if state_did == 39
-	replace state_label = "SC" if state_did == 40
-	replace state_label = "SD" if state_did == 41
-	replace state_label = "TN" if state_did == 42
-	replace state_label = "TX" if state_did == 43
-	replace state_label = "UT" if state_did == 44
-	replace state_label = "VA" if state_did == 45
-	replace state_label = "WA" if state_did == 46
-	replace state_label = "WI" if state_did == 47
 	
-	drop if state_did == 54 //drop WV bc coefficient is too high 
+	label values state_did state_cat
+	
+	drop if inlist(state_did, 42, 54) //drop US territories and WV bc coefficient is too high 
 
 	reghdfe win i.state_did, absorb(basis_state ym_state) vce(cluster basis_state)
 	eststo A
 
 	reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
     loc att: display %5.4f _b[treat]
-
+	
 	#delimit ;
 	coefplot 
-		A, 
+		(A, keep(1.state_did) mcolor(red) ciopts(color(red))) // AK
+		(A, keep(2.state_did) mcolor(red) ciopts(color(red))) // AL
+		(A, keep(3.state_did) mcolor(red) ciopts(color(red))) // AR
+		(A, keep(5.state_did) mcolor(blue) ciopts(color(blue))) // AZ
+		(A, keep(6.state_did) mcolor(blue) ciopts(color(blue))) // CA
+		(A, keep(7.state_did) mcolor(blue) ciopts(color(blue))) // CO
+		(A, keep(8.state_did) mcolor(blue) ciopts(color(blue))) // CT
+		(A, keep(9.state_did) mcolor(blue) ciopts(color(blue))) // DC
+		(A, keep(11.state_did) mcolor(red) ciopts(color(red))) // FL
+		(A, keep(12.state_did) mcolor(blue) ciopts(color(blue))) // GA
+		(A, keep(14.state_did) mcolor(blue) ciopts(color(blue))) // HI
+		(A, keep(15.state_did) mcolor(red) ciopts(color(red))) // IA
+		(A, keep(16.state_did) mcolor(red) ciopts(color(red))) // ID
+		(A, keep(17.state_did) mcolor(blue) ciopts(color(blue))) // IL
+		(A, keep(18.state_did) mcolor(red) ciopts(color(red))) // IN
+		(A, keep(19.state_did) mcolor(red) ciopts(color(red))) // KS
+		(A, keep(20.state_did) mcolor(red) ciopts(color(red))) // KY
+		(A, keep(21.state_did) mcolor(red) ciopts(color(red))) // LA
+		(A, keep(22.state_did) mcolor(blue) ciopts(color(blue))) // MA
+		(A, keep(23.state_did) mcolor(blue) ciopts(color(blue))) // MD
+		(A, keep(24.state_did) mcolor(blue) ciopts(color(blue))) // ME
+		(A, keep(25.state_did) mcolor(blue) ciopts(color(blue))) // MI
+		(A, keep(26.state_did) mcolor(blue) ciopts(color(blue))) // MN
+		(A, keep(27.state_did) mcolor(red) ciopts(color(red))) // MO
+		(A, keep(28.state_did) mcolor(red) ciopts(color(red))) // MS
+		(A, keep(29.state_did) mcolor(red) ciopts(color(red))) // MT
+		(A, keep(30.state_did) mcolor(red) ciopts(color(red))) // NC
+		(A, keep(31.state_did) mcolor(red) ciopts(color(red))) // ND
+		(A, keep(32.state_did) mcolor(red) ciopts(color(red))) // NE
+		(A, keep(33.state_did) mcolor(blue) ciopts(color(blue))) // NH
+		(A, keep(34.state_did) mcolor(blue) ciopts(color(blue))) // NJ
+		(A, keep(35.state_did) mcolor(blue) ciopts(color(blue))) // NM
+		(A, keep(36.state_did) mcolor(blue) ciopts(color(blue))) // NV
+		(A, keep(37.state_did) mcolor(blue) ciopts(color(blue))) // NY
+		(A, keep(38.state_did) mcolor(red) ciopts(color(red))) // OH
+		(A, keep(39.state_did) mcolor(red) ciopts(color(red))) // OK
+		(A, keep(40.state_did) mcolor(blue) ciopts(color(blue))) // OR
+		(A, keep(41.state_did) mcolor(blue) ciopts(color(blue))) // PA
+		(A, keep(43.state_did) mcolor(blue) ciopts(color(blue))) // RI
+		(A, keep(44.state_did) mcolor(red) ciopts(color(red))) // SC
+		(A, keep(45.state_did) mcolor(red) ciopts(color(red))) // SD
+		(A, keep(46.state_did) mcolor(red) ciopts(color(red))) // TN
+		(A, keep(47.state_did) mcolor(red) ciopts(color(red))) // TX
+		(A, keep(48.state_did) mcolor(red) ciopts(color(red))) // UT
+		(A, keep(49.state_did) mcolor(blue) ciopts(color(blue))) // VA
+		(A, keep(52.state_did) mcolor(blue) ciopts(color(blue))) // WA
+		(A, keep(53.state_did) mcolor(blue) ciopts(color(blue))), // WI
 		drop(_cons)
 		vertical omitted 
+		legend(off)
+		mlabels(1.state_did = 3 "AK" 2.state_did = 3 "AL" 3.state_did = 3 "AR" 5.state_did = 3 "AZ" 6.state_did = 3 "CA" 7.state_did = 3 "CO" 8.state_did = 3 "CT" 9.state_did = 3 "DC" 11.state_did = 3 "FL" 12.state_did = 3 "GA" 14.state_did = 3 "HI" 15.state_did = 3 "IA" 16.state_did = 3 "ID" 17.state_did = 3 "IL" 18.state_did = 3 "IN" 19.state_did = 3 "KS" 20.state_did = 3 "KY" 21.state_did = 3 "LA" 22.state_did = 3 "MA" 23.state_did = 3 "MD" MS.state_did = 3 "ME" 25.state_did = 3 "MI" 26.state_did = 3 "MN" 27.state_did = 3 "MO" 28.state_did = 3 "MS" 29.state_did = 3 "MT" 30.state_did = 3 "NC" 31.state_did = 3 "ND" 32.state_did = 3 "NE" 33.state_did = 3 "NH" 34.state_did = 3 "NJ" 35.state_did = 3 "NM" 36.state_did = 3 "NV" 37.state_did = 3 "NY" 38.state_did = 3 "OH" 39.state_did = 3 "OK" 40.state_did = 3 "OR" 41.state_did = 3 "PA" 43.state_did = 3 "RI" 44.state_did = 3 "SC" 45.state_did = 3 "SD" 46.state_did = 3 "TN" 47.state_did = 3 "TX" 48.state_did = 3 "UT" 49.state_did = 3 "VA" 52.state_did = 3 "WA" 53.state_did = 3 "WI")
 		ciopts(lwidth(thick) recast(rcap))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(orange_red))
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State", size(medium))
-		xlabel(1 "AK" 2 "AL" 3 "AR" 4 "AZ" 5 "CA" 6 "CO" 7 "CT" 8 "DC" 9 "FL" 10 "GA" 11 "HI" 12 "IA" 13 "ID" 14 "IL" 15 "IN" 16 "KS" 17 "KY" 18 "LA" 19 "MA" 20 "MD" 21 "ME" 22 "MI" 23 "MN" 24 "MO" 25 "MS" 26 "MT" 27 "NC" 28 "ND" 29 "NE" 30 "NH" 31 "NJ" 32 "NM" 33 "NV" 34 "NY" 35 "OH" 36 "OK" 37 "OR" 38 "PA" 39 "RI" 40 "SC" 41 "SD" 42 "TN" 43 "TX" 44 "UT" 45 "VA" 46 "WA" 47 "WI", alternate) //mlabel(state_label), fix mlabel here
+		xlabel(, noticks nolabel)
 		note("Controls include state X unit and state X time FE. ATT: `att'", size(small)) 
 		;
 	#delimit cr
@@ -483,6 +487,7 @@ if `state_did' == 1 {
 
 	scatter mean_weight state_cat, ///
 		xtitle("State") mlabel(state) mlabposition(6) ///
+		xlabel(, noticks nolabel nogrid) ///
 		ytitle("Mean weights") ///
 		title("DiD regression weights by state") ///
 		note("Sample is all cases", size(med))
