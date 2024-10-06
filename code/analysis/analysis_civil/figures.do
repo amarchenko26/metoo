@@ -6,9 +6,9 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc event_all  = 0
-loc event 	   = 0
+loc event 	   = 1
 loc timeseries = 0
-loc state_did  	= 1
+loc state_did  	= 0
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
@@ -20,15 +20,15 @@ loc yhat		= 0
 Event-study
 *******************************************************************************/
 
-local outcomes "relief_scale win settle"
+local outcomes "settle dismissed win relief_scale"
 
 if `event_all' == 1 {
-		
-	foreach y in `outcomes' {
-		
-		g event = months_to_treat_12 * sh
-		replace event = event + 9 // dummies can't be negative
+	
+	cap drop event 
+	g event = months_to_treat_12 * sh
+	replace event = event + 9 // dummies can't be negative
 
+	foreach y in `outcomes' {
 		// Run dynamic DiD
 		reghdfe `y' ib8.event, ///
 			absorb(basis ym) ///
@@ -36,9 +36,9 @@ if `event_all' == 1 {
 		estimates store TWFE
 		
 		// Run Rambachan & Roth (2021)
-		/* honestdid, numpre(9) omit ///
+		honestdid, numpre(9) omit ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'_all.png", replace */
+		graph export "$figures/honestdid_`y'_all.png", replace
 
 		// Make graph
 		#delimit ;
@@ -60,14 +60,15 @@ if `event_all' == 1 {
 }
 
 if `event' == 1 {
+
+	cap drop event 
+	g event = months_to_treat_12 * sh
+	replace event = event + 9 // dummies can't be negative
+
 	foreach y in `outcomes' {
-		
 		preserve
 		keep if eeoc == 0
-		
-		g event = months_to_treat_12 * sh
-		replace event = event + 9 // dummies can't be negative
-
+	
 		// Run dynamic DiD
 		reghdfe `y' ib8.event, ///
 			absorb(basis ym) ///
@@ -119,10 +120,7 @@ if `timeseries' == 1 {
 
 	plot_lpolyci dismissed ym, title("Probability Complaint Dismissed Over Time") ylabel("Probability dismissed")
 
-	preserve 
-	keep if eeoc_took_to_court == 0
 	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
-	restore
 
 	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
 

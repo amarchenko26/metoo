@@ -54,7 +54,12 @@ g missing_relief = missing(relief)
 
 drop court_filing_date_temp resolution_date_temp
 
-duplicates drop civil_action_number court_res_date, force
+gen civil_action_number_clean = ustrregexra(civil_action_number, "[^a-zA-Z0-9]", "") //removes non-numeric and non-letter characters
+replace civil_action_number_clean = lower(civil_action_number_clean)
+
+* Drop N = 1 duplicate
+duplicates drop civil_action_number_clean court_res_date, force
+
 replace civil_action_number = subinstr(civil_action_number, "‐", "-", .)
 
 /*******************************************************************************

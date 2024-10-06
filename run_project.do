@@ -21,6 +21,8 @@ Define globals
 global sh_color "amber" 
 global no_sh_color "dark gray"
 global metoo "15oct2017"
+global data_start "01june2010"
+global data_cutoff "01june2023"
 
 /*******************************************************************************
 Define folders

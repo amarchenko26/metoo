@@ -35,15 +35,18 @@ Pull cleaned EEOC filed data (2010-2017)
 
 tempfile temp
 use "$clean_data/clean_eeoc.dta", clear
+di _N // 2287 
 save "`temp'", replace
 
 use "$clean_data/clean_eeoc_filed.dta", clear
+di _N // 3443510
 
 /*******************************************************************************
 Merge using EEOC court case data
 *******************************************************************************/
 
-merge m:1 civil_action_number court_res_date using "`temp'"
+merge m:1 civil_action_number_clean court_res_date using "`temp'"
+count if _merge == 3 // 1,634 matched obs using civil_action_number_clean
 drop _merge
 
 /*******************************************************************************
@@ -186,9 +189,6 @@ drop if basis == "Other"
 // Drop cases removed to EEOC
 di tm(2017m9)
 drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC", "sent to the EEOC") & ym < 692
-
-// These are all = 1, they mess up our DID. CHECK HERE ANYA. 
-drop if eeoc_took_to_court == 1 & eeoc_filed == 1
 
 /*******************************************************************************
 Fixed effects  
