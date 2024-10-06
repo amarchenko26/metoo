@@ -97,6 +97,8 @@ replace win = . if inlist(outcome, "", "CP Refused Full Relief", "Open Charge Cl
 
 // Court
 replace civil_action_number = "" if civil_action_number =="null"
+gen civil_action_number_clean = ustrregexra(civil_action_number, "[^a-zA-Z0-9]", "") //removes non-numeric and non-letter characters
+replace civil_action_number_clean = lower(civil_action_number_clean)
 
 // Court = 1 if either CP or EEOC took case to court
 g court = (!missing(court_file_date))
@@ -154,6 +156,10 @@ Export data
 *******************************************************************************/
 
 drop sex date_of_birth id case_type statute fiscal_year 
+
+// These are all = 1, they mess up our DID. MAY WANT TO CHANGE THIS. 
+// we want to drop these because 
+drop if eeoc_took_to_court == 1
 
 save "$clean_data/clean_eeoc_filed.dta", replace
 
