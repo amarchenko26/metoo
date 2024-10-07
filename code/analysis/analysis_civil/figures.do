@@ -5,6 +5,7 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
+loc selection = 1
 loc event_all  = 0
 loc event 	   = 1
 loc timeseries = 0
@@ -15,6 +16,40 @@ loc run_placebo_overlap = 0
 loc run_placebo_f = 0
 loc duration   = 0
 loc yhat		= 0
+
+/*******************************************************************************
+Selection 
+*******************************************************************************/
+
+if `selection' == 1{
+	// TWFE = omega (A-C) + (1-omega) (B-C)
+	preserve 
+	clear
+	set obs 11
+	g omega = (_n - 1) / 10
+	expand 1 // adds one row 
+	replace omega = 0.63 if _n == _N // last observation
+
+	g omega_c = 1-omega
+	g overlap = .123
+	g twfe 	  = .033 
+
+	g bc = (twfe - (omega*overlap))/omega_c
+
+	#delimit ;
+	twoway scatter bc omega, yline(0)
+			ytitle("Selection effect", size(medium))
+			xtitle("Omega", size(medium))
+			legend(off)
+		;
+	addplot: pcarrowi -.21 0.63 -.14 0.63 (6) "Estimate from method 1 = -.122"
+		legend(off) mlabsize(medium)
+		;
+	#delimit cr
+
+	graph export "$figures/omega.png", replace  
+	restore
+}
 
 /*******************************************************************************
 Event-study
