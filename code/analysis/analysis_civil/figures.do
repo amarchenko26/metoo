@@ -5,16 +5,16 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc selection = 1
-loc event_all  = 0
-loc event 	   = 0
-loc timeseries = 0
+loc selection 	= 1
+loc event_all  	= 0
+loc event 	   	= 0
+loc timeseries 	= 0
 loc state_did  	= 1
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f = 0
-loc duration   = 0
+loc duration   	= 0
 loc yhat		= 0
 
 /*******************************************************************************
@@ -27,23 +27,44 @@ if `selection' == 1{
 	clear
 	set obs 11
 	g omega = (_n - 1) / 10
-	expand 1 // adds one row 
+
+	// Add method 1 omega
+	insobs 1  
 	replace omega = 0.63 if _n == _N // last observation
 
+	// Add method 2 omega
+	insobs 1  
+	replace omega = 0.87 if _n == _N // last observation
+
+	// Add method 3 omega
+	insobs 1  
+	replace omega = 0.65 if _n == _N // last observation
+
 	g omega_c = 1-omega
-	g overlap = .123
-	g twfe 	  = .033 
+	g twfe 	  = 0.033
+	g overlap = 0.123
 
+	// Selection equation
 	g bc = (twfe - (omega*overlap))/omega_c
-
+	
 	#delimit ;
 	twoway scatter bc omega, yline(0)
 			ytitle("Selection effect", size(medium))
-			xtitle("Omega", size(medium))
+			xtitle("Omega (share always reporters)", size(medium))
+			mlabel(omega) mlabposition(6) 
+			msize(medlarge) mlabsize(vsmall)
+			mcolor("0 102 204")
 			legend(off)
+			xlabel(0(.1)1)
 		;
-	addplot: pcarrowi -.21 0.63 -.14 0.63 (6) "Estimate from method 1 = -.122"
-		legend(off) mlabsize(medium)
+	addplot: pcarrowi -.22 0.63 -.17 0.63 (6) "No change in incidence"
+		mlabsize(large)
+		;
+	addplot: pcarrowi -.50 0.87 -.55 0.87 (12) "SH incidence increases by control file rate"
+		mlabsize(large)
+		;
+	addplot: pcarrowi -.05 0.65 -.11 0.65 (12) "SH incidence decreases by 1.1pp"
+		mlabsize(large)
 		;
 	#delimit cr
 
@@ -422,7 +443,6 @@ if `state_did' == 1 {
 	preserve 
 	
 	label values state_did state_cat
-	
 	drop if inlist(state_did, 42, 54) //drop US territories and WV bc coefficient is too high 
 
 	reghdfe win i.state_did, absorb(basis_state ym_state) vce(cluster basis_state)
@@ -431,64 +451,68 @@ if `state_did' == 1 {
 	reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
     loc att: display %5.4f _b[treat]
 	
+	local my_blue "0 102 204"  
+	local my_red "220 20 60"
+
 	#delimit ;
 	coefplot 
-		(A, keep(1.state_did) mcolor(red) ciopts(color(red))) // AK
-		(A, keep(2.state_did) mcolor(red) ciopts(color(red))) // AL
-		(A, keep(3.state_did) mcolor(red) ciopts(color(red))) // AR
-		(A, keep(5.state_did) mcolor(blue) ciopts(color(blue))) // AZ
-		(A, keep(6.state_did) mcolor(blue) ciopts(color(blue))) // CA
-		(A, keep(7.state_did) mcolor(blue) ciopts(color(blue))) // CO
-		(A, keep(8.state_did) mcolor(blue) ciopts(color(blue))) // CT
-		(A, keep(9.state_did) mcolor(blue) ciopts(color(blue))) // DC
-		(A, keep(11.state_did) mcolor(red) ciopts(color(red))) // FL
-		(A, keep(12.state_did) mcolor(blue) ciopts(color(blue))) // GA
-		(A, keep(14.state_did) mcolor(blue) ciopts(color(blue))) // HI
-		(A, keep(15.state_did) mcolor(red) ciopts(color(red))) // IA
-		(A, keep(16.state_did) mcolor(red) ciopts(color(red))) // ID
-		(A, keep(17.state_did) mcolor(blue) ciopts(color(blue))) // IL
-		(A, keep(18.state_did) mcolor(red) ciopts(color(red))) // IN
-		(A, keep(19.state_did) mcolor(red) ciopts(color(red))) // KS
-		(A, keep(20.state_did) mcolor(red) ciopts(color(red))) // KY
-		(A, keep(21.state_did) mcolor(red) ciopts(color(red))) // LA
-		(A, keep(22.state_did) mcolor(blue) ciopts(color(blue))) // MA
-		(A, keep(23.state_did) mcolor(blue) ciopts(color(blue))) // MD
-		(A, keep(24.state_did) mcolor(blue) ciopts(color(blue))) // ME
-		(A, keep(25.state_did) mcolor(blue) ciopts(color(blue))) // MI
-		(A, keep(26.state_did) mcolor(blue) ciopts(color(blue))) // MN
-		(A, keep(27.state_did) mcolor(red) ciopts(color(red))) // MO
-		(A, keep(28.state_did) mcolor(red) ciopts(color(red))) // MS
-		(A, keep(29.state_did) mcolor(red) ciopts(color(red))) // MT
-		(A, keep(30.state_did) mcolor(red) ciopts(color(red))) // NC
-		(A, keep(31.state_did) mcolor(red) ciopts(color(red))) // ND
-		(A, keep(32.state_did) mcolor(red) ciopts(color(red))) // NE
-		(A, keep(33.state_did) mcolor(blue) ciopts(color(blue))) // NH
-		(A, keep(34.state_did) mcolor(blue) ciopts(color(blue))) // NJ
-		(A, keep(35.state_did) mcolor(blue) ciopts(color(blue))) // NM
-		(A, keep(36.state_did) mcolor(blue) ciopts(color(blue))) // NV
-		(A, keep(37.state_did) mcolor(blue) ciopts(color(blue))) // NY
-		(A, keep(38.state_did) mcolor(red) ciopts(color(red))) // OH
-		(A, keep(39.state_did) mcolor(red) ciopts(color(red))) // OK
-		(A, keep(40.state_did) mcolor(blue) ciopts(color(blue))) // OR
-		(A, keep(41.state_did) mcolor(blue) ciopts(color(blue))) // PA
-		(A, keep(43.state_did) mcolor(blue) ciopts(color(blue))) // RI
-		(A, keep(44.state_did) mcolor(red) ciopts(color(red))) // SC
-		(A, keep(45.state_did) mcolor(red) ciopts(color(red))) // SD
-		(A, keep(46.state_did) mcolor(red) ciopts(color(red))) // TN
-		(A, keep(47.state_did) mcolor(red) ciopts(color(red))) // TX
-		(A, keep(48.state_did) mcolor(red) ciopts(color(red))) // UT
-		(A, keep(49.state_did) mcolor(blue) ciopts(color(blue))) // VA
-		(A, keep(52.state_did) mcolor(blue) ciopts(color(blue))) // WA
-		(A, keep(53.state_did) mcolor(blue) ciopts(color(blue))), // WI
+		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
+		(A, keep(2.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AL
+		(A, keep(3.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AR
+		(A, keep(5.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // AZ
+		(A, keep(6.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CA
+		(A, keep(7.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CO
+		(A, keep(8.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CT
+		(A, keep(9.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DC
+		(A, keep(11.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // FL
+		(A, keep(12.state_did) mcolor("`my_red'") ciopts(color("`my_blue'"))) // GA
+		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
+		(A, keep(15.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // IA
+		(A, keep(16.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ID
+		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
+		(A, keep(18.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // IN
+		(A, keep(19.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KS
+		(A, keep(20.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
+		(A, keep(21.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // LA
+		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
+		(A, keep(23.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MD
+		(A, keep(24.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // ME
+		(A, keep(25.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
+		(A, keep(26.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
+		(A, keep(27.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // MO
+		(A, keep(28.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // MS
+		(A, keep(29.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // MT
+		(A, keep(30.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // NC
+		(A, keep(31.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
+		(A, keep(32.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // NE
+		(A, keep(33.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NH
+		(A, keep(34.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NJ
+		(A, keep(35.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NM
+		(A, keep(36.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NV
+		(A, keep(37.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NY
+		(A, keep(38.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // OH
+		(A, keep(39.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // OK
+		(A, keep(40.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // OR
+		(A, keep(41.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // PA
+		(A, keep(43.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // RI
+		(A, keep(44.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // SC
+		(A, keep(45.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // SD
+		(A, keep(46.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // TN
+		(A, keep(47.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // TX
+		(A, keep(48.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // UT
+		(A, keep(49.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // VA
+		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
+		(A, keep(53.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WI
 		drop(_cons)
 		vertical omitted 
 		legend(off)
-		mlabels(1.state_did = 3 "AK" 2.state_did = 3 "AL" 3.state_did = 3 "AR" 5.state_did = 3 "AZ" 6.state_did = 3 "CA" 7.state_did = 3 "CO" 8.state_did = 3 "CT" 9.state_did = 3 "DC" 11.state_did = 3 "FL" 12.state_did = 3 "GA" 14.state_did = 3 "HI" 15.state_did = 3 "IA" 16.state_did = 3 "ID" 17.state_did = 3 "IL" 18.state_did = 3 "IN" 19.state_did = 3 "KS" 20.state_did = 3 "KY" 21.state_did = 3 "LA" 22.state_did = 3 "MA" 23.state_did = 3 "MD" MS.state_did = 3 "ME" 25.state_did = 3 "MI" 26.state_did = 3 "MN" 27.state_did = 3 "MO" 28.state_did = 3 "MS" 29.state_did = 3 "MT" 30.state_did = 3 "NC" 31.state_did = 3 "ND" 32.state_did = 3 "NE" 33.state_did = 3 "NH" 34.state_did = 3 "NJ" 35.state_did = 3 "NM" 36.state_did = 3 "NV" 37.state_did = 3 "NY" 38.state_did = 3 "OH" 39.state_did = 3 "OK" 40.state_did = 3 "OR" 41.state_did = 3 "PA" 43.state_did = 3 "RI" 44.state_did = 3 "SC" 45.state_did = 3 "SD" 46.state_did = 3 "TN" 47.state_did = 3 "TX" 48.state_did = 3 "UT" 49.state_did = 3 "VA" 52.state_did = 3 "WA" 53.state_did = 3 "WI")
+		mlabels(1.state_did = 3 "AK" 2.state_did = 3 "AL" 3.state_did = 3 "AR" 5.state_did = 3 "AZ" 6.state_did = 3 "CA" 7.state_did = 3 "CO" 8.state_did = 3 "CT" 9.state_did = 3 "DC" 11.state_did = 3 "FL" 12.state_did = 3 "GA" 14.state_did = 3 "HI" 15.state_did = 3 "IA" 16.state_did = 3 "ID" 17.state_did = 3 "IL" 18.state_did = 3 "IN" 19.state_did = 3 "KS" 20.state_did = 3 "KY" 21.state_did = 3 "LA" 22.state_did = 3 "MA" 23.state_did = 3 "MD" 24.state_did = 3 "ME" 25.state_did = 3 "MI" 26.state_did = 3 "MN" 27.state_did = 3 "MO" 28.state_did = 3 "MS" 29.state_did = 3 "MT" 30.state_did = 3 "NC" 31.state_did = 3 "ND" 32.state_did = 3 "NE" 33.state_did = 3 "NH" 34.state_did = 3 "NJ" 35.state_did = 3 "NM" 36.state_did = 3 "NV" 37.state_did = 3 "NY" 38.state_did = 3 "OH" 39.state_did = 3 "OK" 40.state_did = 3 "OR" 41.state_did = 3 "PA" 43.state_did = 3 "RI" 44.state_did = 3 "SC" 45.state_did = 3 "SD" 46.state_did = 3 "TN" 47.state_did = 3 "TX" 48.state_did = 3 "UT" 49.state_did = 3 "VA" 52.state_did = 3 "WA" 53.state_did = 3 "WI")
 		ciopts(lwidth(thick) recast(rcap))
+		sort(, by(b))
 		yline(0, lcolor(black)) 
-		yline(`att', lcolor(orange_red))
+		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
 		ytitle("Treatment effect on win", size(medium))
-		xtitle("State", size(medium))
+		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
 		note("Controls include state X unit and state X time FE. ATT: `att'", size(small)) 
 		;
@@ -528,6 +552,56 @@ if `state_did' == 1 {
 		note("Sample is all cases", size(med))
 
 	graph export "$figures/weights_statefe.png", replace 	
+	restore
+
+	
+	preserve 
+	keep if eeoc == 0
+
+	label values state_did state_cat
+
+	reghdfe win i.state_did, absorb(basis_state ym_state) vce(cluster basis_state) 
+	eststo A
+
+	reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
+    loc att: display %5.4f _b[treat]
+	
+	local my_blue "0 102 204"  
+	local my_red "220 20 60"
+
+	#delimit ;
+	coefplot 
+		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
+		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
+		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color(blue))) // IL
+		(A, keep(20.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
+		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
+		(A, keep(25.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
+		(A, keep(31.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
+		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WA
+		drop(_cons)
+		vertical omitted 
+		legend(off)
+		mlabels(1.state_did = 3 "AK" 
+				14.state_did = 3 "HI" 
+				17.state_did = 3 "IL" 
+				20.state_did = 3 "KY" 
+				22.state_did = 3 "MA" 
+				25.state_did = 3 "MI" 
+				31.state_did = 3 "ND"
+				52.state_did = 3 "WA")
+		ciopts(lwidth(thick) recast(rcap))
+		sort(, by(b))
+		yline(0, lcolor(black)) 
+		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
+		ytitle("Treatment effect on win", size(medium))
+		xtitle("State", size(medium))
+		xlabel(, noticks nolabel)
+		yscale(range(-.2 .4)) ylabel(-.2(.2).4, labsize(small))
+		note("Controls include state X unit and state X time FE. ATT in state sample: `att'", size(small)) 
+		;
+	#delimit cr
+    graph export "$figures/state_fx.png", replace  
 	restore
 }
 
