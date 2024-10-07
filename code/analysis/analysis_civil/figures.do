@@ -6,9 +6,9 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc event_all  = 0
-loc event 	   = 1
+loc event 	   = 0
 loc timeseries = 0
-loc state_did  	= 0
+loc state_did  	= 1
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
