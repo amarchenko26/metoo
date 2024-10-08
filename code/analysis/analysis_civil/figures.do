@@ -410,33 +410,28 @@ State-level DID
 if `state_did' == 1 {
 
 	******* All cases
-	// Full regression, get ATT
-	qui: reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
-
-	// FWL regression
-	qui: reghdfe win, absorb(basis_state ym_state) vce(cluster basis_state) resid
+	cap drop treat_tilde den num weights
+	// 1st stage
+	reghdfe treat, absorb(basis_state ym_state) vce(cluster basis_state) resid
 	predict treat_tilde, residuals
 
-	// ATT2, Should give you ATT = ATT2 
-	qui: reg win treat_tilde, cluster(basis_state)
+	// 2nd stage  (should give you ATT) 
+	reg win treat_tilde, cluster(basis_state)
 
 	// Calculate weights 
-	g num = treat_tilde  // weight numerator
-	egen den = total(treat_tilde * treat_tilde)	 // weights denominator
+	g num = treat_tilde  
+	egen den = total(treat_tilde * treat_tilde)	
 	g weights = num / den
 
-	// Collapse weights by state and plot
 	preserve 
 	collapse (mean) mean_weight = weights, by(state_cat)
 
 	scatter mean_weight state_cat, ///
 		xtitle("State") mlabel(state) mlabposition(6) ///
 		xlabel(, noticks nolabel nogrid) ///
-		ytitle("Mean weights") ///
-		title("DiD regression weights by state") ///
-		note("Sample is all cases", size(med))
+		ytitle("DID weights")
 
-	graph export "$figures/weights_all_statefe.png", replace 	
+	graph export "$figures/weights_all.png", replace 	
 	restore
 	cap drop weights treat_tilde num den
 
@@ -527,33 +522,26 @@ if `state_did' == 1 {
 	preserve 
 	keep if eeoc == 0
 
-	qui: reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
-
 	// FWL regression
-	qui: reghdfe win, absorb(basis_state ym_state) vce(cluster basis_state) resid
+	cap drop treat_tilde den num weights
+	reghdfe treat, absorb(basis_state ym_state) vce(cluster basis_state) resid
 	predict treat_tilde, residuals
 
-	// ATT2, Should give you ATT = ATT2 
-	qui: reg win treat_tilde, cluster(basis_state)
+	reg win treat_tilde, cluster(basis_state)
 
 	// Calculate weights 
-	g num = treat_tilde  // weight numerator
-	egen den = total(treat_tilde * treat_tilde)	 // weights denominator
+	g num = treat_tilde  
+	egen den = total(treat_tilde * treat_tilde)
 	g weights = num / den
 
-	cap drop num den 
-
-	// Collapse weights by state and plot
 	collapse (mean) mean_weight = weights, by(state_cat)
 
 	scatter mean_weight state_cat, ///
 		xtitle("State") mlabel(state) mlabposition(6) ///
 		xlabel(, noticks nolabel nogrid) ///
-		ytitle("Mean weights") ///
-		title("DiD regression weights by state") ///
-		note("Sample is all cases", size(med))
+		ytitle("DID weights")
 
-	graph export "$figures/weights_statefe.png", replace 	
+	graph export "$figures/weights_state.png", replace 	
 	restore
 
 	
