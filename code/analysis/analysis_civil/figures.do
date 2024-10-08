@@ -5,10 +5,10 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc selection 	= 1
-loc event_all  	= 1
+loc selection 	= 0
+loc event_all  	= 0
 loc event 	   	= 1
-loc timeseries 	= 1
+loc timeseries 	= 0
 loc state_did  	= 0
 loc run_placebo = 0
 loc run_placebo_single = 0
@@ -92,7 +92,7 @@ if `event_all' == 1 {
 		estimates store TWFE
 		
 		// Run Rambachan & Roth (2021)
-		honestdid, numpre(9) omit ///
+		honestdid, numpre(9) omit parallel(0) ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
 		graph export "$figures/honestdid_`y'_all.png", replace
 
@@ -130,9 +130,10 @@ if `event' == 1 {
 			absorb(basis ym) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
-		
+
 		// Run Rambachan & Roth (2021)
-		honestdid, numpre(9) omit ///
+//		matrix l_vec = 1/5 \ 1/5 \ 1/5 \ 1/5 \ 1/5
+		honestdid, numpre(9) omit parallel(0) ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
 		graph export "$figures/honestdid_`y'_state.png", replace
 
@@ -514,8 +515,8 @@ if `state_did' == 1 {
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
-		note("Controls include State X Unit and State X Time FE. ATT: `att'", size(small)) 
-		text(.05 2 "ATT")
+		note("Controls include State X Unit and State X Time FE", size(small)) 
+		text(.05 2 "ATT: `att'")
 		;
 	#delimit cr
     graph export "$figures/state_fx_all.png", replace  
@@ -599,8 +600,8 @@ if `state_did' == 1 {
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
 		yscale(range(-.2 .4)) ylabel(-.2(.2).4, labsize(small))
-		note("Controls include State X Unit and State X Time FE. ATT in state sample: `att'", size(small)) 
-		text(-.07 1 "ATT")
+		note("Controls include State X Unit and State X Time FE, size(small)) 
+		text(-.068 1 "ATT: `att'")
 		;
 	#delimit cr
     graph export "$figures/state_fx.png", replace  
