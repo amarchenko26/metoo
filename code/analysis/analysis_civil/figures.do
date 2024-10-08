@@ -6,10 +6,10 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc selection 	= 1
-loc event_all  	= 0
-loc event 	   	= 0
-loc timeseries 	= 0
-loc state_did  	= 1
+loc event_all  	= 1
+loc event 	   	= 1
+loc timeseries 	= 1
+loc state_did  	= 0
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
@@ -453,21 +453,22 @@ if `state_did' == 1 {
 	
 	local my_blue "0 102 204"  
 	local my_red "220 20 60"
+	local my_purple "128 0 128"
 
 	#delimit ;
 	coefplot 
 		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
 		(A, keep(2.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AL
 		(A, keep(3.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AR
-		(A, keep(5.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // AZ
+		(A, keep(5.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AZ
 		(A, keep(6.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CA
 		(A, keep(7.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CO
 		(A, keep(8.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CT
 		(A, keep(9.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DC
-		(A, keep(11.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // FL
+		(A, keep(11.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
 		(A, keep(12.state_did) mcolor("`my_red'") ciopts(color("`my_blue'"))) // GA
 		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
-		(A, keep(15.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // IA
+		(A, keep(15.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // IA
 		(A, keep(16.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ID
 		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
 		(A, keep(18.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // IN
@@ -490,7 +491,7 @@ if `state_did' == 1 {
 		(A, keep(35.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NM
 		(A, keep(36.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NV
 		(A, keep(37.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NY
-		(A, keep(38.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // OH
+		(A, keep(38.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // OH
 		(A, keep(39.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // OK
 		(A, keep(40.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // OR
 		(A, keep(41.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // PA
@@ -507,14 +508,14 @@ if `state_did' == 1 {
 		vertical omitted 
 		legend(off)
 		mlabels(1.state_did = 3 "AK" 2.state_did = 3 "AL" 3.state_did = 3 "AR" 5.state_did = 3 "AZ" 6.state_did = 3 "CA" 7.state_did = 3 "CO" 8.state_did = 3 "CT" 9.state_did = 3 "DC" 11.state_did = 3 "FL" 12.state_did = 3 "GA" 14.state_did = 3 "HI" 15.state_did = 3 "IA" 16.state_did = 3 "ID" 17.state_did = 3 "IL" 18.state_did = 3 "IN" 19.state_did = 3 "KS" 20.state_did = 3 "KY" 21.state_did = 3 "LA" 22.state_did = 3 "MA" 23.state_did = 3 "MD" 24.state_did = 3 "ME" 25.state_did = 3 "MI" 26.state_did = 3 "MN" 27.state_did = 3 "MO" 28.state_did = 3 "MS" 29.state_did = 3 "MT" 30.state_did = 3 "NC" 31.state_did = 3 "ND" 32.state_did = 3 "NE" 33.state_did = 3 "NH" 34.state_did = 3 "NJ" 35.state_did = 3 "NM" 36.state_did = 3 "NV" 37.state_did = 3 "NY" 38.state_did = 3 "OH" 39.state_did = 3 "OK" 40.state_did = 3 "OR" 41.state_did = 3 "PA" 43.state_did = 3 "RI" 44.state_did = 3 "SC" 45.state_did = 3 "SD" 46.state_did = 3 "TN" 47.state_did = 3 "TX" 48.state_did = 3 "UT" 49.state_did = 3 "VA" 52.state_did = 3 "WA" 53.state_did = 3 "WI")
-		ciopts(lwidth(thick) recast(rcap))
-		sort(, by(b))
+		ciopts(lwidth(thick) recast(rcap)) //sort(, by(b)) //Maggie uncommented this line
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
-		note("Controls include state X unit and state X time FE. ATT: `att'", size(small)) 
+		note("Controls include State X Unit and State X Time FE. ATT: `att'", size(small)) 
+		text(.05 2 "ATT")
 		;
 	#delimit cr
     graph export "$figures/state_fx_all.png", replace  
@@ -595,10 +596,11 @@ if `state_did' == 1 {
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
 		ytitle("Treatment effect on win", size(medium))
-		xtitle("State", size(medium))
+		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
 		yscale(range(-.2 .4)) ylabel(-.2(.2).4, labsize(small))
-		note("Controls include state X unit and state X time FE. ATT in state sample: `att'", size(small)) 
+		note("Controls include State X Unit and State X Time FE. ATT in state sample: `att'", size(small)) 
+		text(-.07 1 "ATT")
 		;
 	#delimit cr
     graph export "$figures/state_fx.png", replace  
