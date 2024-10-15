@@ -5,9 +5,9 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc selection 	= 0
+loc selection 	= 1
 loc event_all  	= 0
-loc event 	   	= 1
+loc event 	   	= 0
 loc timeseries 	= 0
 loc state_did  	= 0
 loc run_placebo = 0
@@ -21,7 +21,7 @@ loc yhat		= 0
 Selection 
 *******************************************************************************/
 
-if `selection' == 1{
+if `selection' == 1 {
 	// TWFE = omega (A-C) + (1-omega) (B-C)
 	preserve 
 	clear
@@ -56,15 +56,16 @@ if `selection' == 1{
 			mcolor("0 102 204")
 			legend(off)
 			xlabel(0(.1)1)
+			xsize(8)
 		;
-	addplot: pcarrowi -.22 0.63 -.17 0.63 (6) "No change in incidence"
-		mlabsize(large)
+	addplot: pcarrowi -.22 0.63 -.17 0.63 (6) "No change in incidence",
+		mlabsize(small) mcolor(orange) lcolor(orange)
 		;
-	addplot: pcarrowi -.50 0.87 -.55 0.87 (12) "SH incidence increases by control file rate"
-		mlabsize(large)
+	addplot: pcarrowi -.50 0.87 -.55 0.87 (12) "SH incidence increases by control file rate",
+		mlabsize(small) mcolor(orange) lcolor(orange)
 		;
-	addplot: pcarrowi -.05 0.65 -.11 0.65 (12) "SH incidence decreases by 1.1pp"
-		mlabsize(large)
+	addplot: pcarrowi -.05 0.65 -.11 0.65 (12) "SH incidence decreases by 1.1pp",
+		mlabsize(small) mcolor(orange) lcolor(orange)
 		;
 	#delimit cr
 
@@ -504,7 +505,9 @@ if `state_did' == 1 {
 		vertical omitted 
 		legend(off)
 		mlabels(1.state_did = 3 "AK" 2.state_did = 3 "AL" 3.state_did = 3 "AR" 5.state_did = 3 "AZ" 6.state_did = 3 "CA" 7.state_did = 3 "CO" 8.state_did = 3 "CT" 9.state_did = 3 "DC" 11.state_did = 3 "FL" 12.state_did = 3 "GA" 14.state_did = 3 "HI" 15.state_did = 3 "IA" 16.state_did = 3 "ID" 17.state_did = 3 "IL" 18.state_did = 3 "IN" 19.state_did = 3 "KS" 20.state_did = 3 "KY" 21.state_did = 3 "LA" 22.state_did = 3 "MA" 23.state_did = 3 "MD" 24.state_did = 3 "ME" 25.state_did = 3 "MI" 26.state_did = 3 "MN" 27.state_did = 3 "MO" 28.state_did = 3 "MS" 29.state_did = 3 "MT" 30.state_did = 3 "NC" 31.state_did = 3 "ND" 32.state_did = 3 "NE" 33.state_did = 3 "NH" 34.state_did = 3 "NJ" 35.state_did = 3 "NM" 36.state_did = 3 "NV" 37.state_did = 3 "NY" 38.state_did = 3 "OH" 39.state_did = 3 "OK" 40.state_did = 3 "OR" 41.state_did = 3 "PA" 43.state_did = 3 "RI" 44.state_did = 3 "SC" 45.state_did = 3 "SD" 46.state_did = 3 "TN" 47.state_did = 3 "TX" 48.state_did = 3 "UT" 49.state_did = 3 "VA" 52.state_did = 3 "WA" 53.state_did = 3 "WI")
-		ciopts(lwidth(thick) recast(rcap)) //sort(, by(b)) //Maggie uncommented this line
+		xsize(10)
+		ciopts(lwidth(thick) recast(rcap))
+		sort(, by(b))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
 		ytitle("Treatment effect on win", size(medium))
@@ -563,7 +566,7 @@ if `state_did' == 1 {
 	coefplot 
 		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
 		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
-		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color(blue))) // IL
+		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
 		(A, keep(20.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
 		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
 		(A, keep(25.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
@@ -588,7 +591,7 @@ if `state_did' == 1 {
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
 		yscale(range(-.2 .4)) ylabel(-.2(.2).4, labsize(small))
-		note("Controls include State X Unit and State X Time FE, size(small)) 
+		note("Controls include State X Unit and State X Time FE", size(small)) 
 		text(-.068 1 "ATT: `att'")
 		;
 	#delimit cr

@@ -188,7 +188,13 @@ drop if basis == "Other"
 
 // Drop cases removed to EEOC
 di tm(2017m9)
-drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC (Closed at Commission)", "Transfer to EEOC at Intake", "Transferred to EEOC", "sent to the EEOC") & ym < 692
+drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "Closed - EEOC-Administrative", "E05 - EEOC assumed jurisdiction - no adjustment", "I15 - Withdrawn - pursue with EEOC", "Transfer to EEOC at Intake", "Transferred to EEOC", "sent to the EEOC")
+
+// Drop outcomes
+drop if inlist(outcome, "A10 - Unperfected Complaint", "A3 - Lack of Jurisdiction", "A8 - Tribal Sovereign Immunity", "Bankruptcy of Respondent", "Closed - Bankruptcy", "Closed - Lack of Jurisdiction", "Duplicate", "E02 - Lack of jurisdiction for MDCR", "I08 - Respondent out of business")
+drop if inlist("I09 - Duplicate complaint", "I10 - Federal agency assumed jurisdiction", "Lack of Jurisdiction", "No Jurisdiction", "No Jurisdiction/Other", "Non-jurisdictional", "RP Bankruptcy", "Respondent Bankruptcy", "Transfer to Tacoma")
+
+replace win = 0 if outcome == "Transfer to EEOC (Closed at Commission)"
 
 /*******************************************************************************
 Fixed effects  
