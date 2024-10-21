@@ -85,14 +85,36 @@ The following variables are cleaned altogether, after state and federal data is 
 
 ## Description of datasets
 
-**$raw_data/KY/Copy of Employment Case Information M Jiang 09112024.xlsx**  
-These data contain all employment cases filed in Kentucky from June 1, 2010 to June 30, 2023. (File name not standardized bc waiting on housing and public accommodations files.)
+**$raw_data/FL/fl_raw_cases.dta**  
+These data contain all employment and housing cases filed in Delaware from June 1, 2010 to June 30, 2023.
+- N: 10,673
+- SH: 38
+- filingdate: date case was filed
+- bases: basis of discrimination
+- casetype: jurisdiction
+- closuredate: date case was closed
+- closuretype: how case was closed
+
+**$raw_data/DE/de_raw_cases.xlsx**  
+These data contain all housing and public accomodations cases filed in Delaware from June 1, 2010 to June 30, 2023.
+- N: 413
+- SH: 8
+- casename: name for each case
+- casefileddate: date case was filed
+- systemcloseddate: date case was closed
+- protectedclass: basis of discrimination
+- basis: whether the case contained the issue of sexual harassment
+- results: how case was closed
+- dismissalrejectionbasis: reason a case was dismissed or rejected
+
+**$raw_data/KY/ky_raw_cases.dta**  
+These data contain all employment and housing cases filed in Kentucky from June 1, 2010 to June 30, 2023.
 - N: 2452
 - SH: 56
 - kchrcaseno: unique identifier for each case
 - respondent: respondent name
 - basis: basis of discrimination
-- issue: whether the case contained the issue of sexual harassment
+- issue: adverse action alleged by complainant
 - datefiled: date case was filed
 - howresolvedbycommissioners: how case was closed
 - dateofresolution: date case was closed
