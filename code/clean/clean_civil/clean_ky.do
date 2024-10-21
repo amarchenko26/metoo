@@ -4,7 +4,24 @@ Clean Kentucky cases
 
 *******************************************************************************/
 
+tempfile temp
+import excel "$raw_data/KY/ORR Housing Data M Jiang, WITH ISSUE COLUMN.xlsx", sheet(Sheet2) firstrow case(lower) clear
+replace case = "2239-H" if case == "2239-H; Originally stamped 2237-H in ERROR.  Sg"
+replace case = "1626-H" if case == "1626-E"
+save "`temp'", replace
+
+import excel "$raw_data/KY/ORR Housing Data M Jiang, WITH ISSUE COLUMN.xlsx", sheet(Sheet1) firstrow case(lower) clear
+merge 1:1 case basis using "`temp'"
+keep if _merge == 3
+drop _merge
+save "`temp'", replace
+
 import excel "$raw_data/KY/Copy of Employment Case Information M Jiang 09112024.xlsx", firstrow case(lower) clear
+ren kchrcaseno case
+ren dateofresolution dateoforder
+append using "`temp'"
+
+save "$raw_data/KY/ky_raw_cases.dta", replace
 
 
 /*******************************************************************************
@@ -12,15 +29,15 @@ Clean vars
 *******************************************************************************/
 
 // Rename vars
-ren kchrcaseno id
+ren case id
 ren respondent resp_org
 ren basis basis_raw
 ren datefiled charge_file_date
 ren howresolvedbycommissioners outcome
-ren dateofresolution charge_res_date
+ren dateoforder charge_res_date
 ren compensation relief
 drop i f
-drop if resp_org == "VOID" | resp_org == "" | basis_raw == ""
+drop if resp_org == "VOID" | resp_org == "" | basis_raw == "" | regexm(outcome, "Void|No record of KCHR Closure|Other|Per Managing Atty|Final Order of Default Judgment from Admin Hearing.")
 
 
 /*******************************************************************************
@@ -72,7 +89,11 @@ rename *2 *
 g duration = charge_res_date - charge_file_date
 
 // Jurisdiction
+replace id = strtrim(id)
+g n = _n
 g juris = "Employment"
+replace juris = "Housing" if n >= 2452
+drop n
 
 // Multi-category
 g multi_cat = 1 if strpos(basis_raw, ",") > 0 | strpos(basis_raw, "and") > 0 | strpos(basis_raw, ".") > 0
@@ -81,9 +102,9 @@ replace multi_cat = 0 if multi_cat != 1
 // Basis
 replace basis_raw = strtrim(basis_raw)
 g basis = substr(basis_raw, 1, 3)
-replace basis = "Race"			if inlist(basis, "Col", "Rac")
-replace basis = "Other"			if inlist(basis, "Dif", "Har", "Oth", "Smo")
-replace basis = "Disability"	if inlist(basis, "Dis", "dis")
+replace basis = "Race"			if inlist(basis, "Col", "Rac", " Ra")
+replace basis = "Other"			if inlist(basis, "Dif", "Har", "Oth", "Smo", "Fam")
+replace basis = "Disability"	if inlist(basis, "Dis", "dis", "Dsi")
 replace basis = "Nationality"	if basis == "Nat"
 replace basis = "Retaliation"	if inlist(basis, "Rea", "Ret")
 replace basis = "Religion"		if basis == "Rel"
@@ -91,7 +112,9 @@ replace basis = "Religion"		if basis == "Rel"
 // SH
 replace issue = strtrim(issue)
 g sh = 0
-replace sh = 1 if strpos(issue, "Sexual") > 0
+replace sh = 1 if strpos(issue, "Sexual") > 0 & strpos(issue, "Hostile") == 0
+replace sh = 1 if basis_raw == "Sexual Harassment"
+replace basis = "Sex" if strpos(basis_raw, "Sex") > 0 & sh == 1
 
 // Sex
 g sex_cases = 0 
@@ -99,6 +122,11 @@ replace sex_cases = 1 if basis == "Sex"
 replace sex_cases = 1 if basis == "Retaliation" & strpos(basis_raw, "Sex") > 0 & sh == 0
 
 // Relief
+replace relief = "38570.56" if relief == "$26,070.56 in repairs, $12,500 Training, Reporting, Posting"
+replace relief = "2000" if relief == "$1,000 to Complainant, $1,000 to KCHR ;  Training, Reporting, Posting"
+replace relief = "" if relief == "9 months rent, Reporting, Training, Monitoring"
+replace relief = "4095" if relief == "$1,000 + Discharge of Debt $3,095;  Training, Reporting, Posting "
+replace relief = "5751.5" if relief == "$4,780 + $971.50 KCHR Atty Fees"
 split relief, parse(;)
 split relief1
 drop relief?
@@ -111,38 +139,39 @@ g missing_relief = (relief == .)
 // Probable cause
 g win = .
 replace win = 1 if strpos(outcome, "PC Determination") > 0
-replace win = 1 if strpos(outcome, "Concil") > 0
+replace win = 1 if strpos(outcome, "Conc") > 0
 replace win = 0 if strpos(outcome, "NPC") > 0
 
 // Settle
 g settle = 0 
 replace settle = 1 if strpos(outcome, "ett") > 0 & strpos(outcome, "OUT") == 0 & strpos(outcome, "w/o") == 0 & strpos(outcome, "out") == 0 & strpos(outcome, "W/O") == 0 & win == .
-replace settle = . if inlist(outcome, "", "Other", "No Case Resolution Located", "Unable to locate case closure", "Void - case already filed  8761-E")
+replace settle = . if inlist(outcome, "", "No Case Resolution Located", "Unable to locate case closure")
 
 // Administrative closure
 g admin_close = 0
 replace admin_close = 1 if strpos(outcome, "Admin") > 0 & win == .
 replace admin_close = 1 if strpos(outcome, "Error") > 0
 replace admin_close = 1 if strpos(outcome, "Juris") > 0
-replace admin_close = . if inlist(outcome, "", "Other", "No Case Resolution Located", "Unable to locate case closure", "Void - case already filed  8761-E")
+replace admin_close = . if inlist(outcome, "", "No Case Resolution Located", "Unable to locate case closure")
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if outcome == "2"
 replace withdraw = 1 if strpos(outcome, "Withdra") > 0 & settle == 0 & win == .
-replace withdraw = . if inlist(outcome, "", "Other", "No Case Resolution Located", "Unable to locate case closure", "Void - case already filed  8761-E")
+replace withdraw = . if inlist(outcome, "", "No Case Resolution Located", "Unable to locate case closure")
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
 replace dismissed = 1 if outcome == "DWOP"
 replace dismissed = 1 if strpos(outcome, "Di") > 0 & win == .
-replace dismissed = . if inlist(outcome, "", "Other", "No Case Resolution Located", "Unable to locate case closure", "Void - case already filed  8761-E")
+replace dismissed = 1 if strpos(outcome, "DISMISSED") > 0
+replace dismissed = . if inlist(outcome, "", "No Case Resolution Located", "Unable to locate case closure")
 
 // Court
 g court = 0
 replace court = 1 if strpos(outcome, "Circuit") > 0
-replace court = . if inlist(outcome, "", "Other", "No Case Resolution Located", "Unable to locate case closure", "Void - case already filed  8761-E")
+replace court = . if inlist(outcome, "", "No Case Resolution Located", "Unable to locate case closure")
 
 
 /*******************************************************************************

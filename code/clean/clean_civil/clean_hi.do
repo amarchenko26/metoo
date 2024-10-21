@@ -89,6 +89,7 @@ replace win = 0 if outcome == "13"
 g settle = 0 
 replace settle = 1 if outcome == "9"
 replace settle = 1 if outcome == "7"
+replace settle = 1 if outcome == "19"
 replace settle = 1 if enfclosurecode == "Settled"
 replace settle = . if outcome == "5"
 
