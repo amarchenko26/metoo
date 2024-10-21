@@ -20,6 +20,8 @@ import delimited "$raw_data/FL/fl_employment_cases.csv", bindquote(strict) varna
 append using "`temp'"
 drop respondentcounty n subjectproperty
 
+save "$raw_data/FL/fl_raw_cases.dta", replace
+
 /*******************************************************************************
 Clean vars
 *******************************************************************************/

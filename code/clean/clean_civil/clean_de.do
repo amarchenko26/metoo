@@ -70,7 +70,7 @@ replace basis = "Sex" 			if regexm(basis_raw, "Sex") & !regexm(basis_raw, "Sexua
 
 // SH
 g sh = 0
-replace sh = 1 if regexm(basis_raw, "Sex (Harrassment)")
+replace sh = 1 if strpos(basis_raw, "Sex (Harrassment)") > 0
 
 // Sex
 g sex_cases = 0 

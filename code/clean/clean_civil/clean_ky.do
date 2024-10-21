@@ -21,6 +21,8 @@ ren kchrcaseno case
 ren dateofresolution dateoforder
 append using "`temp'"
 
+save "$raw_data/KY/ky_raw_cases.dta", replace
+
 
 /*******************************************************************************
 Clean vars
