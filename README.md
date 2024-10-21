@@ -87,7 +87,7 @@ The following variables are cleaned altogether, after state and federal data is 
 
 **$raw_data/FL/fl_raw_cases.dta**  
 These data contain all employment and housing cases filed in Delaware from June 1, 2010 to June 30, 2023.
-- N: 10,673
+- N: 10673
 - SH: 38
 - filingdate: date case was filed
 - bases: basis of discrimination
@@ -109,8 +109,8 @@ These data contain all housing and public accomodations cases filed in Delaware 
 
 **$raw_data/KY/ky_raw_cases.dta**  
 These data contain all employment and housing cases filed in Kentucky from June 1, 2010 to June 30, 2023.
-- N: 2452
-- SH: 56
+- N: 3148
+- SH: 66
 - kchrcaseno: unique identifier for each case
 - respondent: respondent name
 - basis: basis of discrimination
