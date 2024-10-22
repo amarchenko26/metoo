@@ -97,4 +97,3 @@ do "$droot/code/clean/clean_civil/merge_all.do"
 // analysis files
 do "$droot/code/analysis/analysis_civil/tables.do"
 do "$droot/code/analysis/analysis_civil/figures.do"
-do "$droot/code/analysis/analysis_civil/sdid.do"

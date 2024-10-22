@@ -5,15 +5,14 @@ Tables for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc	run_did 	 	= 1
-loc run_selection 	= 0
+loc run_selection 	= 1
 loc run_overlap  	= 1
 loc run_did_robust 	= 1
 loc run_victim_f_present = 0
-loc run_summary  	= 0
+loc run_summary  	= 1
 loc run_balance  	= 0
-loc run_duration 	= 0
-loc run_sdid   		= 0
-loc run_unit_trends = 0
+loc run_duration 	= 1
+loc run_sdid   		= 1
 
 /*******************************************************************************
 DiD regression
@@ -875,7 +874,7 @@ Unit trends
 // Same locals as above 
 loc j 1
 
-if `run_robust' == 1 {
+if `run_sdid' == 1 {
 
 	foreach y of local outcome_vars {
 		
