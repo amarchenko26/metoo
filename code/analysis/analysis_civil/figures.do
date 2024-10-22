@@ -514,7 +514,7 @@ if `state_did' == 1 {
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
 		note("Controls include State X Unit and State X Time FE", size(small)) 
-		text(.05 2 "ATT: `att'")
+		text(.05 4 "ATT: `att'")
 		;
 	#delimit cr
     graph export "$figures/state_fx_all.png", replace  
@@ -592,7 +592,7 @@ if `state_did' == 1 {
 		xlabel(, noticks nolabel)
 		yscale(range(-.2 .4)) ylabel(-.2(.2).4, labsize(small))
 		note("Controls include State X Unit and State X Time FE", size(small)) 
-		text(-.068 1 "ATT: `att'")
+		text(-.068 3 "ATT: `att'")
 		;
 	#delimit cr
     graph export "$figures/state_fx.png", replace  

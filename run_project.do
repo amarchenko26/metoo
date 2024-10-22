@@ -65,6 +65,7 @@ ssc install honestdid, replace // https://github.com/mcaceresb/stata-honestdid
 ssc install coefplot, replace
 ssc install addplot, replace
 net install parallel, from(https://raw.github.com/gvegayon/parallel/stable) replace
+ssc install leebounds, replace
 */
 
 /*******************************************************************************
