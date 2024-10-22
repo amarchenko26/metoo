@@ -9,12 +9,12 @@ loc selection 	= 1
 loc event_all  	= 0
 loc event 	   	= 0
 loc timeseries 	= 0
-loc state_did  	= 0
-loc run_placebo = 0
-loc run_placebo_single = 0
-loc run_placebo_overlap = 0
-loc run_placebo_f = 0
-loc duration   	= 0
+loc state_did  	= 1
+loc run_placebo = 1
+loc run_placebo_single = 1
+loc run_placebo_overlap = 1
+loc run_placebo_f = 1
+loc duration   	= 1
 loc yhat		= 0
 
 /*******************************************************************************
@@ -462,6 +462,7 @@ if `state_did' == 1 {
 		(A, keep(7.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CO
 		(A, keep(8.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CT
 		(A, keep(9.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DC
+		(A, keep(10.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
 		(A, keep(11.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
 		(A, keep(12.state_did) mcolor("`my_red'") ciopts(color("`my_blue'"))) // GA
 		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
@@ -504,7 +505,7 @@ if `state_did' == 1 {
 		drop(_cons)
 		vertical omitted 
 		legend(off)
-		mlabels(1.state_did = 3 "AK" 2.state_did = 3 "AL" 3.state_did = 3 "AR" 5.state_did = 3 "AZ" 6.state_did = 3 "CA" 7.state_did = 3 "CO" 8.state_did = 3 "CT" 9.state_did = 3 "DC" 11.state_did = 3 "FL" 12.state_did = 3 "GA" 14.state_did = 3 "HI" 15.state_did = 3 "IA" 16.state_did = 3 "ID" 17.state_did = 3 "IL" 18.state_did = 3 "IN" 19.state_did = 3 "KS" 20.state_did = 3 "KY" 21.state_did = 3 "LA" 22.state_did = 3 "MA" 23.state_did = 3 "MD" 24.state_did = 3 "ME" 25.state_did = 3 "MI" 26.state_did = 3 "MN" 27.state_did = 3 "MO" 28.state_did = 3 "MS" 29.state_did = 3 "MT" 30.state_did = 3 "NC" 31.state_did = 3 "ND" 32.state_did = 3 "NE" 33.state_did = 3 "NH" 34.state_did = 3 "NJ" 35.state_did = 3 "NM" 36.state_did = 3 "NV" 37.state_did = 3 "NY" 38.state_did = 3 "OH" 39.state_did = 3 "OK" 40.state_did = 3 "OR" 41.state_did = 3 "PA" 43.state_did = 3 "RI" 44.state_did = 3 "SC" 45.state_did = 3 "SD" 46.state_did = 3 "TN" 47.state_did = 3 "TX" 48.state_did = 3 "UT" 49.state_did = 3 "VA" 52.state_did = 3 "WA" 53.state_did = 3 "WI")
+		mlabels(1.state_did = 3 "AK" 2.state_did = 3 "AL" 3.state_did = 3 "AR" 5.state_did = 3 "AZ" 6.state_did = 3 "CA" 7.state_did = 3 "CO" 8.state_did = 3 "CT" 9.state_did = 3 "DC" 10.state_did = 3 "DE" 11.state_did = 3 "FL" 12.state_did = 3 "GA" 14.state_did = 3 "HI" 15.state_did = 3 "IA" 16.state_did = 3 "ID" 17.state_did = 3 "IL" 18.state_did = 3 "IN" 19.state_did = 3 "KS" 20.state_did = 3 "KY" 21.state_did = 3 "LA" 22.state_did = 3 "MA" 23.state_did = 3 "MD" 24.state_did = 3 "ME" 25.state_did = 3 "MI" 26.state_did = 3 "MN" 27.state_did = 3 "MO" 28.state_did = 3 "MS" 29.state_did = 3 "MT" 30.state_did = 3 "NC" 31.state_did = 3 "ND" 32.state_did = 3 "NE" 33.state_did = 3 "NH" 34.state_did = 3 "NJ" 35.state_did = 3 "NM" 36.state_did = 3 "NV" 37.state_did = 3 "NY" 38.state_did = 3 "OH" 39.state_did = 3 "OK" 40.state_did = 3 "OR" 41.state_did = 3 "PA" 43.state_did = 3 "RI" 44.state_did = 3 "SC" 45.state_did = 3 "SD" 46.state_did = 3 "TN" 47.state_did = 3 "TX" 48.state_did = 3 "UT" 49.state_did = 3 "VA" 52.state_did = 3 "WA" 53.state_did = 3 "WI")
 		xsize(10)
 		ciopts(lwidth(thick) recast(rcap))
 		sort(, by(b))
@@ -565,24 +566,32 @@ if `state_did' == 1 {
 	#delimit ;
 	coefplot 
 		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
+		(A, keep(10.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
+		(A, keep(11.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
 		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
 		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
 		(A, keep(20.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
 		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
 		(A, keep(25.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
+		(A, keep(26.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
 		(A, keep(31.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
-		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WA
+		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
+		(A, keep(53.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WI
 		drop(_cons)
 		vertical omitted 
 		legend(off)
-		mlabels(1.state_did = 3 "AK" 
+		mlabels(1.state_did = 3 "AK"
+				10.state_did = 3 "DE"
+				11.state_did = 3 "FL"
 				14.state_did = 3 "HI" 
 				17.state_did = 3 "IL" 
 				20.state_did = 3 "KY" 
 				22.state_did = 3 "MA" 
-				25.state_did = 3 "MI" 
+				25.state_did = 3 "MI"
+				26.state_did = 3 "MN"
 				31.state_did = 3 "ND"
-				52.state_did = 3 "WA")
+				52.state_did = 3 "WA"
+				53.state_did = 3 "WI")
 		ciopts(lwidth(thick) recast(rcap))
 		sort(, by(b))
 		yline(0, lcolor(black)) 
