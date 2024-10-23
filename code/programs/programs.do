@@ -49,7 +49,6 @@ program define plot_lpolyci
     local Xvar : word 2 of `varlist'
 
     preserve
-    keep if eeoc_took_to_court ==1
     collapse (mean) mean_y = `Yvar', by(`Xvar' sh)
     
     * Get the min and max values of the x-axis variable

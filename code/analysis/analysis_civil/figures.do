@@ -5,16 +5,16 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc selection 	= 1
+loc selection 	= 0
 loc event_all  	= 0
 loc event 	   	= 0
-loc timeseries 	= 0
-loc state_did  	= 1
-loc run_placebo = 1
-loc run_placebo_single = 1
-loc run_placebo_overlap = 1
-loc run_placebo_f = 1
-loc duration   	= 1
+loc timeseries 	= 1
+loc state_did  	= 0
+loc run_placebo = 0
+loc run_placebo_single = 0
+loc run_placebo_overlap = 0
+loc run_placebo_f = 0
+loc duration   	= 0
 loc yhat		= 0
 
 /*******************************************************************************
@@ -411,30 +411,38 @@ State-level DID
 if `state_did' == 1 {
 
 	******* All cases
-	cap drop treat_tilde den num weights
-	// 1st stage
-	reghdfe treat, absorb(basis_state ym_state) vce(cluster basis_state) resid
+	// FWL regression
+	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
+	reghdfe treat, absorb(basis ym) vce(cluster basis) resid 
 	predict treat_tilde, residuals
-
-	// 2nd stage  (should give you ATT) 
-	reg win treat_tilde, cluster(basis_state)
 
 	// Calculate weights 
 	g num = treat_tilde  
-	egen den = total(treat_tilde * treat_tilde)	
+	egen den = total(treat_tilde * treat_tilde)
 	g weights = num / den
+	
+	// Check if weights created correctly 
+	egen treat_weights = total(weights) if treat ==1 
+	sum treat_weights // should sum to 1 and they do 
+		
+	egen c_weights = total(weights) if treat ==0 
+	sum c_weights // sum is -1
 
-	preserve 
-	collapse (mean) mean_weight = weights, by(state_cat)
+	// Sum weights by state 
+	preserve
+*	bysort state_cat: egen sum_weight_by_state = total(weights)
+	collapse (sum) sum_weight_by_state = weights, by(state_cat)
 
-	scatter mean_weight state_cat, ///
-		xtitle("State") mlabel(state) mlabposition(6) ///
+	scatter sum_weight_by_state state_cat, ///
+		xtitle(" ") yscale(range(-.1 .1)) ylabel(-.1(.05).1, labsize(small)) ///
+		yline(0) mlabel(state) mlabposition(6) ///
 		xlabel(, noticks nolabel nogrid) ///
 		ytitle("DID weights")
 
-	graph export "$figures/weights_all.png", replace 	
+	graph export "$figures/state_weights_all.png", replace 	
 	restore
-	cap drop weights treat_tilde num den
+
+
 
 	***** Individual state effects
 	preserve 
@@ -512,10 +520,11 @@ if `state_did' == 1 {
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
 		ytitle("Treatment effect on win", size(medium))
+		yscale(range(-.2 .6)) ylabel(-.2(.2).6, labsize(small))
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
 		note("Controls include State X Unit and State X Time FE", size(small)) 
-		text(.05 4 "ATT: `att'")
+		text(.07 5 "ATT: `att'")
 		;
 	#delimit cr
     graph export "$figures/state_fx_all.png", replace  
@@ -527,25 +536,32 @@ if `state_did' == 1 {
 	keep if eeoc == 0
 
 	// FWL regression
-	cap drop treat_tilde den num weights
-	reghdfe treat, absorb(basis_state ym_state) vce(cluster basis_state) resid
+	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
+	reghdfe treat, absorb(basis ym) vce(cluster basis) resid 
 	predict treat_tilde, residuals
-
-	reg win treat_tilde, cluster(basis_state)
 
 	// Calculate weights 
 	g num = treat_tilde  
 	egen den = total(treat_tilde * treat_tilde)
 	g weights = num / den
+	
+	// Check if weights created correctly 
+	egen treat_weights = total(weights) if treat ==1 
+	sum treat_weights // should sum to 1 and they do 
+		
+	egen c_weights = total(weights) if treat ==0 
+	sum c_weights // sum is -1
 
-	collapse (mean) mean_weight = weights, by(state_cat)
+	// Sum weights by state 
+	collapse (sum) sum_weight_by_state = weights, by(state_cat)
 
-	scatter mean_weight state_cat, ///
-		xtitle("State") mlabel(state) mlabposition(6) ///
+	scatter sum_weight_by_state state_cat, ///
+		xtitle(" ") yscale(range(-.1 .1)) ylabel(-.1(.05).1, labsize(small)) ///
+		yline(0) mlabel(state) mlabposition(6) msize(medlarge) ///
 		xlabel(, noticks nolabel nogrid) ///
 		ytitle("DID weights")
 
-	graph export "$figures/weights_state.png", replace 	
+	graph export "$figures/state_weights.png", replace 	
 	restore
 
 	
@@ -562,6 +578,7 @@ if `state_did' == 1 {
 	
 	local my_blue "0 102 204"  
 	local my_red "220 20 60"
+	local my_purple "128 0 128"
 
 	#delimit ;
 	coefplot 
@@ -599,9 +616,9 @@ if `state_did' == 1 {
 		ytitle("Treatment effect on win", size(medium))
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel)
-		yscale(range(-.2 .4)) ylabel(-.2(.2).4, labsize(small))
+		yscale(range(-.2 .6)) ylabel(-.2(.2).6, labsize(small))
 		note("Controls include State X Unit and State X Time FE", size(small)) 
-		text(-.068 3 "ATT: `att'")
+		text(-.05 2 "ATT: `att'")
 		;
 	#delimit cr
     graph export "$figures/state_fx.png", replace  
