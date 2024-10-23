@@ -93,7 +93,7 @@ if `event_all' == 1 {
 		estimates store TWFE
 		
 		// Run Rambachan & Roth (2021)
-		honestdid, numpre(9) omit parallel(0) ///
+		honestdid, numpre(9) omit ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
 		graph export "$figures/honestdid_`y'_all.png", replace
 
@@ -134,7 +134,7 @@ if `event' == 1 {
 
 		// Run Rambachan & Roth (2021)
 //		matrix l_vec = 1/5 \ 1/5 \ 1/5 \ 1/5 \ 1/5
-		honestdid, numpre(9) omit parallel(0) ///
+		honestdid, numpre(9) omit ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
 		graph export "$figures/honestdid_`y'_state.png", replace
 
@@ -169,10 +169,7 @@ if `timeseries' == 1 {
 	plot_lpolyci_gender win ym, title("Probability of Winning by Complainant Gender") ylabel("Probability of win")
 
 	* Plot outcomes over time 
-	preserve
-	keep if eeoc == 0
 	plot_lpolyci ln_total_cases_per_month_by_sh ym, title("Number Complaints Filed Over Time") ylabel("Ln(count of complaints filed)")
-	restore
 
 	plot_lpolyci settle ym, title("Probability Complainant Settles Over Time") ylabel("Probability settled")
 
