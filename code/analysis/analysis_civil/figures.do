@@ -427,6 +427,7 @@ if `state_did' == 1 {
 
 	// Sum weights by state 
 	preserve
+	keep if treat ==1
 *	bysort state_cat: egen sum_weight_by_state = total(weights)
 	collapse (sum) sum_weight_by_state = weights, by(state_cat)
 
@@ -558,7 +559,15 @@ if `state_did' == 1 {
 		xlabel(, noticks nolabel nogrid) ///
 		ytitle("DID weights")
 
-	graph export "$figures/state_weights.png", replace 	
+	graph export "$figures/state_weights.png", replace 
+
+	** Maggie make graph here 	
+	bysort state_cat: egen t_weight_by_state = total(weights) if treat == 1
+	bysort state_cat: egen c_weight_by_state = total(weights) if treat == 0
+	bysort state_cat: egen sum_weight_by_state = total(weights)
+
+	** Maggie - maybe rspike combined with scatter would work? Feel free to experiment. 
+	twoway rspike t_weight_by_state c_weight_by_state state_cat
 	restore
 
 	
