@@ -159,7 +159,7 @@ drop sex date_of_birth id case_type statute fiscal_year
 
 // These are all = 1, they mess up our DID. MAY WANT TO CHANGE THIS. 
 // we want to drop these because 
-drop if eeoc_took_to_court == 1
+// drop if eeoc_took_to_court == 1
 
 save "$clean_data/clean_eeoc_filed.dta", replace
 

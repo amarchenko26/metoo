@@ -8,8 +8,8 @@ use "$clean_data/clean_cases.dta", replace
 loc selection 	= 0
 loc event_all  	= 0
 loc event 	   	= 0
-loc timeseries 	= 1
-loc state_did  	= 0
+loc timeseries 	= 0
+loc state_did  	= 1
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
@@ -178,6 +178,44 @@ if `timeseries' == 1 {
 	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
 
 	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
+
+    local Yvar y
+    local Xvar ym
+
+
+	* 1. Number of complaints filed over time
+    preserve
+	keep if eeoc == 0 
+    collapse (sum) mean_y = `Yvar', by(`Xvar' sh)
+    
+    * Get the min and max values of the x-axis variable
+    summarize `Xvar', detail
+    local xmin = r(min)
+    local xmax = r(max)
+    
+    * Create the x-axis label with proper formatting
+    local xlabel_cmd `"xlabel(`xmin'(12)`xmax', angle(45) format(%tm))"'
+
+	#delimit ;
+	twoway 
+		lpolyci mean_y `Xvar' if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black) yaxis(2)
+		|| scatter mean_y `Xvar' if sh == 0, mcolor("gs3") msize(small) yaxis(2)
+		|| lpolyci mean_y `Xvar' if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
+		|| scatter mean_y `Xvar' if sh == 1, mcolor("orange_red") msize(small) yaxis(1)
+		|| pcarrowi 65 730 52 722, mlabsize(small) mcolor(black) lcolor(black)
+		legend(order(4 1) lab(4 "Sexual harassment, 95% CI") lab(1 "Other complaints, 95% CI") size(small) ring(0) pos(11) rows(2))
+		xtitle("Date filed", size(medium))
+		xline(693, lpattern(solid))
+		`xlabel_cmd'
+		title("Number of complaints filed over time (state data)")
+		ytitle("Other complaints", axis(2)) 
+		ytitle("SH complaints", axis(1))
+		text(67 730 "Covid-19 starts", color("gs3") place(r) size(small))
+		text(15 697 "51% increase in SH, 44% increase in non-SH", size(small))
+	;
+	#delimit cr
+    graph export "$figures/timeseries_filed.png", replace
+    restore
 
 	* Plot outcomes over time by basis
 	// Number of cases
@@ -432,10 +470,10 @@ if `state_did' == 1 {
 	collapse (sum) sum_weight_by_state = weights, by(state_cat)
 
 	scatter sum_weight_by_state state_cat, ///
-		xtitle(" ") yscale(range(-.1 .1)) ylabel(-.1(.05).1, labsize(small)) ///
+		xtitle(" ") /// //yscale(range(-.1 .1)) ylabel(-.1(.05).1, labsize(small))
 		yline(0) mlabel(state) mlabposition(6) ///
 		xlabel(, noticks nolabel nogrid) ///
-		ytitle("DID weights")
+		ytitle("DID treated weights")
 
 	graph export "$figures/state_weights_all.png", replace 	
 	restore
@@ -551,23 +589,24 @@ if `state_did' == 1 {
 	sum c_weights // sum is -1
 
 	// Sum weights by state 
+	keep if treat == 1
 	collapse (sum) sum_weight_by_state = weights, by(state_cat)
 
 	scatter sum_weight_by_state state_cat, ///
-		xtitle(" ") yscale(range(-.1 .1)) ylabel(-.1(.05).1, labsize(small)) ///
+		xtitle(" ") /// //yscale(range(-.1 .1)) ylabel(-.1(.05).1, labsize(small))
 		yline(0) mlabel(state) mlabposition(6) msize(medlarge) ///
 		xlabel(, noticks nolabel nogrid) ///
-		ytitle("DID weights")
+		ytitle("DID treated weights")
 
 	graph export "$figures/state_weights.png", replace 
 
 	** Maggie make graph here 	
-	bysort state_cat: egen t_weight_by_state = total(weights) if treat == 1
-	bysort state_cat: egen c_weight_by_state = total(weights) if treat == 0
-	bysort state_cat: egen sum_weight_by_state = total(weights)
+//	bysort state_cat: egen t_weight_by_state = total(weights) if treat == 1
+//	bysort state_cat: egen c_weight_by_state = total(weights) if treat == 0
+//	bysort state_cat: egen sum_weight_by_state = total(weights)
 
 	** Maggie - maybe rspike combined with scatter would work? Feel free to experiment. 
-	twoway rspike t_weight_by_state c_weight_by_state state_cat
+	//twoway rspike t_weight_by_state c_weight_by_state state_cat
 	restore
 
 	
