@@ -5,11 +5,11 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc selection 	= 0
+loc selection 	= 1
 loc event_all  	= 0
 loc event 	   	= 0
 loc timeseries 	= 0
-loc state_did  	= 1
+loc state_did  	= 0
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
@@ -22,28 +22,26 @@ Selection
 *******************************************************************************/
 
 if `selection' == 1 {
-	// TWFE = omega (A-C) + (1-omega) (B-C)
 	preserve 
 	clear
+	
 	set obs 11
 	g omega = (_n - 1) / 10
 
-	// Add method 1 omega
 	insobs 1  
-	replace omega = 0.63 if _n == _N // last observation
+	replace omega = 0.63 if _n == _N // Add method 1 omega
 
-	// Add method 2 omega
 	insobs 1  
-	replace omega = 0.87 if _n == _N // last observation
+	replace omega = 0.87 if _n == _N // Add method 2 omega
 
-	// Add method 3 omega
 	insobs 1  
-	replace omega = 0.65 if _n == _N // last observation
+	replace omega = 0.65 if _n == _N // Add method 3 omega
 
 	g omega_c = 1-omega
-	g twfe 	  = 0.033
-	g overlap = 0.123
+	g twfe 	  = -.281 // full data = 0.033
+	g overlap = .372 // full data = 0.123
 
+	// TWFE = omega (A-C) + (1-omega) (B-C)
 	// Selection equation
 	g bc = (twfe - (omega*overlap))/omega_c
 	
@@ -69,7 +67,7 @@ if `selection' == 1 {
 		;
 	#delimit cr
 
-	graph export "$figures/omega.png", replace  
+//	graph export "$figures/omega.png", replace  
 	restore
 }
 
@@ -144,6 +142,7 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash))
+			yscale(range(-.4 .4)) ylabel(-.4(.1).4, labsize(small))
 			xline(9)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo", size(medium))
@@ -165,27 +164,30 @@ Cases/outcomes over time
 
 if `timeseries' == 1 {
 
+	preserve 
+	keep if eeoc == 0 
 	* Women winning vs men winning vs. other complaints 
 	plot_lpolyci_gender win ym, title("Probability of Winning by Complainant Gender") ylabel("Probability of win")
-
-	* Plot outcomes over time 
-	plot_lpolyci ln_total_cases_per_month_by_sh ym, title("Number Complaints Filed Over Time") ylabel("Ln(count of complaints filed)")
 
 	plot_lpolyci settle ym, title("Probability Complainant Settles Over Time") ylabel("Probability settled")
 
 	plot_lpolyci dismissed ym, title("Probability Complaint Dismissed Over Time") ylabel("Probability dismissed")
 
-	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
+	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time (state data)") ylabel("Probability of win")
+	
+	*keep if inlist(state, "AK", "DE", "FL", "HI", "IL", "KY", "MA", "MI") | inlist(state, "MN", "ND", "PA", "RI", "WA", "WI")
 
 	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
-
-    local Yvar y
-    local Xvar ym
+	restore
 
 
 	* 1. Number of complaints filed over time
     preserve
 	keep if eeoc == 0 
+
+    local Yvar y
+    local Xvar ym
+
     collapse (sum) mean_y = `Yvar', by(`Xvar' sh)
     
     * Get the min and max values of the x-axis variable
@@ -202,15 +204,18 @@ if `timeseries' == 1 {
 		|| scatter mean_y `Xvar' if sh == 0, mcolor("gs3") msize(small) yaxis(2)
 		|| lpolyci mean_y `Xvar' if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
 		|| scatter mean_y `Xvar' if sh == 1, mcolor("orange_red") msize(small) yaxis(1)
-		|| pcarrowi 65 730 52 722, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi 67 729 67 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi 85 689 85 692, mlabsize(small) mcolor(black) lcolor(black)
 		legend(order(4 1) lab(4 "Sexual harassment, 95% CI") lab(1 "Other complaints, 95% CI") size(small) ring(0) pos(11) rows(2))
 		xtitle("Date filed", size(medium))
 		xline(693, lpattern(solid))
+		xline(722, lpattern(solid))
 		`xlabel_cmd'
 		title("Number of complaints filed over time (state data)")
 		ytitle("Other complaints", axis(2)) 
 		ytitle("SH complaints", axis(1))
-		text(67 730 "Covid-19 starts", color("gs3") place(r) size(small))
+		text(67 730 "Covid-19", color("gs3") place(r) size(small))
+		text(85 688 "MeToo", color("gs3") place(l) size(small))
 		text(15 697 "51% increase in SH, 44% increase in non-SH", size(small))
 	;
 	#delimit cr

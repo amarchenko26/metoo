@@ -4,15 +4,16 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc	run_did 	 	= 1
-loc run_selection 	= 1
-loc run_overlap  	= 1
-loc run_did_robust 	= 1
+loc	run_did 	 	= 0
+loc run_selection 	= 0
+loc run_did_state 	= 1
+loc run_overlap  	= 0
+loc run_did_robust 	= 0
 loc run_victim_f_present = 0
-loc run_summary  	= 1
+loc run_summary  	= 0
 loc run_balance  	= 0
-loc run_duration 	= 1
-loc run_sdid   		= 1
+loc run_duration 	= 0
+loc run_sdid   		= 0
 
 /*******************************************************************************
 DiD regression
@@ -116,18 +117,18 @@ if `run_did' == 1 {
 	
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' triple_did, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' triple_did if eeoc==0, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat == 0
+		qui: sum ``y'' if triple_did == 0
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' triple_did, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' triple_did if eeoc==0, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if treat == 0
+		qui: sum ``y'' if triple_did == 0
 		estadd scalar control_mean = `r(mean)'
 						
 		loc ++i
@@ -155,20 +156,19 @@ if `run_did' == 1 {
 	
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_did, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' overlap_did if eeoc==0, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat_did == 0
+		qui: sum ``y'' if overlap_did == 0 & eeoc==0
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' treat_did, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' overlap_did if eeoc==0, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if treat_did == 0
+		qui: sum ``y'' if overlap_did == 0 & eeoc==0
 		estadd scalar control_mean = `r(mean)'
-						
 		loc ++i
 	}
 
@@ -177,7 +177,7 @@ if `run_did' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{All overlap cases}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat_did "SH $\times$ Overlap") keep(treat_did)
+		varlabels(overlap_did "SH $\times$ Overlap") keep(overlap_did)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
