@@ -18,51 +18,6 @@ elif userid == "maggie":
 elif userid == "jacobhirschhorn":
     root = "/Users/jacobhirschhorn/Dropbox (Brown)/metoo_data"
     
-
-## California
-
-file_path = root + '/raw/CA/2017 - 2024 Report  - Final.pdf'
-
-# Initialize an empty list to store all tables
-all_tables = []
-
-with pdfplumber.open(file_path) as pdf:
-    for page_number, page in enumerate(pdf.pages, start=1):
-        tables = page.extract_tables()
-        
-        if tables:
-            for table in tables:
-                # Check the number of cells in the first row
-                first_row = table[0]
-                remaining_rows = table[1:]
-                
-                # If the first row has only one cell, ignore it and set custom column headers
-                if len(first_row) == 1:
-                    print(f"Page {page_number}: Skipping single-cell first row.")
-                    # Define column headers manually or based on the expected structure
-                    num_columns = len(remaining_rows[0])  # Assuming all rows have the same structure after the first
-                    headers = [f"Column {i+1}" for i in range(num_columns)]
-                    df = pd.DataFrame(remaining_rows, columns=headers)
-                else:
-                    # Normal case where the first row can be used as headers
-                    df = pd.DataFrame(remaining_rows, columns=first_row)
-
-                all_tables.append(df)
-            print(f"Page {page_number} processed: Table extracted successfully.", flush=True)
-        else:
-            print(f"Page {page_number} processed: No tables found.", flush=True)
-
-# Concatenate all DataFrames in the list into a single DataFrame
-final_df = pd.concat(all_tables, ignore_index=True)
-
-# Save the final DataFrame to a CSV file
-output_csv_path = root + '/raw/CA/ca_raw_cases.csv'
-final_df.to_csv(output_csv_path, index=False)
-
-# Print completion message
-print(f"Data has been successfully extracted from {file_path} and written to '{output_csv_path}'")
-
-    
 ## Florida employment
 
 file_path = root + '/raw/FL/Maggie Jiang EMP pdf.pdf'
