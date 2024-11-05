@@ -299,10 +299,11 @@ Gen post and treat
 g post = (common_file_date > date("$metoo", "DMY"))
 g treat = post*sh // treat=1 if post =1 and sh=1
 replace treat = . if sex_cases == 1 & sh == 0 
-replace treat = 1 if overlap_2 == 1
+replace treat = 1 if overlap_all == 1
 
 g overlap_did = 0 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY")
 replace overlap_did = 1 if overlap_did == 0 & sh == 1
+replace overlap_did = . if sex_cases == 1 & sh == 0
 
 g triple_did = treat * victim_f
 
