@@ -5,11 +5,11 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc selection 	= 1
+loc selection 	= 0
 loc event_all  	= 0
 loc event 	   	= 0
 loc timeseries 	= 0
-loc state_did  	= 0
+loc state_did  	= 1
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
@@ -592,8 +592,49 @@ if `state_did' == 1 {
 		
 	egen c_weights = total(weights) if treat ==0 
 	sum c_weights // sum is -1
+	
+	// Range plot
+	bysort state_cat: egen t_weight_by_state = total(weights) if treat == 1
+	bysort state_cat: egen c_weight_by_state = total(weights) if treat == 0
+	bysort state_cat: egen sum_weight_by_state = total(weights)
+	
+	collapse (max) t_weight_by_state c_weight_by_state sum_weight_by_state, by(state)
+	sort sum_weight_by_state
+	gen order = _n
+	labmask order, values(state)
+	
+	twoway rspike t_weight_by_state c_weight_by_state order, ///
+	|| scatter t_weight_by_state order, m(T) mc(green) ///
+	|| scatter c_weight_by_state order, m(S) mc(red) ///
+	|| scatter sum_weight_by_state order, m(O) mc(black) ///
+		mlabel(state) mlabposition(3) ///
+		xlabel(, noticks nolabel nogrid) xtitle(" ") ///
+		legend(label(1 "") label(2 "Treated") label(3 "Control") label(4 "Sum"))
+	
+	graph export "$figures/state_range_weights.png", replace 
+	restore
+	
+	// Sum weights by state
+	preserve 
+	keep if eeoc == 0
 
-	// Sum weights by state 
+	// FWL regression
+	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
+	reghdfe treat, absorb(basis ym) vce(cluster basis) resid 
+	predict treat_tilde, residuals
+
+	// Calculate weights 
+	g num = treat_tilde  
+	egen den = total(treat_tilde * treat_tilde)
+	g weights = num / den
+	
+	// Check if weights created correctly 
+	egen treat_weights = total(weights) if treat ==1 
+	sum treat_weights // should sum to 1 and they do 
+		
+	egen c_weights = total(weights) if treat ==0 
+	sum c_weights // sum is -1
+	
 	keep if treat == 1
 	collapse (sum) sum_weight_by_state = weights, by(state_cat)
 
@@ -603,15 +644,7 @@ if `state_did' == 1 {
 		xlabel(, noticks nolabel nogrid) ///
 		ytitle("DID treated weights")
 
-	graph export "$figures/state_weights.png", replace 
-
-	** Maggie make graph here 	
-//	bysort state_cat: egen t_weight_by_state = total(weights) if treat == 1
-//	bysort state_cat: egen c_weight_by_state = total(weights) if treat == 0
-//	bysort state_cat: egen sum_weight_by_state = total(weights)
-
-	** Maggie - maybe rspike combined with scatter would work? Feel free to experiment. 
-	//twoway rspike t_weight_by_state c_weight_by_state state_cat
+	graph export "$figures/state_weights.png", replace
 	restore
 
 	
