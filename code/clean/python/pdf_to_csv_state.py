@@ -1,14 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jun  2 17:50:55 2024
-
-@author: maggie
-"""
-
 import getpass
+import PyPDF2
 import pdfplumber
-import pandas as pd
+import csv
+import os
 
 userid = getpass.getuser()
 if userid == "anyamarchenko":
@@ -17,50 +11,65 @@ elif userid == "maggie":
     root = "/Users/maggie/Dropbox (Brown)/metoo_data"
 elif userid == "jacobhirschhorn":
     root = "/Users/jacobhirschhorn/Dropbox (Brown)/metoo_data"
-    
 
 ## California
-
-file_path = root + '/raw/CA/2017 - 2024 Report  - Final.pdf'
-
-# Initialize an empty list to store all tables
-all_tables = []
-
-with pdfplumber.open(file_path) as pdf:
-    for page_number, page in enumerate(pdf.pages, start=1):
-        tables = page.extract_tables()
-        
-        if tables:
-            for table in tables:
-                # Check the number of cells in the first row
-                first_row = table[0]
-                remaining_rows = table[1:]
-                
-                # If the first row has only one cell, ignore it and set custom column headers
-                if len(first_row) == 1:
-                    print(f"Page {page_number}: Skipping single-cell first row.")
-                    # Define column headers manually or based on the expected structure
-                    num_columns = len(remaining_rows[0])  # Assuming all rows have the same structure after the first
-                    headers = [f"Column {i+1}" for i in range(num_columns)]
-                    df = pd.DataFrame(remaining_rows, columns=headers)
-                else:
-                    # Normal case where the first row can be used as headers
-                    df = pd.DataFrame(remaining_rows, columns=first_row)
-
-                all_tables.append(df)
-            print(f"Page {page_number} processed: Table extracted successfully.", flush=True)
-        else:
-            print(f"Page {page_number} processed: No tables found.", flush=True)
-
-# Concatenate all DataFrames in the list into a single DataFrame
-final_df = pd.concat(all_tables, ignore_index=True)
-
-# Save the final DataFrame to a CSV file
+input_pdf_path = root + '/raw/CA/2017 - 2024 Report  - Final.pdf'
+split_pdf_dir = root + '/raw/CA/split_pdfs'
 output_csv_path = root + '/raw/CA/ca_raw_cases.csv'
-final_df.to_csv(output_csv_path, index=False)
 
-# Print completion message
-print(f"Data has been successfully extracted from {file_path} and written to '{output_csv_path}'")
+# Ensure the split directory exists
+os.makedirs(split_pdf_dir, exist_ok=True)
+
+# Step 1: Split the Large PDF into Smaller Files
+def split_pdf(input_pdf_path, output_dir, pages_per_split=100):
+    # Open the large PDF file
+    with open(input_pdf_path, "rb") as pdf_file:
+        reader = PyPDF2.PdfReader(pdf_file)
+        total_pages = len(reader.pages)
+        
+        # Split the PDF into smaller chunks
+        for i in range(0, total_pages, pages_per_split):
+            writer = PyPDF2.PdfWriter()
+            for j in range(i, min(i + pages_per_split, total_pages)):
+                writer.add_page(reader.pages[j])
+            
+            # Write each chunk to a new file
+            split_pdf_path = f"{output_dir}/split_{i // pages_per_split + 1}.pdf"
+            with open(split_pdf_path, "wb") as split_pdf_file:
+                writer.write(split_pdf_file)
+            print(f"Created split PDF: {split_pdf_path}")
+
+# Step 2: Extract Tables from Each Split PDF
+def extract_tables_from_split_pdfs(split_pdf_dir, output_csv_path):
+    # Initialize variables for processing
+    headers_written = False  # To ensure headers are written only once
+
+    # Get list of split PDF files
+    split_pdf_files = sorted([f for f in os.listdir(split_pdf_dir) if f.endswith('.pdf')])
+
+    for split_pdf_file in split_pdf_files:
+        split_pdf_path = os.path.join(split_pdf_dir, split_pdf_file)
+        print(f"Processing {split_pdf_file}")
+
+        # Open the split PDF file
+        with pdfplumber.open(split_pdf_path) as pdf:
+            # Iterate through each page in the split PDF
+            for page in pdf.pages:
+                # Extract the table from the current page
+                table = page.extract_table()
+                if table:
+                    # Convert the page's table data to a DataFrame
+                    df = pd.DataFrame(table[1:], columns=table[0])
+
+                    # Write to CSV, appending each page’s data to avoid memory overload
+                    # Only write headers once
+                    df.to_csv(output_csv_path, mode='a', header=not headers_written, index=False)
+                    headers_written = True  # Ensure headers are only written on the first page
+
+# Run the split and extraction functions
+split_pdf(input_pdf_path, split_pdf_dir)
+extract_tables_from_split_pdfs(split_pdf_dir, output_csv_path)
+print(f"Data has been successfully extracted to {output_csv_path}")
 
     
 ## Florida employment
