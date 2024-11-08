@@ -10,8 +10,6 @@ loc run_did_alt_win = 1
 loc run_did_sex 	= 1
 loc	run_did_all  	= 1
 loc run_did_robust 	= 1
-
-loc run_victim_f_present = 0
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
@@ -822,49 +820,6 @@ if `run_selection' == 1 {
 	eststo clear	
 
 	restore
-}
-
-/*******************************************************************************
-Victim female regression - for presentations only, not in paper, generates 
-3rd panel of did.tex but separately
-*******************************************************************************/
-
-if `run_victim_f_present' == 1 {
-
-	loc outcome_vars y1 y2 y3 y4
-	loc i 1
-
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' treat_f, absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "Yes", replace
-		qui estadd loc fetime "Yes", replace
-		
-		reghdfe ``y'' treat_f, absorb(basis_state ym_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "Yes", replace
-		qui estadd loc fetime_s "Yes", replace
-						
-		loc ++i
-	}
-
-	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_f.tex", style(tex) replace
-		coeflabel(treat_f "Female $\times$ SH $\times$ Post") keep(treat_f)
-		mgroups("Filed" "Settled" "Won" "\($\) paid", pattern(1 0 1 0 1 0 1 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
-		stats(feunit fetime feunit_s fetime_s N r2, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)")
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}");
-	#delimit cr
-	eststo clear
-	estimates clear
 }
 
 /*******************************************************************************
