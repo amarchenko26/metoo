@@ -180,8 +180,7 @@ if `timeseries' == 1 {
 	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
 	restore
 
-
-	* 1. Number of complaints filed over time
+	* Number of complaints filed over time
     preserve
 	keep if eeoc == 0 
 
@@ -895,7 +894,7 @@ if `run_placebo_f' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' triple_did, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_f, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}

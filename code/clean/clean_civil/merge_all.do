@@ -275,15 +275,17 @@ replace lose_court = 1 if win == 0 & court == 1
 g unknown_court = 0 if dismissed != . | settle != . | court != . | investigation != .
 replace unknown_court = 1 if win == . & court == 1
 
+// Alternative def of win 
+g win_alt = win
+replace win_alt = 0 if dismissed == 1
+
 /*******************************************************************************
 Overlap
 *******************************************************************************/
 
-// overlap_all - all sh cases filed before MeToo & ended after, 0 o/w
-g overlap_all = 1 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") & sh == 1 // 1 if case ended after MeToo
-replace overlap_all = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY") & sh == 1 // 0 if case ended before MeToo
-replace overlap_all = . if common_file_date > date("$metoo", "DMY") // remove cases filed after
-replace overlap_all = . if sh == 0 // Double check to leave only sh cases
+// 1 if case filed before & ended after, 0 if filed before & ended before, . if filed after
+g overlap_all = 1 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY") 
+replace overlap_all = 0 if common_file_date < date("$metoo", "DMY") & common_res_date < date("$metoo", "DMY")
 
 // overlap_2 - Bounded at a duration of 2 years maximum
 g overlap_2 = overlap_all
@@ -292,22 +294,40 @@ replace overlap_2 = . if common_res_date > date("$metoo", "DMY") + 365 // remove
 replace overlap_2 = . if (common_file_date < date("$metoo", "DMY") - 365) & (overlap_2 == 1) // remove overlap cases filed more than a year before MeToo
 
 /*******************************************************************************
-Gen post and treat 
+Treatment 
 *******************************************************************************/
+// Drop SH cases that are not basis = Sex 
+// drop if sh == 1 & basis != "Sex" // N = 27,811
 
-// Gen post and treat
+// Post
 g post = (common_file_date > date("$metoo", "DMY"))
-g treat = post*sh // treat=1 if post =1 and sh=1
-replace treat = . if sex_cases == 1 & sh == 0 
-replace treat = 1 if overlap_all == 1
 
-g overlap_did = 0 if common_file_date < date("$metoo", "DMY") & common_res_date > date("$metoo", "DMY")
-replace overlap_did = 1 if overlap_did == 0 & sh == 1
-replace overlap_did = . if sex_cases == 1 & sh == 0
+//***** SH cases ******* //
+g sample_sh = 1 if eeoc == 0 
+replace sample_sh = . if basis == "Sex" & sh == 0 //drop all sex cases that are not SH
 
-g triple_did = treat * victim_f
+// Treat for SH 
+g treat 	  = post * sh // To use treat, make sure to restrict to sample_sh == 1 to avoid including non-SH sex cases
+replace treat = 1 if overlap_all == 1 & sh == 1 // 1 if SH and overlaps with MeToo
 
+g treat_f 	= treat * victim_f
 g state_did = treat * state_cat
+
+// Overlap 
+g overlap_treat 	= overlap_all * sh 
+g overlap_treat_f 	= overlap_all * sh * victim_f
+
+
+//***** Sex cases ******* //
+// Treat for sex 
+g treat_sex = post * sex_cases
+replace treat_sex = 1 if overlap_all == 1 & sex_cases == 1 
+
+g treat_sex_f = treat_sex * victim_f
+
+// Overlap
+g overlap_treat_sex = overlap_all * sex_cases 
+g overlap_treat_sex_f = overlap_all * sex_cases * victim_f
 
 /*******************************************************************************
 Create time to treat - 0 is the pre-period before MeToo
