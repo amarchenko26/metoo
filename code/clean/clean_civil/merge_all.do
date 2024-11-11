@@ -307,7 +307,7 @@ g sample_sh = 1 if eeoc == 0
 replace sample_sh = . if basis == "Sex" & sh == 0 //drop all sex cases that are not SH
 
 // Treat for SH 
-g treat 	  = post * sh // To use treat, make sure to restrict to sample_sh == 1 to avoid including non-SH sex cases
+g treat 	  = post * sh // When regressing on treat, restrict to sample_sh == 1 to avoid including non-SH sex cases
 replace treat = 1 if overlap_all == 1 & sh == 1 // 1 if SH and overlaps with MeToo
 
 g treat_f 	= treat * victim_f

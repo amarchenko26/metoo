@@ -4,12 +4,12 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did_state 	= 1
-loc run_did_gender	= 1
-loc run_did_alt_win = 1
+loc run_did_state 	= 0
+loc run_did_gender	= 0
+loc run_did_alt_win = 0
 loc run_did_sex 	= 1
-loc	run_did_all  	= 1
-loc run_did_robust 	= 1
+loc	run_did_all  	= 0
+loc run_did_robust 	= 0
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
@@ -272,7 +272,7 @@ if `run_did_alt_win' == 1 {
 	#delimit ;	
 	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_alt_win.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{State sample}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
 		mgroups("Settled" "Won (or not dismissed)" "Compensation", pattern(1 0 1 0 1 0) 
@@ -340,7 +340,7 @@ loc i 1
 
 if `run_did_sex' == 1 {
 	preserve 
-	keep if eeoc == 0
+	keep if eeoc == 0 // don't use sample_sh here bc we want all Sex cases
 	foreach y of local outcome_vars {
 		
 		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
@@ -363,7 +363,7 @@ if `run_did_sex' == 1 {
 	#delimit ;	
 	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_sex.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{State sample}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
@@ -402,7 +402,7 @@ if `run_did_sex' == 1 {
 	#delimit ;	
 	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_sex.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{State sample}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Complainant is female}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f)
 		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 

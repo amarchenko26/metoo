@@ -7,9 +7,9 @@ use "$clean_data/clean_cases.dta", replace
 
 loc selection 	= 0
 loc event_all  	= 0
-loc event 	   	= 0
+loc event 	   	= 1
 loc timeseries 	= 0
-loc state_did  	= 1
+loc state_did  	= 0
 loc run_placebo = 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
@@ -75,7 +75,7 @@ if `selection' == 1 {
 Event-study
 *******************************************************************************/
 
-local outcomes "settle dismissed win relief_scale"
+local outcomes "settle dismissed win win_alt relief_scale"
 
 if `event_all' == 1 {
 	
@@ -122,11 +122,11 @@ if `event' == 1 {
 
 	foreach y in `outcomes' {
 		preserve
-		keep if eeoc == 0
+		keep if sample_sh == 1
 	
 		// Run dynamic DiD
 		reghdfe `y' ib8.event, ///
-			absorb(basis ym) ///
+			absorb(basis_state ym_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
 
@@ -141,12 +141,12 @@ if `event' == 1 {
 		coefplot (TWFE, omitted baselevel), vertical
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash))
-			yscale(range(-.4 .4)) ylabel(-.4(.1).4, labsize(small))
+			yline(0, lp(dash)) //yscale(range(-.4 .4)) ylabel(-.4(.1).4, labsize(small))
 			xline(9)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo", size(medium))
 			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
+			note("Fixed effects: unit/state and time/state", size(small))
 		;
 		#delimit cr
 					
