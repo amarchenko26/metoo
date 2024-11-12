@@ -6,14 +6,16 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc selection 	= 0
-loc event_all  	= 0
-loc event 	   	= 1
+loc event 	   	= 0
 loc timeseries 	= 0
-loc state_did  	= 0
-loc run_placebo = 0
-loc run_placebo_single = 0
-loc run_placebo_overlap = 0
-loc run_placebo_f = 0
+loc timeseries_basis = 0
+loc state_did  	= 1
+loc state_did_all = 0
+loc event_all  	= 0
+loc run_placebo = 1
+loc run_placebo_single = 1
+loc run_placebo_overlap = 1
+loc run_placebo_f = 1
 loc duration   	= 0
 loc yhat		= 0
 
@@ -77,52 +79,15 @@ Event-study
 
 local outcomes "settle dismissed win win_alt relief_scale"
 
-if `event_all' == 1 {
-	
-	cap drop event 
-	g event = months_to_treat_12 * sh
-	replace event = event + 9 // dummies can't be negative
-
-	foreach y in `outcomes' {
-		// Run dynamic DiD
-		reghdfe `y' ib8.event, ///
-			absorb(basis ym) ///
-			vce(cluster basis) noconstant
-		estimates store TWFE
-		
-		// Run Rambachan & Roth (2021)
-		honestdid, numpre(9) omit ///
-			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'_all.png", replace
-
-		// Make graph
-		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical
-			ciopts(recast(rcap) msize(medium) color(orange_red))
-			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash))
-			xline(9)
-			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
-		;
-		#delimit cr
-					
-		graph export "$figures/eventstudy_`y'_all.png", replace 
-		
-		estimates clear
-	}
-}
-
 if `event' == 1 {
 
 	cap drop event 
-	g event = months_to_treat_12 * sh
+	g event = months_to_treat_12 * sex_cases
 	replace event = event + 9 // dummies can't be negative
 
 	foreach y in `outcomes' {
 		preserve
-		keep if sample_sh == 1
+		keep if eeoc == 0
 	
 		// Run dynamic DiD
 		reghdfe `y' ib8.event, ///
@@ -157,13 +122,48 @@ if `event' == 1 {
 	}	
 }
 
+if `event_all' == 1 {
+	
+	cap drop event 
+	g event = months_to_treat_12 * sex_cases
+	replace event = event + 9 // dummies can't be negative
+
+	foreach y in `outcomes' {
+		// Run dynamic DiD
+		reghdfe `y' ib8.event, ///
+			absorb(basis ym) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+		
+		// Run Rambachan & Roth (2021)
+		honestdid, numpre(9) omit ///
+			coefplot xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honestdid_`y'_all.png", replace
+
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash))
+			xline(9)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_`y'_all.png", replace 
+		
+		estimates clear
+	}
+}
 
 /*******************************************************************************
 Cases/outcomes over time 
 *******************************************************************************/
 
 if `timeseries' == 1 {
-
 	preserve 
 	keep if eeoc == 0 
 	* Women winning vs men winning vs. other complaints 
@@ -173,10 +173,8 @@ if `timeseries' == 1 {
 
 	plot_lpolyci dismissed ym, title("Probability Complaint Dismissed Over Time") ylabel("Probability dismissed")
 
-	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time (state data)") ylabel("Probability of win")
+	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
 	
-	*keep if inlist(state, "AK", "DE", "FL", "HI", "IL", "KY", "MA", "MI") | inlist(state, "MN", "ND", "PA", "RI", "WA", "WI")
-
 	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
 	restore
 
@@ -187,7 +185,7 @@ if `timeseries' == 1 {
     local Yvar y
     local Xvar ym
 
-    collapse (sum) mean_y = `Yvar', by(`Xvar' sh)
+    collapse (sum) mean_y = `Yvar', by(`Xvar' sex_cases)
     
     * Get the min and max values of the x-axis variable
     summarize `Xvar', detail
@@ -199,10 +197,10 @@ if `timeseries' == 1 {
 
 	#delimit ;
 	twoway 
-		lpolyci mean_y `Xvar' if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black) yaxis(2)
-		|| scatter mean_y `Xvar' if sh == 0, mcolor("gs3") msize(small) yaxis(2)
-		|| lpolyci mean_y `Xvar' if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
-		|| scatter mean_y `Xvar' if sh == 1, mcolor("orange_red") msize(small) yaxis(1)
+		lpolyci mean_y `Xvar' if sex_cases == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black) yaxis(2)
+		|| scatter mean_y `Xvar' if sex_cases == 0, mcolor("gs3") msize(small) yaxis(2)
+		|| lpolyci mean_y `Xvar' if sex_cases == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
+		|| scatter mean_y `Xvar' if sex_cases == 1, mcolor("orange_red") msize(small) yaxis(1)
 		|| pcarrowi 67 729 67 723, mlabsize(small) mcolor(black) lcolor(black)
 		|| pcarrowi 85 689 85 692, mlabsize(small) mcolor(black) lcolor(black)
 		legend(order(4 1) lab(4 "Sexual harassment, 95% CI") lab(1 "Other complaints, 95% CI") size(small) ring(0) pos(11) rows(2))
@@ -220,7 +218,9 @@ if `timeseries' == 1 {
 	#delimit cr
     graph export "$figures/timeseries_filed.png", replace
     restore
+}
 
+if `timeseries_basis' == 1 {
 	* Plot outcomes over time by basis
 	// Number of cases
     preserve
@@ -449,10 +449,13 @@ State-level DID
 
 if `state_did' == 1 {
 
-	******* All cases
+	** State sample
+	preserve 
+	keep if eeoc == 0
+
 	// FWL regression
 	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
-	reghdfe treat, absorb(basis ym) vce(cluster basis) resid 
+	reghdfe treat_sex, absorb(basis ym) vce(cluster basis) resid 
 	predict treat_tilde, residuals
 
 	// Calculate weights 
@@ -461,15 +464,114 @@ if `state_did' == 1 {
 	g weights = num / den
 	
 	// Check if weights created correctly 
-	egen treat_weights = total(weights) if treat ==1 
+	egen treat_weights = total(weights) if treat_sex ==1 
 	sum treat_weights // should sum to 1 and they do 
 		
-	egen c_weights = total(weights) if treat ==0 
+	egen c_weights = total(weights) if treat_sex ==0 
+	sum c_weights // sum is -1
+	
+	// Range plot
+	bysort state_cat: egen t_weight_by_state = total(weights) if treat_sex == 1
+	bysort state_cat: egen c_weight_by_state = total(weights) if treat_sex == 0
+	bysort state_cat: egen sum_weight_by_state = total(weights)
+	
+	collapse (max) t_weight_by_state c_weight_by_state sum_weight_by_state, by(state)
+	sort sum_weight_by_state
+	gen order = _n
+	labmask order, values(state)
+	
+	twoway rspike t_weight_by_state c_weight_by_state order, ///
+	|| scatter t_weight_by_state order, m(T) mc(green) ///
+	|| scatter c_weight_by_state order, m(S) mc(red) ///
+	|| scatter sum_weight_by_state order, m(O) mc(black) ///
+		mlabel(state) mlabposition(3) ///
+		xlabel(, noticks nolabel nogrid) xtitle(" ") ///
+		legend(label(1 "") label(2 "Treated") label(3 "Control") label(4 "Sum"))
+	
+	graph export "$figures/state_range_weights.png", replace 
+	restore
+		
+	preserve 
+	keep if eeoc == 0
+
+	label values state_did_sex state_cat
+	reghdfe win i.state_did_sex, absorb(basis_state ym_state) vce(cluster basis_state) 
+	eststo A
+
+	reghdfe win treat_sex, absorb(basis_state ym_state) vce(cluster basis_state)
+    loc att: display %5.4f _b[treat_sex]
+	
+	local my_blue "0 102 204"  
+	local my_red "220 20 60"
+	local my_purple "128 0 128"
+
+	#delimit ;
+	coefplot 
+		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
+		(A, keep(10.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
+		(A, keep(11.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
+		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
+		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
+		(A, keep(20.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
+		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
+		(A, keep(25.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
+		(A, keep(26.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
+		(A, keep(31.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
+		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
+		(A, keep(53.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WI
+		drop(_cons)
+		vertical omitted 
+		legend(off)
+		mlabels(1.state_did = 3 "AK"
+				10.state_did = 3 "DE"
+				11.state_did = 3 "FL"
+				14.state_did = 3 "HI" 
+				17.state_did = 3 "IL" 
+				20.state_did = 3 "KY" 
+				22.state_did = 3 "MA" 
+				25.state_did = 3 "MI"
+				26.state_did = 3 "MN"
+				31.state_did = 3 "ND"
+				52.state_did = 3 "WA"
+				53.state_did = 3 "WI")
+		ciopts(lwidth(thick) recast(rcap))
+		sort(, by(b))
+		yline(0, lcolor(black)) 
+		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
+		ytitle("Treatment effect on win", size(medium))
+		xtitle("State filed", size(medium))
+		xlabel(, noticks nolabel)
+		yscale(range(-.2 .6)) ylabel(-.2(.2).6, labsize(small))
+		note("Controls include State X Unit and State X Time FE", size(small)) 
+		text(-.05 2 "ATT: `att'")
+		;
+	#delimit cr
+    graph export "$figures/state_fx.png", replace  
+	restore
+}
+
+if `state_did_all' == 1{
+	******* All cases
+	// FWL regression
+	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
+	reghdfe treat_sex, absorb(basis ym) vce(cluster basis) resid 
+	predict treat_tilde, residuals
+
+	// Calculate weights 
+	g num = treat_tilde  
+	egen den = total(treat_tilde * treat_tilde)
+	g weights = num / den
+	
+	// Check if weights created correctly 
+	egen treat_weights = total(weights) if treat_sex ==1 
+	sum treat_weights // should sum to 1 and they do 
+		
+	egen c_weights = total(weights) if treat_sex ==0 
 	sum c_weights // sum is -1
 
 	// Sum weights by state 
 	preserve
-	keep if treat ==1
+	keep if treat_sex ==1
 *	bysort state_cat: egen sum_weight_by_state = total(weights)
 	collapse (sum) sum_weight_by_state = weights, by(state_cat)
 
@@ -482,8 +584,6 @@ if `state_did' == 1 {
 	graph export "$figures/state_weights_all.png", replace 	
 	restore
 
-
-
 	***** Individual state effects
 	preserve 
 	
@@ -493,8 +593,8 @@ if `state_did' == 1 {
 	reghdfe win i.state_did, absorb(basis_state ym_state) vce(cluster basis_state)
 	eststo A
 
-	reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
-    loc att: display %5.4f _b[treat]
+	reghdfe win treat_sex, absorb(basis_state ym_state) vce(cluster basis_state)
+    loc att: display %5.4f _b[treat_sex]
 	
 	local my_blue "0 102 204"  
 	local my_red "220 20 60"
@@ -569,142 +669,6 @@ if `state_did' == 1 {
 	#delimit cr
     graph export "$figures/state_fx_all.png", replace  
 	restore
-
-
-	** State sample
-	preserve 
-	keep if eeoc == 0
-
-	// FWL regression
-	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
-	reghdfe treat, absorb(basis ym) vce(cluster basis) resid 
-	predict treat_tilde, residuals
-
-	// Calculate weights 
-	g num = treat_tilde  
-	egen den = total(treat_tilde * treat_tilde)
-	g weights = num / den
-	
-	// Check if weights created correctly 
-	egen treat_weights = total(weights) if treat ==1 
-	sum treat_weights // should sum to 1 and they do 
-		
-	egen c_weights = total(weights) if treat ==0 
-	sum c_weights // sum is -1
-	
-	// Range plot
-	bysort state_cat: egen t_weight_by_state = total(weights) if treat == 1
-	bysort state_cat: egen c_weight_by_state = total(weights) if treat == 0
-	bysort state_cat: egen sum_weight_by_state = total(weights)
-	
-	collapse (max) t_weight_by_state c_weight_by_state sum_weight_by_state, by(state)
-	sort sum_weight_by_state
-	gen order = _n
-	labmask order, values(state)
-	
-	twoway rspike t_weight_by_state c_weight_by_state order, ///
-	|| scatter t_weight_by_state order, m(T) mc(green) ///
-	|| scatter c_weight_by_state order, m(S) mc(red) ///
-	|| scatter sum_weight_by_state order, m(O) mc(black) ///
-		mlabel(state) mlabposition(3) ///
-		xlabel(, noticks nolabel nogrid) xtitle(" ") ///
-		legend(label(1 "") label(2 "Treated") label(3 "Control") label(4 "Sum"))
-	
-	graph export "$figures/state_range_weights.png", replace 
-	restore
-	
-	// Sum weights by state
-	preserve 
-	keep if eeoc == 0
-
-	// FWL regression
-	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
-	reghdfe treat, absorb(basis ym) vce(cluster basis) resid 
-	predict treat_tilde, residuals
-
-	// Calculate weights 
-	g num = treat_tilde  
-	egen den = total(treat_tilde * treat_tilde)
-	g weights = num / den
-	
-	// Check if weights created correctly 
-	egen treat_weights = total(weights) if treat ==1 
-	sum treat_weights // should sum to 1 and they do 
-		
-	egen c_weights = total(weights) if treat ==0 
-	sum c_weights // sum is -1
-	
-	keep if treat == 1
-	collapse (sum) sum_weight_by_state = weights, by(state_cat)
-
-	scatter sum_weight_by_state state_cat, ///
-		xtitle(" ") /// //yscale(range(-.1 .1)) ylabel(-.1(.05).1, labsize(small))
-		yline(0) mlabel(state) mlabposition(6) msize(medlarge) ///
-		xlabel(, noticks nolabel nogrid) ///
-		ytitle("DID treated weights")
-
-	graph export "$figures/state_weights.png", replace
-	restore
-
-	
-	preserve 
-	keep if eeoc == 0
-
-	label values state_did state_cat
-
-	reghdfe win i.state_did, absorb(basis_state ym_state) vce(cluster basis_state) 
-	eststo A
-
-	reghdfe win treat, absorb(basis_state ym_state) vce(cluster basis_state)
-    loc att: display %5.4f _b[treat]
-	
-	local my_blue "0 102 204"  
-	local my_red "220 20 60"
-	local my_purple "128 0 128"
-
-	#delimit ;
-	coefplot 
-		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
-		(A, keep(10.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
-		(A, keep(11.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
-		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
-		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
-		(A, keep(20.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
-		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
-		(A, keep(25.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
-		(A, keep(26.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
-		(A, keep(31.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
-		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
-		(A, keep(53.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WI
-		drop(_cons)
-		vertical omitted 
-		legend(off)
-		mlabels(1.state_did = 3 "AK"
-				10.state_did = 3 "DE"
-				11.state_did = 3 "FL"
-				14.state_did = 3 "HI" 
-				17.state_did = 3 "IL" 
-				20.state_did = 3 "KY" 
-				22.state_did = 3 "MA" 
-				25.state_did = 3 "MI"
-				26.state_did = 3 "MN"
-				31.state_did = 3 "ND"
-				52.state_did = 3 "WA"
-				53.state_did = 3 "WI")
-		ciopts(lwidth(thick) recast(rcap))
-		sort(, by(b))
-		yline(0, lcolor(black)) 
-		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
-		ytitle("Treatment effect on win", size(medium))
-		xtitle("State filed", size(medium))
-		xlabel(, noticks nolabel)
-		yscale(range(-.2 .6)) ylabel(-.2(.2).6, labsize(small))
-		note("Controls include State X Unit and State X Time FE", size(small)) 
-		text(-.05 2 "ATT: `att'")
-		;
-	#delimit cr
-    graph export "$figures/state_fx.png", replace  
-	restore
 }
 
 /*******************************************************************************
@@ -744,7 +708,7 @@ if `run_placebo' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -794,7 +758,7 @@ if `run_placebo_single' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -844,7 +808,7 @@ if `run_placebo_overlap' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat if overlap_2 != ., absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex if overlap_2 != ., absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -894,7 +858,7 @@ if `run_placebo_f' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_f, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex_f, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}

@@ -10,7 +10,7 @@ program define plot_lpolyci_gender
     local Xvar : word 2 of `varlist'
 
     preserve
-    collapse (mean) mean_y = `Yvar', by(`Xvar' sh victim_f)
+    collapse (mean) mean_y = `Yvar', by(`Xvar' sex_cases victim_f)
     
     * Get the min and max values of the x-axis variable
     summarize `Xvar', detail
@@ -22,10 +22,10 @@ program define plot_lpolyci_gender
 
     #delimit ;
     twoway 
-        lpolyci mean_y `Xvar' if sh == 0, acolor("gs3 %65") lwidth(medthick) clpattern(solid) clcolor(gs3)
-        || lpolyci mean_y `Xvar' if sh == 1 & victim_f == 1, acolor("red %65") lwidth(medthick) clpattern(solid) clcolor(red)
-        || lpolyci mean_y `Xvar' if sh == 1 & victim_f == 0, acolor("orange %65") lwidth(medthick) clpattern(solid) clcolor(orange)
-           legend(order(3 5 1) lab(3 "Female SH complainants") lab(5 "Male SH complainants") lab(1 "All other complainants") size(medium) ring(0) pos(11) rows(3))
+        lpolyci mean_y `Xvar' if sex_cases == 0, acolor("gs3 %65") lwidth(medthick) clpattern(solid) clcolor(gs3)
+        || lpolyci mean_y `Xvar' if sex_cases == 1 & victim_f == 1, acolor("red %65") lwidth(medthick) clpattern(solid) clcolor(red)
+        || lpolyci mean_y `Xvar' if sex_cases == 1 & victim_f == 0, acolor("orange %65") lwidth(medthick) clpattern(solid) clcolor(orange)
+           legend(order(3 5 1) lab(3 "Female Sex complainants") lab(5 "Male Sex complainants") lab(1 "All other complainants") size(medium) ring(0) pos(11) rows(3))
            xtitle("Date filed", size(medium))
            xline(693, lpattern(solid))
            `xlabel_cmd'
@@ -49,7 +49,7 @@ program define plot_lpolyci
     local Xvar : word 2 of `varlist'
 
     preserve
-    collapse (mean) mean_y = `Yvar', by(`Xvar' sh)
+    collapse (mean) mean_y = `Yvar', by(`Xvar' sex_cases)
     
     * Get the min and max values of the x-axis variable
     summarize `Xvar', detail
@@ -61,11 +61,11 @@ program define plot_lpolyci
 
     #delimit ;
     twoway 
-        lpolyci mean_y `Xvar' if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black)
-        || lpolyci mean_y `Xvar' if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black)
-        || scatter mean_y `Xvar' if sh == 0, mcolor("gs3") msize(small)
-        || scatter mean_y `Xvar' if sh == 1, mcolor("orange_red") msize(small)
-           legend(order(3 1) lab(3 "Sexual harassment, 95% CI") lab(1 "Other complaints, 95% CI") size(medium) ring(0) pos(11) rows(2))
+        lpolyci mean_y `Xvar' if sex_cases == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black)
+        || lpolyci mean_y `Xvar' if sex_cases == 1, acolor("orange_red %65") lwidth(medium) clpattern(dasex_cases) clcolor(black)
+        || scatter mean_y `Xvar' if sex_cases == 0, mcolor("gs3") msize(small)
+        || scatter mean_y `Xvar' if sex_cases == 1, mcolor("orange_red") msize(small)
+           legend(order(3 1) lab(3 "Sex complaints, 95% CI") lab(1 "Other complaints, 95% CI") size(medium) ring(0) pos(11) rows(2))
            xtitle("Date filed", size(medium))
            xline(693, lpattern(solid))
            `xlabel_cmd'

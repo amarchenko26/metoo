@@ -4,328 +4,17 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
+loc run_did_sex 	= 0
 loc run_did_state 	= 0
 loc run_did_gender	= 0
 loc run_did_alt_win = 0
-loc run_did_sex 	= 1
 loc	run_did_all  	= 0
 loc run_did_robust 	= 0
-loc run_selection 	= 0
+loc run_selection 	= 1
 loc run_summary  	= 0
 loc run_balance  	= 0
 loc run_duration 	= 0
 loc run_sdid   		= 0
-
-/*******************************************************************************
-DiD State regression
-*******************************************************************************/
-
-loc y1 settle
-loc y2 dismissed
-loc y3 win
-loc y4 relief_scale
-
-loc outcome_vars y1 y2 y3 y4
-loc i 1
-
-if `run_did_state' == 1 {
-	preserve 
-	keep if sample_sh == 1
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat == 0
-		estadd scalar control_mean = `r(mean)'
-		
-		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if treat == 0
-		estadd scalar control_mean = `r(mean)'
-						
-		loc ++i
-	}
-
-	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_state.tex", style(tex) replace 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
-		fragment
-		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none) nomtitles
-		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule");
-
-	#delimit cr
-	estimates clear
-	eststo clear
-	
-	loc outcome_vars y1 y2 y3 y4
-	loc i 1
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' overlap_treat, absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if overlap_treat == 0 
-		estadd scalar control_mean = `r(mean)'
-		
-		reghdfe ``y'' overlap_treat, absorb(basis_state ym_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if overlap_treat == 0
-		estadd scalar control_mean = `r(mean)'
-		loc ++i
-	}
-
-	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_state.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
-		fragment
-		append
-		varlabels(overlap_treat "SH $\times$ Overlap") keep(overlap_treat)
-		mlabel(none) nomtitles nonumbers nolines
-		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}");
-	#delimit cr
-	estimates clear
-	eststo clear
-	restore
-}
-
-/*******************************************************************************
-DiD with gender
-*******************************************************************************/
-loc y1 settle
-loc y2 dismissed
-loc y3 win
-loc y4 relief_scale
-
-loc outcome_vars y1 y2 y3 y4
-loc i 1
-
-if `run_did_gender' == 1 {
-	preserve 
-	keep if sample_sh == 1
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' treat if victim_f != ., absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat == 0 & victim_f != .
-		estadd scalar control_mean = `r(mean)'
-		
-		reghdfe ``y'' treat if victim_f != ., absorb(basis_state ym_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if treat == 0 & victim_f != .
-		estadd scalar control_mean = `r(mean)'
-						
-		loc ++i
-	}
-
-	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_gender.tex", style(tex) replace 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Gender non-missing}} \\ \midrule")
-		fragment
-		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none) nomtitles
-		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule");
-
-	#delimit cr
-	estimates clear
-	eststo clear
-	
-	loc outcome_vars y1 y2 y3 y4
-	loc i 1
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' treat treat_f, absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat == 0
-		estadd scalar control_mean = `r(mean)'
-		
-		reghdfe ``y'' treat treat_f, absorb(basis_state ym_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if treat == 0
-		estadd scalar control_mean = `r(mean)'
-						
-		loc ++i
-	}
-
-	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_gender.tex", style(tex) 
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Complainant is female}} \\ \midrule")
-		fragment
-		append
-		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
-		mlabel(none) nomtitles
-		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule");
-
-	#delimit cr
-	estimates clear
-	eststo clear
-	
-	loc outcome_vars y1 y2 y3 y4
-	loc i 1
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' overlap_treat overlap_treat_f, absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if overlap_treat ==0
-		estadd scalar control_mean = `r(mean)'
-		
-		reghdfe ``y'' overlap_treat overlap_treat_f, absorb(basis_state ym_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if overlap_treat == 0
-		estadd scalar control_mean = `r(mean)'
-		loc ++i
-	}
-
-	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_gender.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
-		fragment
-		append
-		varlabels(overlap_treat "SH $\times$ Overlap" overlap_treat_f "SH $\times$ Overlap $\times$ Female") keep(overlap_treat overlap_treat_f)
-		mlabel(none) nomtitles nonumbers nolines
-		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}");
-	#delimit cr
-	estimates clear
-	eststo clear
-	restore
-}
-
-/*******************************************************************************
-DiD regression with win_alt 
-*******************************************************************************/
-loc y1 settle
-loc y2 win_alt
-loc y3 relief_scale
-
-loc outcome_vars y1 y2 y3
-loc i 1
-
-if `run_did_alt_win' == 1 {
-	preserve 
-	keep if sample_sh == 1
-
-	foreach y of local outcome_vars {
-		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat == 0
-		estadd scalar control_mean = `r(mean)'
-		
-		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if treat == 0
-		estadd scalar control_mean = `r(mean)'
-						
-		loc ++i
-	}
-
-	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_alt_win.tex", style(tex) replace 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
-		fragment
-		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Settled" "Won (or not dismissed)" "Compensation", pattern(1 0 1 0 1 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none) nomtitles
-		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule");
-
-	#delimit cr
-	estimates clear
-	eststo clear
-	
-	loc outcome_vars y1 y2 y3
-	loc i 1
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' overlap_treat, absorb(basis ym) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if overlap_treat == 0
-		estadd scalar control_mean = `r(mean)'
-		
-		reghdfe ``y'' overlap_treat, absorb(basis_state ym_state) vce(cluster basis)
-		eststo s`i'
-		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if overlap_treat == 0
-		estadd scalar control_mean = `r(mean)'
-		loc ++i
-	}
-
-	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_alt_win.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
-		fragment
-		append
-		varlabels(overlap_treat "SH $\times$ Overlap") keep(overlap_treat)
-		mlabel(none) nomtitles nonumbers nolines
-		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
-			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}");
-	#delimit cr
-	estimates clear
-	eststo clear
-	restore
-}
 
 /*******************************************************************************
 DiD with Sex as treated
@@ -456,7 +145,7 @@ if `run_did_sex' == 1 {
 }
 
 /*******************************************************************************
-DiD regression with all data  
+DiD with gender
 *******************************************************************************/
 loc y1 settle
 loc y2 dismissed
@@ -466,8 +155,229 @@ loc y4 relief_scale
 loc outcome_vars y1 y2 y3 y4
 loc i 1
 
-if `run_did_all' == 1 {
+if `run_did_gender' == 1 {
+	preserve 
+	keep if eeoc == 0
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat_sex if victim_f != ., absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if treat_sex == 0 & victim_f != .
+		estadd scalar control_mean = `r(mean)'
+		
+		reghdfe ``y'' treat_sex if victim_f != ., absorb(basis_state ym_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if treat_sex == 0 & victim_f != .
+		estadd scalar control_mean = `r(mean)'
+						
+		loc ++i
+	}
 
+	#delimit ;	
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_gender.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Gender non-missing}} \\ \midrule")
+		fragment
+		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
+		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+		
+		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis_state ym_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+						
+		loc ++i
+	}
+
+	#delimit ;	
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_gender.tex", style(tex) 
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Complainant is female}} \\ \midrule")
+		fragment
+		append
+		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f)
+		mlabel(none) nomtitles
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' overlap_treat_sex overlap_treat_sex_f, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if overlap_treat_sex ==0
+		estadd scalar control_mean = `r(mean)'
+		
+		reghdfe ``y'' overlap_treat_sex overlap_treat_sex_f, absorb(basis_state ym_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if overlap_treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+
+	#delimit ;
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_gender.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
+		fragment
+		append
+		varlabels(overlap_treat_sex "Sex $\times$ Overlap" overlap_treat_sex_f "Sex $\times$ Overlap $\times$ Female") keep(overlap_treat_sex overlap_treat_sex_f)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+	#delimit cr
+	estimates clear
+	eststo clear
+	restore
+}
+
+/*******************************************************************************
+DiD regression with win_alt 
+*******************************************************************************/
+loc y1 settle
+loc y2 win_alt
+loc y3 relief_scale
+
+loc outcome_vars y1 y2 y3
+loc i 1
+
+if `run_did_alt_win' == 1 {
+	preserve 
+	keep if eeoc == 0
+
+	foreach y of local outcome_vars {
+		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+		
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+						
+		loc ++i
+	}
+
+	#delimit ;	
+	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_alt_win.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
+		fragment
+		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
+		mgroups("Settled" "Won (or not dismissed)" "Compensation", pattern(1 0 1 0 1 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	
+	loc outcome_vars y1 y2 y3
+	loc i 1
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' overlap_treat_sex, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if overlap_treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+		
+		reghdfe ``y'' overlap_treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if overlap_treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+
+	#delimit ;
+	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_alt_win.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
+		fragment
+		append
+		varlabels(overlap_treat_sex "Sex $\times$ Overlap") keep(overlap_treat_sex)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+	#delimit cr
+	estimates clear
+	eststo clear
+	restore
+}
+
+/*******************************************************************************
+DiD with SH as treated
+*******************************************************************************/
+
+loc y1 settle
+loc y2 dismissed
+loc y3 win
+loc y4 relief_scale
+
+loc outcome_vars y1 y2 y3 y4
+loc i 1
+
+if `run_did_state' == 1 {
+	preserve 
+	keep if sample_sh == 1
 	foreach y of local outcome_vars {
 		
 		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
@@ -488,11 +398,102 @@ if `run_did_all' == 1 {
 	}
 
 	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace 
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_state.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
+		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	
+	loc outcome_vars y1 y2 y3 y4
+	loc i 1
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' overlap_treat, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if overlap_treat == 0 
+		estadd scalar control_mean = `r(mean)'
+		
+		reghdfe ``y'' overlap_treat, absorb(basis_state ym_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if overlap_treat == 0
+		estadd scalar control_mean = `r(mean)'
+		loc ++i
+	}
+
+	#delimit ;
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_state.tex", style(tex)
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
+		fragment
+		append
+		varlabels(overlap_treat "SH $\times$ Overlap") keep(overlap_treat)
+		mlabel(none) nomtitles nonumbers nolines
+		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
+			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+	#delimit cr
+	estimates clear
+	eststo clear
+	restore
+}
+
+
+/*******************************************************************************
+DiD regression with all data  
+*******************************************************************************/
+loc y1 settle
+loc y2 dismissed
+loc y3 win
+loc y4 relief_scale
+
+loc outcome_vars y1 y2 y3 y4
+loc i 1
+
+if `run_did_all' == 1 {
+
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
+		eststo a`i'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui: sum ``y'' if treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+		
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+		eststo s`i'
+		qui estadd loc feunit_s "\checkmark", replace
+		qui estadd loc fetime_s "\checkmark", replace
+		qui: sum ``y'' if treat_sex == 0
+		estadd scalar control_mean = `r(mean)'
+						
+		loc ++i
+	}
+
+	#delimit ;	
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
+		fragment
+		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
@@ -512,18 +513,18 @@ if `run_did_all' == 1 {
 	
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat treat_f, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat == 0
+		qui: sum ``y'' if treat_sex == 0
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' treat treat_f, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_f, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if treat == 0
+		qui: sum ``y'' if treat_sex == 0
 		estadd scalar control_mean = `r(mean)'
 						
 		loc ++i
@@ -534,7 +535,7 @@ if `run_did_all' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Complainant is female}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
+		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
@@ -551,18 +552,18 @@ if `run_did_all' == 1 {
 	
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' overlap_treat, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if overlap_treat == 0
+		qui: sum ``y'' if overlap_treat_sex == 0
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' overlap_treat, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
-		qui: sum ``y'' if overlap_treat == 0
+		qui: sum ``y'' if overlap_treat_sex == 0
 		estadd scalar control_mean = `r(mean)'
 		loc ++i
 	}
@@ -572,7 +573,7 @@ if `run_did_all' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlap cases}} \\ \midrule")
 		fragment
 		append
-		varlabels(overlap_treat "SH $\times$ Overlap") keep(overlap_treat)
+		varlabels(overlap_treat_sex "Sex $\times$ Overlap") keep(overlap_treat_sex)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
@@ -601,15 +602,15 @@ if `run_did_robust' == 1 {
 	// DID - Single-tagged ****************************************************/
 	preserve 
 	keep if multi_cat == 0
-	keep if sample_sh == 1
+	keep if eeoc == 0
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -622,7 +623,7 @@ if `run_did_robust' == 1 {
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Single-tagged cases}} \\ \midrule")
 		fragment
-		varlabels(treat "SH $\times$ Post") keep(treat)
+		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
@@ -643,15 +644,15 @@ if `run_did_robust' == 1 {
 
 	preserve 
 	drop if basis == "Retaliation"
-	keep if sample_sh == 1
+	keep if eeoc == 0
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -664,7 +665,7 @@ if `run_did_robust' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{No retaliation cases}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "SH $\times$ Post") keep(treat)
+		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit fetime feunit_s fetime_s N r2, 
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
@@ -682,15 +683,15 @@ if `run_did_robust' == 1 {
 	
 	preserve 
 	keep if juris == "Employment"
-	keep if sample_sh == 1
+	keep if eeoc == 0
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -703,7 +704,7 @@ if `run_did_robust' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Employment cases}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "SH $\times$ Post") keep(treat)
+		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit fetime feunit_s fetime_s N r2, 
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
@@ -723,12 +724,12 @@ if `run_did_robust' == 1 {
 	keep if eeoc_foia == 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		
-		reghdfe ``y'' treat, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -741,7 +742,7 @@ if `run_did_robust' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{EEOC court cases}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "SH $\times$ Post") keep(treat)
+		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit fetime feunit_s fetime_s N r2, 
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
@@ -765,13 +766,13 @@ if `run_selection' == 1 {
 	keep if eeoc == 0 // exclude EEOC cases  
 	eststo A: reg total_cases_per_year post, r
 
-	eststo B: reg sh_per_year post if sh == 1, r
+	eststo B: reg sex_cases_per_year post if sex_cases == 1, r
 
-	bys months_to_treat_12: egen months_to_treat_12_count = total(y) if sh == 0
-	eststo C: reg months_to_treat_12_count post if sh == 0 & inlist(months_to_treat_12, -1, 0), r
+	bys months_to_treat_12: egen months_to_treat_12_count = total(y) if sex_cases == 0
+	eststo C: reg months_to_treat_12_count post if sex_cases == 0 & inlist(months_to_treat_12, -1, 0), r
 
-	bys months_to_treat_12 sh: egen months_to_treat_12_count_sh = total(y)
-	eststo D: reg months_to_treat_12_count_sh post if sh == 1 & inlist(months_to_treat_12, -1, 0), r
+	bys months_to_treat_12 sex_cases: egen months_to_treat_12_count_sex = total(y)
+	eststo D: reg months_to_treat_12_count_sex post if sex_cases == 1 & inlist(months_to_treat_12, -1, 0), r
 	
 	#delimit ;
 	
@@ -780,7 +781,7 @@ if `run_selection' == 1 {
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule" "\multicolumn{@span}{c}{\textbf{Counts (per year)}} \\ \midrule")
 		fragment
 		varlabels(post "Post MeToo")
-		mlabel("\# filed" "\# SH filed" "\shortstack{\# Control filed in 12 months\\before vs after MeToo}" "\shortstack{\# SH filed in 12 months\\before vs after MeToo}" )
+		mlabel("\# filed" "\# Sex filed" "\shortstack{\# Control filed in 12 months\\before vs after MeToo}" "\shortstack{\# Sex filed in 12 months\\before vs after MeToo}" )
 		nomtitles nonumbers
 		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
@@ -791,11 +792,11 @@ if `run_selection' == 1 {
 	estimates clear
 	eststo clear
 
-	eststo B: reg filed_per_year post if sh == 1, r 
+	eststo B: reg filed_per_year post if sex_cases == 1, r 
 	
-	eststo C: reg filed_f_per_year post if sh == 1 & victim_f == 1, r
+	eststo C: reg filed_f_per_year post if sex_cases == 1 & victim_f == 1, r
 
-	eststo D: reg filed_f_per_year post if sh == 1 & victim_f == 0, r
+	eststo D: reg filed_f_per_year post if sex_cases == 1 & victim_f == 0, r
 
 	#delimit ;
 	
@@ -805,7 +806,7 @@ if `run_selection' == 1 {
 		append
 		drop(_cons)
 		varlabels(post "Post MeToo")
-		mlabel("DELETE ME" "\shortstack{Share SH filed\\of total cases}" "\shortstack{Share SH filed\\by women}" "\shortstack{Share SH filed\\by men}")
+		mlabel("DELETE ME" "\shortstack{Share Sex filed\\of total cases}" "\shortstack{Share Sex filed\\by women}" "\shortstack{Share Sex filed\\by men}")
 		nomtitles nonumbers
 		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
@@ -934,10 +935,10 @@ if `run_summary' == 1 {
 	eststo mean_all: estpost tabstat `summary_1', c(stat) stat(mean sd)
 	eststo mean_state: estpost tabstat `summary_1' if eeoc == 0, c(stat) stat(mean sd)
 	eststo post_all: estpost ttest `summary_2', by(post)
-	eststo post_sh: estpost ttest `summary_3' if sh == 1, by(post)
+	eststo post_sex_cases: estpost ttest `summary_3' if sex_cases == 1, by(post)
 
 	#delimit ;
-	esttab mean_all mean_state post_all post_sh using "$tables/summary.tex", replace 
+	esttab mean_all mean_state post_all post_sex_cases using "$tables/summary.tex", replace 
 		nonote nonumbers label booktabs f 
 		cells("mean(fmt(%13.3fc)) b(star fmt(%13.3fc))" 
 				"sd(fmt(2) par([ ])) se(par fmt(%15.2gc))")
@@ -945,7 +946,7 @@ if `run_summary' == 1 {
     	mgroups("\shortstack{Summary stats\\in sample}" 
 				"\shortstack{Difference in means\\pre/post MeToo}", 
 			pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-    	mtitles("All" "State only" "All" "SH")
+    	mtitles("All" "State only" "All" "Sex cases")
 			varlab( 
 			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
 			victim_f "\hspace{5mm} Complainant is female" 
@@ -992,15 +993,15 @@ if `run_duration' == 1 {
 
 	eststo: reg settle duration, r
 
-	eststo: reg settle duration if sh == 1, r
+	eststo: reg settle duration if sex_cases == 1, r
 
 	eststo: reg win duration, r
 
-	eststo: reg win duration if sh == 1, r
+	eststo: reg win duration if sex_cases == 1, r
 
 	eststo:	reg relief_scale duration, r
 
-	eststo:	reg relief_scale duration if sh == 1, r
+	eststo:	reg relief_scale duration if sex_cases == 1, r
 
 	#delimit ;
 	
@@ -1029,7 +1030,7 @@ Balance table
 if `run_balance' == 1 {
 	
 	loc balance ///
-    sh ///
+    sex_cases ///
 	basis_dummy1 ///
 	basis_dummy2 ///
 	basis_dummy3 ///
@@ -1062,7 +1063,7 @@ if `run_balance' == 1 {
 
     balancetable_program `balance', using("$tables/balance.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
-    balancetable_program `balance', sample(sh == 1) using("$tables/balance_sex.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(robust)
+    balancetable_program `balance', sample(sex_cases == 1) using("$tables/balance_sex.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(robust)
 
     // Filed pre-covid
     balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
@@ -1110,11 +1111,11 @@ if `run_sdid' == 1 {
 			xtset `unit'_cat `time' // xtset for panel data
 			spbalance, balance // check balance, drop if unbalanced
 
-			g treat = 0 
-			replace treat = 1 if `unit' == "Sex" & `time' > 0 
+			g treat_sex = 0 
+			replace treat_sex = 1 if `unit' == "Sex" & `time' > 0 
 
 			#delimit ;
-			eststo sdid`i': sdid ``y'' `unit' `time' treat,
+			eststo sdid`i': sdid ``y'' `unit' `time' treat_sex,
 				vce(placebo) reps(100) seed(123) method(sdid) 
 				graph g1on msize(medium)
 				g2_opt(xlabel(-8(1)5) xtitle("Time to MeToo", size(medium))) //ytitle("Probability of settlement", size(medium))
@@ -1138,7 +1139,7 @@ if `run_sdid' == 1 {
 
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis ym ym#basis_cat) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym ym#basis_cat) vce(cluster basis)
 		eststo u`j'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -1149,7 +1150,7 @@ if `run_sdid' == 1 {
 	
 	#delimit ;	
 	estout u1 u2 u3 sdid1 sdid2 sdid3 using "$tables/sdid.tex", style(tex) replace
-		varlabels(treat "ATT") keep(treat)
+		varlabels(treat_sex "ATT") keep(treat_sex)
 		mgroups("Unit trends" "SDID", pattern(1 0 0 1 0 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel("Settle" "Win" "Comp." "Settle" "Win" "Comp.", pattern(1 1 1 1 1 1) 

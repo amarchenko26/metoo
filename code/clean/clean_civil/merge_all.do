@@ -230,16 +230,16 @@ Outcomes
 // Gen index var for count
 g y = 1
 
-// Gen filed_per_year for sh vs non
-bys ym sh: egen total_cases_per_month_sh = total(y)
-g ln_total_cases_per_month_by_sh = ln(total_cases_per_month_sh)
+// Gen filed_per_year for sex_cases vs non
+bys ym sex_cases: egen total_cases_per_month_sex_cases = total(y)
+g ln_total_cases_per_month_by_sex = ln(total_cases_per_month_sex_cases)
 
 bys common_year: gen total_cases_per_year = _N
 bys common_year: egen total_gender_cases_per_year = sum(y) if victim_f != .
-bys common_year sh: gen sh_per_year = _N
-bys common_year sh victim_f: gen sh_f_per_year = _N
-g filed_per_year = sh_per_year / total_cases_per_year
-g filed_f_per_year = sh_f_per_year / total_gender_cases_per_year
+bys common_year sex_cases: gen sex_cases_per_year = _N
+bys common_year sex_cases victim_f: gen sex_cases_f_per_year = _N
+g filed_per_year = sex_cases_per_year / total_cases_per_year
+g filed_f_per_year = sex_cases_f_per_year / total_gender_cases_per_year
 
 // Gen share_filed_by_basis
 bys basis common_year: gen filed_by_basis = _N
@@ -324,6 +324,7 @@ g treat_sex = post * sex_cases
 replace treat_sex = 1 if overlap_all == 1 & sex_cases == 1 
 
 g treat_sex_f = treat_sex * victim_f
+g state_did_sex = treat_sex * state_cat
 
 // Overlap
 g overlap_treat_sex = overlap_all * sex_cases 
