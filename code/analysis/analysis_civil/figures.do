@@ -9,7 +9,7 @@ loc selection 	= 0
 loc event 	   	= 0
 loc timeseries 	= 0
 loc timeseries_basis = 0
-loc state_did  	= 1
+loc state_did  	= 0
 loc state_did_all = 0
 loc event_all  	= 0
 loc run_placebo = 1
@@ -40,8 +40,8 @@ if `selection' == 1 {
 	replace omega = 0.65 if _n == _N // Add method 3 omega
 
 	g omega_c = 1-omega
-	g twfe 	  = -.281 // full data = 0.033
-	g overlap = .372 // full data = 0.123
+	g twfe 	  = .024 // full data = 0.033
+	g overlap = .089 // full data = 0.123
 
 	// TWFE = omega (A-C) + (1-omega) (B-C)
 	// Selection equation
@@ -61,10 +61,10 @@ if `selection' == 1 {
 	addplot: pcarrowi -.22 0.63 -.17 0.63 (6) "No change in incidence",
 		mlabsize(small) mcolor(orange) lcolor(orange)
 		;
-	addplot: pcarrowi -.50 0.87 -.55 0.87 (12) "SH incidence increases by control file rate",
+	addplot: pcarrowi -.50 0.87 -.55 0.87 (12) "Sex incidence increases by control file rate",
 		mlabsize(small) mcolor(orange) lcolor(orange)
 		;
-	addplot: pcarrowi -.05 0.65 -.11 0.65 (12) "SH incidence decreases by 1.1pp",
+	addplot: pcarrowi -.05 0.65 -.11 0.65 (12) "Sex incidence decreases by 1.1pp",
 		mlabsize(small) mcolor(orange) lcolor(orange)
 		;
 	#delimit cr
@@ -689,7 +689,8 @@ if `run_placebo' == 1 {
 
 	// Placebo treatment effects
 	preserve
-	drop if basis == "Sex" | sh == 1 // drop real treated cases
+	keep if eeoc == 0 
+	drop if basis == "Sex" // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -708,7 +709,7 @@ if `run_placebo' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex if eeoc == 0, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -722,7 +723,7 @@ if `run_placebo' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment", size(medium));
@@ -740,7 +741,8 @@ if `run_placebo_single' == 1 {
 
 	// Single-tagged placebo treatment effects
 	preserve
-	drop if basis == "Sex" | sh == 1 // drop real treated cases
+	keep if eeoc == 0 
+	drop if basis == "Sex" // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -758,7 +760,7 @@ if `run_placebo_single' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex if eeoc == 0, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -772,7 +774,7 @@ if `run_placebo_single' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment for single-tagged cases", size(medium));
@@ -789,8 +791,9 @@ if `run_placebo_overlap' == 1 {
 	loc j 1
 
 	// Single-tagged placebo treatment effects
-	preserve
-	drop if basis == "Sex" | sh == 1 // drop real treated cases
+	preserve	
+	keep if eeoc == 0 
+	drop if basis == "Sex"  // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -808,7 +811,7 @@ if `run_placebo_overlap' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex if overlap_2 != ., absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex if overlap_2 != . & eeoc == 0, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -822,7 +825,7 @@ if `run_placebo_overlap' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment for overlap cases", size(medium));
@@ -840,7 +843,8 @@ if `run_placebo_f' == 1 {
 
 	// VICTIM FEMALE Placebo treatment effects
 	preserve
-	drop if basis == "Sex" | sh == 1 // drop real treated cases
+	keep if eeoc == 0 
+	drop if basis == "Sex" // drop real treated cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -858,7 +862,7 @@ if `run_placebo_f' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex_f, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex_f if eeoc == 0, absorb(basis_state ym_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -872,7 +876,7 @@ if `run_placebo_f' == 1 {
 		|| , drop(_cons)
 		byopts(xrescale legend(off)) // so x-axis is different for all plots
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sexual harassment", labsize(medium)) // angle(45)
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
 		ytitle("Placebo treatment for female complainants", size(medium));
