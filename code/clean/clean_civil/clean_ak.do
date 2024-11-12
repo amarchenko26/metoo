@@ -80,6 +80,7 @@ split issue
 g sh = 0
 replace sh = 1 if issue1 == "sexualharassment"
 replace basis = "Sex" if sh == 1 & strpos(basis_raw, "sex") > 0
+replace sh = 1 if basis == "Sex" & regexm(issue, "sexualharassment")
 replace sh = . if sh == 1 & basis != "Sex"
 drop issue?
 
