@@ -400,13 +400,11 @@ if `run_did_sex' == 1 {
 	}
 
 	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_sex.tex", style(tex) replace 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_sex.tex", style(tex) 
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Complainant is female}} \\ \midrule")
 		fragment
+		append
 		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f)
-		mgroups("Settled" "Dismissed" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit fetime feunit_s fetime_s N r2 control_mean, 
 			label("Case FE" "Time FE" "Case $\times$ State FE" "Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 3 3 %9.0fc 3))
