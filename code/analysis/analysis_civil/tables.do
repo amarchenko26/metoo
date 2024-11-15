@@ -6,7 +6,7 @@ use "$clean_data/clean_cases.dta", replace
 
 loc run_did_sex 	= 0
 loc run_did_state 	= 0
-loc run_did_gender	= 0
+loc run_did_gender	= 1
 loc run_did_alt_win = 0
 loc	run_did_all  	= 0
 loc run_did_robust 	= 0

@@ -6,16 +6,16 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc selection 	= 0
-loc event 	   	= 0
+loc event 	   	= 1
 loc timeseries 	= 0
 loc timeseries_basis = 0
 loc state_did  	= 0
 loc state_did_all = 0
 loc event_all  	= 0
-loc run_placebo = 1
-loc run_placebo_single = 1
-loc run_placebo_overlap = 1
-loc run_placebo_f = 1
+loc run_placebo = 0
+loc run_placebo_single = 0
+loc run_placebo_overlap = 0
+loc run_placebo_f = 0
 loc duration   	= 0
 loc yhat		= 0
 
@@ -81,23 +81,23 @@ local outcomes "settle dismissed win win_alt relief_scale"
 
 if `event' == 1 {
 
-	cap drop event 
-	g event = months_to_treat_12 * sex_cases
-	replace event = event + 9 // dummies can't be negative
-
 	foreach y in `outcomes' {
 		preserve
 		keep if eeoc == 0
-	
+
+		g event = months_to_treat_12 * sex_cases
+		drop if event == -8
+		replace event = event + 8 // dummies can't be negative
+
 		// Run dynamic DiD
-		reghdfe `y' ib8.event, ///
+		reghdfe `y' ib7.event, ///
 			absorb(basis_state ym_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
 
 		// Run Rambachan & Roth (2021)
 //		matrix l_vec = 1/5 \ 1/5 \ 1/5 \ 1/5 \ 1/5
-		honestdid, numpre(9) omit ///
+		honestdid, numpre(8) omit ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
 		graph export "$figures/honestdid_`y'_state.png", replace
 
@@ -106,11 +106,12 @@ if `event' == 1 {
 		coefplot (TWFE, omitted baselevel), vertical
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.4 .4)) ylabel(-.4(.1).4, labsize(small))
-			xline(9)
+			yline(0, lp(dash)) 
+			yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5", labsize(medium)) 
 			note("Fixed effects: unit/state and time/state", size(small))
 		;
 		#delimit cr
@@ -164,6 +165,44 @@ Cases/outcomes over time
 *******************************************************************************/
 
 if `timeseries' == 1 {
+    preserve
+	keep if eeoc == 0 
+
+    local Yvar y
+    local Xvar ym
+
+    collapse (sum) mean_y = `Yvar', by(`Xvar' sex_cases)
+    
+    * Get the min and max values of the x-axis variable
+    summarize `Xvar', detail
+    local xmin = r(min)
+    local xmax = r(max)
+    
+    * Create the x-axis label with proper formatting
+    local xlabel_cmd `"xlabel(`xmin'(12)`xmax', angle(45) format(%tm))"'
+
+	#delimit ;
+	twoway 
+		scatter mean_y `Xvar' if sex_cases == 1, mcolor("orange_red") msize(small) yaxis(1)
+		//	||	lpolyci mean_y `Xvar' if sex_cases == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
+		|| pcarrowi 67 729 67 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi 85 689 85 692, mlabsize(small) mcolor(black) lcolor(black)
+		legend(off)
+		xtitle("Date filed", size(medium))
+		xline(693, lpattern(solid))
+		xline(722, lpattern(solid))
+		`xlabel_cmd'
+		title("Number of complaints filed over time")
+		ytitle("Number sex complaints", axis(1))
+		text(67 730 "Covid-19", color("gs3") place(r) size(small))
+		text(85 688 "MeToo", color("gs3") place(l) size(small))
+		note("57% increase in Sex, 42% increase in non-Sex", size(small))
+	;
+	#delimit cr
+    graph export "$figures/timeseries_sex_filed.png", replace
+    restore
+
+
 	preserve 
 	keep if eeoc == 0 
 	* Women winning vs men winning vs. other complaints 
@@ -177,6 +216,7 @@ if `timeseries' == 1 {
 	
 	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
 	restore
+
 
 	* Number of complaints filed over time
     preserve
@@ -203,17 +243,17 @@ if `timeseries' == 1 {
 		|| scatter mean_y `Xvar' if sex_cases == 1, mcolor("orange_red") msize(small) yaxis(1)
 		|| pcarrowi 67 729 67 723, mlabsize(small) mcolor(black) lcolor(black)
 		|| pcarrowi 85 689 85 692, mlabsize(small) mcolor(black) lcolor(black)
-		legend(order(4 1) lab(4 "Sexual harassment, 95% CI") lab(1 "Other complaints, 95% CI") size(small) ring(0) pos(11) rows(2))
+		legend(order(4 1) lab(4 "Sex, 95% CI") lab(1 "Non-sex, 95% CI") size(small) ring(0) pos(11) rows(2))
 		xtitle("Date filed", size(medium))
 		xline(693, lpattern(solid))
 		xline(722, lpattern(solid))
 		`xlabel_cmd'
-		title("Number of complaints filed over time (state data)")
-		ytitle("Other complaints", axis(2)) 
-		ytitle("SH complaints", axis(1))
+		title("Number of complaints filed over time")
+		ytitle("Number non-sex complaints", axis(2)) 
+		ytitle("Number sex complaints", axis(1))
 		text(67 730 "Covid-19", color("gs3") place(r) size(small))
 		text(85 688 "MeToo", color("gs3") place(l) size(small))
-		text(15 697 "51% increase in SH, 44% increase in non-SH", size(small))
+		note("57% increase in Sex, 42% increase in non-Sex", size(small))
 	;
 	#delimit cr
     graph export "$figures/timeseries_filed.png", replace
