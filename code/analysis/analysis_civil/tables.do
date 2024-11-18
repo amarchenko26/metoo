@@ -6,12 +6,12 @@ use "$clean_data/clean_cases.dta", replace
 
 loc run_did_sex 	= 0
 loc run_did_state 	= 0
-loc run_did_gender	= 1
+loc run_did_gender	= 0
 loc run_did_alt_win = 0
 loc	run_did_all  	= 0
 loc run_did_robust 	= 0
-loc run_selection 	= 1
-loc run_summary  	= 0
+loc run_selection 	= 0
+loc run_summary  	= 1
 loc run_balance  	= 0
 loc run_duration 	= 0
 loc run_sdid   		= 0
@@ -900,53 +900,21 @@ if `run_summary' == 1 {
 		juris_dummy5; 
 	#delimit cr
 	
-	#delimit ;
-	loc summary_3 
-	// Case chars
-		victim_f 
-		duration 
-	// Basis
-		basis_dummy1 
-		basis_dummy2 
-		basis_dummy3 
-		basis_dummy4 
-		basis_dummy5 
-		basis_dummy6 
-		basis_dummy7 
-	// Outcomes 
-		dismissed 
-		settle
-		investigation
-		win_investigation
-		lose_investigation
-		court
-		win_court
-		lose_court
-		unknown_court
-		relief_scale 
-	// Jurisdiction 
-		juris_dummy1 
-		juris_dummy2 
-		juris_dummy3 
-		juris_dummy4 
-		juris_dummy5; 
-	#delimit cr
-	
-	eststo mean_all: estpost tabstat `summary_1', c(stat) stat(mean sd)
-	eststo mean_state: estpost tabstat `summary_1' if eeoc == 0, c(stat) stat(mean sd)
-	eststo post_all: estpost ttest `summary_2', by(post)
-	eststo post_sex_cases: estpost ttest `summary_3' if sex_cases == 1, by(post)
+	eststo mean_all: estpost tabstat `summary_1' if eeoc == 0, c(stat) stat(mean sd)
+	eststo mean_sex_cases: estpost tabstat `summary_1' if sex_cases == 1, c(stat) stat(mean sd)
+	eststo post_all: estpost ttest `summary_2' if eeoc == 0, by(post)
+	eststo post_sex_cases: estpost ttest `summary_2' if sex_cases == 1, by(post)
 
 	#delimit ;
-	esttab mean_all mean_state post_all post_sex_cases using "$tables/summary.tex", replace 
+	esttab mean_all mean_sex_cases post_all post_sex_cases using "$tables/summary.tex", replace 
 		nonote nonumbers label booktabs f 
-		cells("mean(fmt(%13.3fc)) b(star fmt(%13.3fc))" 
-				"sd(fmt(2) par([ ])) se(par fmt(%15.2gc))")
+		cells("mean(fmt(%13.3fc) pattern(1 1 0 0)) b(star fmt(%13.3fc) pattern (0 0 1 1) vacant(.))"
+				"sd(fmt(2) par([ ]) pattern(1 1 0 0)) se(par fmt(%15.2gc) pattern (0 0 1 1) vacant(.))")
 		collabels(none)
     	mgroups("\shortstack{Summary stats\\in sample}" 
 				"\shortstack{Difference in means\\pre/post MeToo}", 
 			pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-    	mtitles("All" "State only" "All" "Sex cases")
+    	mtitles("State only" "Sex cases" "State only" "Sex cases")
 			varlab( 
 			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
 			victim_f "\hspace{5mm} Complainant is female" 
