@@ -79,8 +79,7 @@ append using "$clean_data/clean_il.dta"
 Append to TX
 *******************************************************************************/
 
-//append using "$clean_data/clean_tx.dta"
-//waiting on TX to respond to identification of sh cases filed
+append using "$clean_data/clean_tx.dta"
 
 /*******************************************************************************
 Append to ND
