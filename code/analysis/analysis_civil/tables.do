@@ -830,7 +830,6 @@ if `run_summary' == 1 {
 	tab basis, gen(basis_dummy)
 	tab juris, gen(juris_dummy)
 
-	// Define local 
 	#delimit ;
 	loc summary_1
 	// Case chars
@@ -868,7 +867,43 @@ if `run_summary' == 1 {
 	#delimit cr
 	
 	#delimit ;
-	loc summary_2 
+	loc summary_2 // sex cases
+	// Case chars
+		sh
+		victim_f
+		post 
+		charge_file_year 
+		charge_res_year 
+		duration 
+	// Basis
+		/* basis_dummy1 
+		basis_dummy2 
+		basis_dummy3 
+		basis_dummy4 
+		basis_dummy5  */
+		basis_dummy6 
+		basis_dummy7 
+	// Outcomes 
+		dismissed 
+		settle
+		investigation
+		win_investigation
+		lose_investigation
+		court
+		win_court
+		lose_court
+		unknown_court
+		relief_scale 
+	// Jurisdiction 
+		juris_dummy1 
+		juris_dummy2 
+		juris_dummy3 
+		juris_dummy4 
+		juris_dummy5; 
+	#delimit cr
+
+	#delimit ;
+	loc summary_3 // post MeToo
 	// Case chars
 		sh
 		victim_f
@@ -899,11 +934,44 @@ if `run_summary' == 1 {
 		juris_dummy4 
 		juris_dummy5; 
 	#delimit cr
+
+	#delimit ;
+	loc summary_4 // post MeToo
+	// Case chars
+		sh
+		victim_f
+		duration 
+	// Basis
+		/* basis_dummy1 
+		basis_dummy2 
+		basis_dummy3 
+		basis_dummy4 
+		basis_dummy5  */
+		basis_dummy6 
+		basis_dummy7 
+	// Outcomes 
+		dismissed 
+		settle
+		investigation
+		win_investigation
+		lose_investigation
+		court
+		win_court
+		lose_court
+		unknown_court
+		relief_scale 
+	// Jurisdiction 
+		juris_dummy1 
+		juris_dummy2 
+		juris_dummy3 
+		juris_dummy4 
+		juris_dummy5; 
+	#delimit cr
 	
 	eststo mean_all: estpost tabstat `summary_1' if eeoc == 0, c(stat) stat(mean sd)
-	eststo mean_sex_cases: estpost tabstat `summary_1' if sex_cases == 1, c(stat) stat(mean sd)
-	eststo post_all: estpost ttest `summary_2' if eeoc == 0, by(post)
-	eststo post_sex_cases: estpost ttest `summary_2' if sex_cases == 1, by(post)
+	eststo mean_sex_cases: estpost tabstat `summary_2' if sex_cases == 1 & eeoc == 0, c(stat) stat(mean sd)
+	eststo post_all: estpost ttest `summary_3' if eeoc == 0, by(post)
+	eststo post_sex_cases: estpost ttest `summary_4' if sex_cases == 1 & eeoc == 0, by(post)
 
 	#delimit ;
 	esttab mean_all mean_sex_cases post_all post_sex_cases using "$tables/summary.tex", replace 
@@ -911,12 +979,12 @@ if `run_summary' == 1 {
 		cells("mean(fmt(%13.3fc) pattern(1 1 0 0)) b(star fmt(%13.3fc) pattern (0 0 1 1) vacant(.))"
 				"sd(fmt(2) par([ ]) pattern(1 1 0 0)) se(par fmt(%15.2gc) pattern (0 0 1 1) vacant(.))")
 		collabels(none)
-    	mgroups("\shortstack{Summary stats\\in sample}" 
-				"\shortstack{Difference in means\\pre/post MeToo}", 
+    	mgroups("\shortstack{Sample\\Statistics}" 
+				"\shortstack{Mean Difference\\(Post-Pre) MeToo}", 
 			pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-    	mtitles("State only" "Sex cases" "State only" "Sex cases")
+    	mtitles("All" "Sex only" "All" "Sex only")
 			varlab( 
-			sh "\textit{Characteristics} \\ \hspace{5mm} Sexual harassment" 
+			sh "\textit{Complaint Characteristics} \\ \hspace{5mm} Sexual harassment" 
 			victim_f "\hspace{5mm} Complainant is female" 
 			post "\hspace{5mm} Filed after MeToo" 
 			charge_file_year "\hspace{5mm} Year filed" 
@@ -938,7 +1006,7 @@ if `run_summary' == 1 {
 			win_court "\hspace{10mm} Won in court" 
 			lose_court "\hspace{10mm} Lost in court"
 			unknown_court "\hspace{10mm} Unknown outcome in court"
-			relief_scale "\hspace{5mm} Compensation, 1000s (in court or investigation)" 
+			relief_scale "\hspace{5mm} Compensation, 1000s (court or invest.)" 
 			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
 			juris_dummy2 "\hspace{5mm} Employment" 
 			juris_dummy3 "\hspace{5mm} Housing" 

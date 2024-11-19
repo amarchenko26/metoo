@@ -7,7 +7,7 @@ use "$clean_data/clean_cases.dta", replace
 
 loc selection 	= 0
 loc event 	   	= 1
-loc timeseries 	= 0
+loc timeseries 	= 1
 loc timeseries_basis = 0
 loc state_did  	= 0
 loc state_did_all = 0
