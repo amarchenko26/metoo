@@ -976,8 +976,8 @@ if `run_summary' == 1 {
 	#delimit ;
 	esttab mean_all mean_sex_cases post_all post_sex_cases using "$tables/summary.tex", replace 
 		nonote nonumbers label booktabs f 
-		cells("mean(fmt(%13.3fc) pattern(1 1 0 0)) b(star fmt(%13.3fc) pattern (0 0 1 1) vacant(.))"
-				"sd(fmt(2) par([ ]) pattern(1 1 0 0)) se(par fmt(%15.2gc) pattern (0 0 1 1) vacant(.))")
+		cells("mean(fmt(%13.3fc) pattern(1 1 0 0) vacant(.)) b(star fmt(%13.3fc) pattern (0 0 1 1) vacant(.))"
+				"sd(fmt(2) par([ ]) pattern(1 1 0 0) vacant(.)) se(par fmt(%15.2gc) pattern (0 0 1 1) vacant(.))")
 		collabels(none)
     	mgroups("\shortstack{Sample\\Statistics}" 
 				"\shortstack{Mean Difference\\(Post-Pre) MeToo}", 
