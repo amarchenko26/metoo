@@ -4,14 +4,14 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did_sex 	= 0
-loc run_did_state 	= 0
-loc run_did_gender	= 0
-loc run_did_alt_win = 0
-loc	run_did_all  	= 0
-loc run_did_robust 	= 0
+loc run_did_sex 	= 1
+loc run_did_state 	= 1
+loc run_did_gender	= 1
+loc run_did_alt_win = 1
+loc	run_did_all  	= 1
+loc run_did_robust 	= 1
 loc run_selection 	= 0
-loc run_summary  	= 1
+loc run_summary  	= 0
 loc run_balance  	= 0
 loc run_duration 	= 0
 loc run_sdid   		= 0
@@ -848,15 +848,10 @@ if `run_summary' == 1 {
 		basis_dummy6 
 		basis_dummy7 
 	// Outcomes 
-		dismissed 
 		settle
-		investigation
-		win_investigation
-		lose_investigation
+		win_1
+		win_0
 		court
-		win_court
-		lose_court
-		unknown_court
 		relief_scale 
 	// Jurisdiction 
 		juris_dummy1 
@@ -884,15 +879,10 @@ if `run_summary' == 1 {
 		basis_dummy6 
 		basis_dummy7 
 	// Outcomes 
-		dismissed 
 		settle
-		investigation
-		win_investigation
-		lose_investigation
+		win_1
+		win_0
 		court
-		win_court
-		lose_court
-		unknown_court
 		relief_scale 
 	// Jurisdiction 
 		juris_dummy1 
@@ -917,15 +907,10 @@ if `run_summary' == 1 {
 		basis_dummy6 
 		basis_dummy7 
 	// Outcomes 
-		dismissed 
 		settle
-		investigation
-		win_investigation
-		lose_investigation
+		win_1
+		win_0
 		court
-		win_court
-		lose_court
-		unknown_court
 		relief_scale 
 	// Jurisdiction 
 		juris_dummy1 
@@ -950,15 +935,10 @@ if `run_summary' == 1 {
 		basis_dummy6 
 		basis_dummy7 
 	// Outcomes 
-		dismissed 
 		settle
-		investigation
-		win_investigation
-		lose_investigation
+		win_1
+		win_0
 		court
-		win_court
-		lose_court
-		unknown_court
 		relief_scale 
 	// Jurisdiction 
 		juris_dummy1 
@@ -997,16 +977,11 @@ if `run_summary' == 1 {
 			basis_dummy5 "\hspace{5mm} Religion" 
 			basis_dummy6 "\hspace{5mm} Retaliation" 
 			basis_dummy7 "\hspace{5mm} Sex" 
-			dismissed "\textit{Outcomes} \\ \hspace{5mm} Dismissed" 
-			settle "\hspace{5mm} Settled" 
-			investigation "\hspace{5mm} Went to investigation" 
-			win_investigation "\hspace{10mm} Won at investigation" 
-			lose_investigation "\hspace{10mm} Lost at investigation" 
+			settle "\textit{Outcomes} \\ \hspace{5mm} Settled" 
+			win_1 "\hspace{5mm} Won"
+			win_0 "\hspace{5mm} Lost or dismissed"
 			court "\hspace{5mm} Went to court" 
-			win_court "\hspace{10mm} Won in court" 
-			lose_court "\hspace{10mm} Lost in court"
-			unknown_court "\hspace{10mm} Unknown outcome in court"
-			relief_scale "\hspace{5mm} Compensation, 1000s (court or invest.)" 
+			relief_scale "\hspace{5mm} Compensation, 1000s" 
 			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
 			juris_dummy2 "\hspace{5mm} Employment" 
 			juris_dummy3 "\hspace{5mm} Housing" 

@@ -126,8 +126,8 @@ replace court = . if inlist(outcome, "", "Agency Discretion")
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if regexm(outcome, "Withdrawn") & settle == 0 & court == 0
-replace dismissed = 1 if regexm(outcome,"Dismiss") & court == 0
-replace dismissed = 1 if regexm(outcome, "No Basis to Proceed (For Filing Purposes Only)|No Follow-Up Info Rcvd from Requestor|ime|No Jurisdiction|Respondent Bankrupt|Unable")
+replace dismissed = 1 if regexm(outcome, "Dismiss") & court == 0
+replace dismissed = 1 if regexm(outcome, "No Basis to Proceed|No Follow-Up Info Rcvd from Requestor|ime|No Jurisdiction|Respondent Bankrupt|Unable")
 replace dismissed = . if inlist(outcome, "", "Agency Discretion")
 
 
