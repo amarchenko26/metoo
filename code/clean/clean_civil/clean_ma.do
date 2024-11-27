@@ -4,31 +4,47 @@ Cleans Massachussets data
 
 *******************************************************************************/
 
+import excel "$raw_data/MA/ma_gender.xlsx", firstrow clear
+duplicates drop DocketId, force
+save "$clean_data/clean_ma.dta", replace
+
 import excel "$raw_data/MA/ma_raw_cases.xlsx", ///
 	sheet("No Duplicate Complaints") firstrow clear
+duplicates drop DocketId, force
+merge 1:1 DocketId using "$clean_data/clean_ma.dta"
+
 
 /*******************************************************************************
 Clean vars
 *******************************************************************************/
 
 drop CaseStatus // only closed cases in MA
+drop Organization _merge
 
 ren DocketId id
+
 ren ChargeFilingDate charge_file_date
+replace charge_file_date = DateFiled if charge_file_date == .
+drop DateFiled
+
 ren ResolutionDate charge_res_date
+
 ren Jurisdiction juris 
+replace juris = JurisdictionDiscription if juris == ""
+drop JurisdictionDiscription
+
 ren Outcome outcome
 ren RespondentLastName resp_ln 
 ren RespondentOrganization resp_org
 ren AllegationsBasisofdiscrimina basis_raw
+g comp_name = FirstName + " " + LastName
+replace comp_name = "" if comp_name == " "
+drop FirstName LastName
 
 
 /*******************************************************************************
 Define new vars
 *******************************************************************************/
-
-// Drops 200 empty observations
-drop if charge_file_date == . & charge_res_date == .
 
 // Jurisdiction
 replace juris = "Housing" if juris != "Employment"
@@ -37,6 +53,9 @@ replace juris = "Housing" if juris != "Employment"
 g multi_cat = 0
 
 // Clean basis 
+replace basis_raw = BasisDiscription if basis_raw == ""
+drop BasisDiscription
+drop if basis_raw == ""
 g basis = "Sex" if regexm(basis_raw, "Sex|Female|Male")
 replace basis = "Sex" if regexm(basis_raw, "Sexual orientation|Gender")
 replace basis = "Religion" if regexm(basis_raw, "Atheist|Catholic|Creed|Orthodox|Islamic|Jehovah's|Jewish|Protestant|Sabbath|Adventist") | regexm(basis_raw, "^Other Religion")| regexm(basis_raw, "^Other religious")| regexm(basis_raw, "^Other specified creed")
@@ -48,7 +67,6 @@ replace basis = "Retaliation" if regexm(basis_raw, "Retaliation")
 replace basis = "Other" if regexm(basis_raw, "Arrest|Children|Conviction|Divorced|Drug|Familial|Genetic|Lead|Marital|Married|Military|Misdemeanor|Police|Public|Separated|Single|Unspecified|Veteran|Widowed")
 replace basis = "Other" if basis_raw == "Other"
 
-
 // Make SH vars
 gen sh = basis_raw == "Sex discrimination / Sexual Harassment"
 gen sex_cases = basis == "Sex"
@@ -57,10 +75,21 @@ replace sh = . if sex_cases == 0 & sh == 1 // remove cases that are SH but not s
 /*replace sex_cases = 0 if basis == "Male" //don't count Male discrimination in Sex
 replace sex_cases = 0 if basis == "Male (Paternity-related)" */
 
+// Victim female
+g victim_f = .
+replace victim_f = 1 if GenderCode == "Female"
+replace victim_f = 1 if regexm(basis_raw, "Female") & GenderCode != "Male"
+replace victim_f = 0 if GenderCode == "Male"
+replace victim_f = 0 if regexm(basis_raw, "Male") & GenderCode != "Female"
+
+// Duration
 gen duration = charge_res_date - charge_file_date
 
 // Gen state var
 gen state = "MA"
+
+replace outcome = Description if outcome == ""
+drop Description
 
 // Probable cause
 g win = .
@@ -92,7 +121,6 @@ g withdraw = 0
 replace withdraw = 1 if outcome == "Closed - Withdrawn"
 replace withdraw = . if inlist(outcome, "Closed - Compliance With Order", "Closed - Housing Judicial Review  ", "Closed - Judicial Review")
 
-
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if outcome == "Closed - Dismissed"
@@ -100,12 +128,10 @@ replace dismissed = 1 if outcome == "Closed - R&A Dismissal"
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
 replace dismissed = . if inlist(outcome, "Closed - Compliance With Order", "Closed - Housing Judicial Review  ", "Closed - Judicial Review")
 
-
 // Clean court
 g court = 0
 replace court = 1 if outcome == "Closed - Chapter 478 (removed to court)" 
 replace court = . if inlist(outcome, "Closed - Compliance With Order", "Closed - Housing Judicial Review  ", "Closed - Judicial Review")
-
 
 // Relief
 g relief = .

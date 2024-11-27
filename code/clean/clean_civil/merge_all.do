@@ -26,6 +26,7 @@ Already merged:
 	- DE
 	- FL
 	- NC
+	- CA
 	
 *******************************************************************************/
 
@@ -147,6 +148,12 @@ Append to NC
 *******************************************************************************/
 
 append using "$clean_data/clean_nc.dta"
+
+/*******************************************************************************
+Append to CA
+*******************************************************************************/
+
+append using "$clean_data/clean_ca.dta"
 
 
 /*******************************************************************************
@@ -284,6 +291,12 @@ replace unknown_court = 1 if win == . & court == 1
 // Alternative def of win 
 g win_alt = win
 replace win_alt = 0 if dismissed == 1
+
+// Alternative def of win (for summary table)
+g win_1 = 0 if dismissed != . | settle != . | court != .
+replace win_1 = 1 if win_alt == 1
+g win_0 = 0 if dismissed != . | settle != . | court != .
+replace win_0 = 1 if win_alt == 0
 
 /*******************************************************************************
 Overlap

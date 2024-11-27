@@ -84,6 +84,7 @@ Run files
 do "$droot/code/clean/clean_civil/clean_eeoc.do"
 do "$droot/code/clean/clean_civil/clean_eeoc_filed.do"
 do "$droot/code/clean/clean_civil/clean_ak.do"
+do "$droot/code/clean/clean_civil/clean_ca.do"
 do "$droot/code/clean/clean_civil/clean_de.do"
 do "$droot/code/clean/clean_civil/clean_fl.do"
 do "$droot/code/clean/clean_civil/clean_hi.do"
