@@ -165,46 +165,42 @@ Cases/outcomes over time
 *******************************************************************************/
 
 if `timeseries' == 1 {
+
     preserve
 	keep if eeoc == 0 
+	keep if sex_cases == 1
 
-    local Yvar y
-    local Xvar ym
-
-    collapse (sum) mean_y = `Yvar', by(`Xvar' sex_cases)
+	collapse (sum) mean_y = y, by(ym state_cat)
+	reg mean_y i.state_cat, r 
+	predict resid_num, resid
+	collapse (mean) mean_resid_by_ym = resid_num, by(ym)
     
-    * Get the min and max values of the x-axis variable
-    summarize `Xvar', detail
-    local xmin = r(min)
-    local xmax = r(max)
-    
-    * Create the x-axis label with proper formatting
-    local xlabel_cmd `"xlabel(`xmin'(12)`xmax', angle(45) format(%tm))"'
+	loc height = 15
 
 	#delimit ;
 	twoway 
-		scatter mean_y `Xvar' if sex_cases == 1, mcolor("orange_red") msize(small) yaxis(1)
-		//	||	lpolyci mean_y `Xvar' if sex_cases == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
-		|| pcarrowi 67 729 67 723, mlabsize(small) mcolor(black) lcolor(black)
-		|| pcarrowi 85 689 85 692, mlabsize(small) mcolor(black) lcolor(black)
+		scatter mean_resid_by_ym ym, mcolor("orange_red") msize(small) yaxis(1)
+		||	lpolyci mean_resid_by_ym ym, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
+		|| pcarrowi `height' 729 `height' 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi `height' 686 `height' 692, mlabsize(small) mcolor(black) lcolor(black)
 		legend(off)
 		xtitle("Date filed", size(medium))
 		xline(693, lpattern(solid))
 		xline(722, lpattern(solid))
-		`xlabel_cmd'
-		title("Number of complaints filed over time")
-		ytitle("Number sex complaints", axis(1))
-		text(67 730 "Covid-19", color("gs3") place(r) size(small))
-		text(85 688 "MeToo", color("gs3") place(l) size(small))
-		note("57% increase in Sex, 42% increase in non-Sex", size(small))
+		title("Number of sex discrimination complaints filed over time")
+		ytitle("Residualized number of complaints", axis(1))
+		text(`height' 730 "Covid-19", color("gs3") place(r) size(small))
+		text(`height' 685 "MeToo", color("gs3") place(l) size(small))
+		note("Each dot plots the mean residuals from a regression of number of monthly complaints on state fixed effects.")
 	;
 	#delimit cr
     graph export "$figures/timeseries_sex_filed.png", replace
     restore
 
-
 	preserve 
 	keep if eeoc == 0 
+	drop if state == "CA" //CA data starts 2017, messes up timeseries graph
+
 	* Women winning vs men winning vs. other complaints 
 	plot_lpolyci_gender win ym, title("Probability of Winning by Complainant Gender") ylabel("Probability of win")
 
@@ -212,11 +208,10 @@ if `timeseries' == 1 {
 
 	plot_lpolyci dismissed ym, title("Probability Complaint Dismissed Over Time") ylabel("Probability dismissed")
 
-	plot_lpolyci win ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
+	plot_lpolyci win_alt ym, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
 	
 	plot_lpolyci relief_scale ym, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
 	restore
-
 
 	* Number of complaints filed over time
     preserve
@@ -227,14 +222,6 @@ if `timeseries' == 1 {
 
     collapse (sum) mean_y = `Yvar', by(`Xvar' sex_cases)
     
-    * Get the min and max values of the x-axis variable
-    summarize `Xvar', detail
-    local xmin = r(min)
-    local xmax = r(max)
-    
-    * Create the x-axis label with proper formatting
-    local xlabel_cmd `"xlabel(`xmin'(12)`xmax', angle(45) format(%tm))"'
-
 	#delimit ;
 	twoway 
 		lpolyci mean_y `Xvar' if sex_cases == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black) yaxis(2)
@@ -247,13 +234,11 @@ if `timeseries' == 1 {
 		xtitle("Date filed", size(medium))
 		xline(693, lpattern(solid))
 		xline(722, lpattern(solid))
-		`xlabel_cmd'
 		title("Number of complaints filed over time")
 		ytitle("Number non-sex complaints", axis(2)) 
 		ytitle("Number sex complaints", axis(1))
 		text(67 730 "Covid-19", color("gs3") place(r) size(small))
 		text(85 688 "MeToo", color("gs3") place(l) size(small))
-		note("57% increase in Sex, 42% increase in non-Sex", size(small))
 	;
 	#delimit cr
     graph export "$figures/timeseries_filed.png", replace

@@ -4,42 +4,44 @@ Cleans Massachussets data
 
 *******************************************************************************/
 
-import excel "$raw_data/MA/ma_gender.xlsx", firstrow clear
-duplicates drop DocketId, force
+import delimited "$raw_data/MA/ma_gender_w_algo.csv", clear varnames(1)
+duplicates drop docketid, force
 save "$clean_data/clean_ma.dta", replace
+
 
 import excel "$raw_data/MA/ma_raw_cases.xlsx", ///
 	sheet("No Duplicate Complaints") firstrow clear
-duplicates drop DocketId, force
-merge 1:1 DocketId using "$clean_data/clean_ma.dta"
+ren *, lower
+duplicates drop docketid, force
+merge 1:1 docketid using "$clean_data/clean_ma.dta"
 
 
 /*******************************************************************************
 Clean vars
 *******************************************************************************/
 
-drop CaseStatus // only closed cases in MA
-drop Organization _merge
+drop casestatus // only closed cases in MA
+drop organization _merge
 
-ren DocketId id
+ren docketid id
 
-ren ChargeFilingDate charge_file_date
-replace charge_file_date = DateFiled if charge_file_date == .
-drop DateFiled
+ren chargefilingdate charge_file_date
+gen datefiled_date = date(datefiled, "MDY")
+replace charge_file_date = datefiled_date if charge_file_date == .
+drop datefiled datefiled_date
 
-ren ResolutionDate charge_res_date
+ren resolutiondate charge_res_date
 
-ren Jurisdiction juris 
-replace juris = JurisdictionDiscription if juris == ""
-drop JurisdictionDiscription
+ren jurisdiction juris 
+replace juris = jurisdictiondiscription if juris == ""
+drop jurisdictiondiscription
 
-ren Outcome outcome
-ren RespondentLastName resp_ln 
-ren RespondentOrganization resp_org
-ren AllegationsBasisofdiscrimina basis_raw
-g comp_name = FirstName + " " + LastName
+ren respondentlastname resp_ln 
+ren respondentorganization resp_org
+ren allegationsbasisofdiscrimina basis_raw
+g comp_name = firstname + " " + lastname
 replace comp_name = "" if comp_name == " "
-drop FirstName LastName
+drop firstname lastname
 
 
 /*******************************************************************************
@@ -53,8 +55,8 @@ replace juris = "Housing" if juris != "Employment"
 g multi_cat = 0
 
 // Clean basis 
-replace basis_raw = BasisDiscription if basis_raw == ""
-drop BasisDiscription
+replace basis_raw = basisdiscription if basis_raw == ""
+drop basisdiscription
 drop if basis_raw == ""
 g basis = "Sex" if regexm(basis_raw, "Sex|Female|Male")
 replace basis = "Sex" if regexm(basis_raw, "Sexual orientation|Gender")
@@ -77,10 +79,10 @@ replace sex_cases = 0 if basis == "Male (Paternity-related)" */
 
 // Victim female
 g victim_f = .
-replace victim_f = 1 if GenderCode == "Female"
-replace victim_f = 1 if regexm(basis_raw, "Female") & GenderCode != "Male"
-replace victim_f = 0 if GenderCode == "Male"
-replace victim_f = 0 if regexm(basis_raw, "Male") & GenderCode != "Female"
+replace victim_f = 1 if gendercode == "Female"
+replace victim_f = 1 if regexm(basis_raw, "Female") & gendercode != "Male"
+replace victim_f = 0 if gendercode == "Male"
+replace victim_f = 0 if regexm(basis_raw, "Male") & gendercode != "Female"
 
 // Duration
 gen duration = charge_res_date - charge_file_date
@@ -88,8 +90,8 @@ gen duration = charge_res_date - charge_file_date
 // Gen state var
 gen state = "MA"
 
-replace outcome = Description if outcome == ""
-drop Description
+replace outcome = description if outcome == ""
+drop description
 
 // Probable cause
 g win = .
