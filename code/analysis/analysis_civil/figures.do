@@ -6,10 +6,10 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc selection 	= 0
-loc event 	   	= 1
-loc timeseries 	= 1
+loc event 	   	= 0
+loc timeseries 	= 0
 loc timeseries_basis = 0
-loc state_did  	= 0
+loc state_did  	= 1
 loc state_did_all = 0
 loc event_all  	= 0
 loc run_placebo = 0
@@ -49,16 +49,25 @@ if `selection' == 1 {
 	
 	#delimit ;
 	twoway scatter bc omega, yline(0)
-			ytitle("Selection effect", size(medium))
-			xtitle("Omega (share always reporters)", size(medium))
+			ytitle("Treatment effect", size(medium))
+			title("Treatment effect on marginal reporters for given values of {&omega}")
+			xtitle("Share always reporters", size(medlarge))
 			mlabel(omega) mlabposition(6) 
-			msize(medlarge) mlabsize(vsmall)
-			mcolor("0 102 204")
+			msize(large) mlabsize(medium)
+			mcolor(orange_red) //mcolor("0 102 204")
 			legend(off)
-			xlabel(0(.1)1)
+			xline(.3, lcolor(orange_red) lp(dash))
+			text(-.3 .32 "As long as share > .3" "TEs on marginal reporters is negative", color("gs3") place(r) size(medlarge))
+			xlabel(0 `" "All Marginal" "Reporters" "' 
+				  .2 " "
+				  .4 " "
+				  .5 " " // `" "Half Always /" "Half New" "Reporters" "' 
+				  .6 " "
+				  .8 " "
+				  .97 `" "All Always" "Reporters" "' 1 " ", labsize(medlarge) noticks)
 			xsize(8)
 		;
-	addplot: pcarrowi -.22 0.63 -.17 0.63 (6) "No change in incidence",
+	/* addplot: pcarrowi -.22 0.63 -.17 0.63 (6) "No change in incidence",
 		mlabsize(small) mcolor(orange) lcolor(orange)
 		;
 	addplot: pcarrowi -.50 0.87 -.55 0.87 (12) "Sex incidence increases by control file rate",
@@ -66,10 +75,10 @@ if `selection' == 1 {
 		;
 	addplot: pcarrowi -.05 0.65 -.11 0.65 (12) "Sex incidence decreases by 1.1pp",
 		mlabsize(small) mcolor(orange) lcolor(orange)
-		;
+		; */
 	#delimit cr
 
-//	graph export "$figures/omega.png", replace  
+	graph export "$figures/omega.png", replace  
 	restore
 }
 
@@ -187,11 +196,10 @@ if `timeseries' == 1 {
 		xtitle("Date filed", size(medium))
 		xline(693, lpattern(solid))
 		xline(722, lpattern(solid))
-		title("Number of sex discrimination complaints filed over time")
-		ytitle("Residualized number of complaints", axis(1))
-		text(`height' 730 "Covid-19", color("gs3") place(r) size(small))
-		text(`height' 685 "MeToo", color("gs3") place(l) size(small))
-		note("Each dot plots the mean residuals from a regression of number of monthly complaints on state fixed effects.")
+		title("Number of sex complaints filed over time (residualized)")
+		ytitle("Residualized number of complaints", axis(1) size(medium))
+		text(`height' 730 "Covid-19", color("gs3") place(r) size(medium))
+		text(`height' 685 "MeToo", color("gs3") place(l) size(medium)) //note("Each dot plots the mean residuals from a regression of number of monthly complaints on state fixed effects.", size(medium))
 	;
 	#delimit cr
     graph export "$figures/timeseries_sex_filed.png", replace
@@ -532,46 +540,56 @@ if `state_did' == 1 {
 
 	#delimit ;
 	coefplot 
-		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
-		(A, keep(10.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
-		(A, keep(11.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
-		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
-		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
-		(A, keep(20.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
-		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
-		(A, keep(25.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
-		(A, keep(26.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
-		(A, keep(31.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
-		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
-		(A, keep(53.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WI
+		(A, keep(1.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
+		(A, keep(6.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CA
+		(A, keep(10.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
+		(A, keep(11.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
+		(A, keep(14.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
+		(A, keep(17.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
+		(A, keep(20.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
+		(A, keep(22.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
+		(A, keep(25.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
+		(A, keep(26.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
+		(A, keep(30.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NC
+		(A, keep(31.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
+		(A, keep(41.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // PA
+		(A, keep(43.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // RI
+		(A, keep(47.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // TX
+		(A, keep(52.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
+		(A, keep(53.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WI
 		drop(_cons)
 		vertical omitted 
 		legend(off)
-		mlabels(1.state_did = 3 "AK"
-				10.state_did = 3 "DE"
-				11.state_did = 3 "FL"
-				14.state_did = 3 "HI" 
-				17.state_did = 3 "IL" 
-				20.state_did = 3 "KY" 
-				22.state_did = 3 "MA" 
-				25.state_did = 3 "MI"
-				26.state_did = 3 "MN"
-				31.state_did = 3 "ND"
-				52.state_did = 3 "WA"
-				53.state_did = 3 "WI")
+		mlabels(1.state_did_sex = 3 "AK"
+				6.state_did_sex = 3 "CA"
+				10.state_did_sex = 3 "DE"
+				11.state_did_sex = 3 "FL"
+				14.state_did_sex = 3 "HI" 
+				17.state_did_sex = 3 "IL" 
+				20.state_did_sex = 3 "KY" 
+				22.state_did_sex = 3 "MA" 
+				25.state_did_sex = 3 "MI"
+				26.state_did_sex = 3 "MN"
+				30.state_did_sex = 3 "NC"
+				31.state_did_sex = 3 "ND"
+				41.state_did_sex = 3 "PA"
+				43.state_did_sex = 3 "RI"
+				47.state_did_sex = 3 "TX"
+				52.state_did_sex = 3 "WA"
+				53.state_did_sex = 3 "WI")
 		ciopts(lwidth(thick) recast(rcap))
 		sort(, by(b))
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
-		ytitle("Treatment effect on win", size(medium))
+		ytitle("Treatment effect on P(win)", size(medium))
+		title("Treatment effects on P(win) by state", size(medium))
 		xtitle("State filed", size(medium))
-		xlabel(, noticks nolabel)
-		yscale(range(-.2 .6)) ylabel(-.2(.2).6, labsize(small))
+		xlabel(, noticks nolabel) //yscale(range(-.1 .5)) ylabel(-.1(.2).5, labsize(small))
 		note("Controls include State X Unit and State X Time FE", size(small)) 
-		text(-.05 2 "ATT: `att'")
+		text(0.08 2 "Overall ATT: `att'")
 		;
 	#delimit cr
-    graph export "$figures/state_fx.png", replace  
+    graph export "$figures/state_fx.png", replace    
 	restore
 }
 
