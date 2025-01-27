@@ -192,6 +192,13 @@ replace eeoc_took_to_court = 0 if eeoc == 0 // Make sure to make eeoc_took_to_co
 
 replace civil_action_number = "" if civil_action_number == "null"
 
+// Gen earliest available dates
+bysort state: egen earliest_date = min(common_file_date)
+bysort state: egen last_date 	= max(common_file_date)
+
+format earliest_date last_date %td
+
+
 /*******************************************************************************
 Consistent sample 
 *******************************************************************************/

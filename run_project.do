@@ -34,10 +34,6 @@ if "`c(username)'" == "anyamarchenko"{
 if "`c(username)'" == "maggie"{
 	gl droot = "/Users/maggie/Desktop/metoo"
 }
-if "`c(username)'"=="jacobhirschhorn"{
-	gl droot = "/Users/jacobhirschhorn/Desktop/College/metoo"
-}
-
 
 /* Make sure you have Dropbox folder with data stored within /metoo, like /metoo/data
 Dropbox access granted separately, email Anya */
