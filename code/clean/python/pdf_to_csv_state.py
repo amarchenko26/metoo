@@ -51,10 +51,6 @@ import pdfplumber
 import pandas as pd
 
 
-
-
-
-
 import os
 import re
 import pdfplumber
@@ -62,32 +58,49 @@ import pandas as pd
 
 def extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path):
     """
-    Extracts rows from PDF files in 'split_pdf_dir' and saves them to 'output_csv_path'.
-
-    Key changes from your previous version:
-    1) We now match any substring containing "mploy" (e.g. "Etmployment", "ComplainEtmployment", etc.)
-       so that OCR misspellings of "Employment" are recognized as the Jurisdiction.
-    2) The special-exception trigger is still "Serve Order After Hearing: Dismissing".
+    This version introduces a new 'Case Name' field to keep multi-line
+    case names out of the 'Basis' or 'Acts' columns.
     """
 
-    # A helper to collapse multiple spaces/newlines
     def clean_text(text):
         return ' '.join(text.split())
 
-    # Updated Jurisdiction Regex
-    #   (\S*mploy\w+) will catch anything like "Etmployment", "ComplainEtmployment", etc.
-    #   Hous\w+ catches "Housing", "Houseing", etc.
-    #   Educ\w+ for "Education"
-    #   Public\sAccomm\w+ for "Public Accommodation"
+    # Loose matching of "employment," "housing," etc., to handle OCR typos
     JURISDICTION_REGEX = re.compile(
         r'(.*?)(\S*mploy\w+|Hous\w+|Educ\w+|Public\sAccomm\w+)(.*)',
         re.IGNORECASE
     )
 
-    # Special-exception triggered by "Serve Order After Hearing: Dismissing" (case-insensitive)
+    # Special-exception trigger (case-insensitive)
     SPECIAL_EXCEPTION_PATTERN = re.compile(
         r'(?i)Serve Order After Hearing:\s*Dismissing'
     )
+
+    def parse_basis_acts(text):
+        """
+        Splits leftover text into 'Basis' (ending in semicolon)
+        and 'Acts' (which does not end in a semicolon).
+        """
+        text = text.strip()
+        last_semicolon_index = text.rfind(';')
+
+        if last_semicolon_index == -1:
+            # No semicolon => all goes to Acts
+            return ("", text)
+
+        # If text ends in ';', there's no Acts portion
+        if last_semicolon_index == len(text) - 1:
+            basis = text
+            acts = ""
+        else:
+            # Split at the final semicolon
+            basis = text[: last_semicolon_index + 1].strip()
+            acts = text[last_semicolon_index + 1 :].strip()
+
+        # Remove any trailing semicolons/spaces in the Basis
+        while basis.endswith(';'):
+            basis = basis[:-1].rstrip()
+        return (basis, acts)
 
     def parse_row(row_text):
         row_text = clean_text(row_text)
@@ -96,65 +109,82 @@ def extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path):
             "Case ID": "",
             "Date Filed": "",
             "Closing Date": "",
+            "Case Name": "",
             "Closing Acts": "",
             "Jurisdiction": "",
             "Basis": "",
-            "Acts": ""  # placeholder if you need to fill this later
+            "Acts": ""
         }
 
-        # 1) Capture Case ID at start (7- or 8-digit number)
-        match_caseid = re.search(r"^(\d{7,8})", row_text)
-        if match_caseid:
-            parsed_data["Case ID"] = match_caseid.group(1)
+        # 1) Case ID (7 or 8 digits at start of row)
+        m_id = re.search(r'^(\d{7,8})', row_text)
+        if m_id:
+            parsed_data["Case ID"] = m_id.group(1)
 
-        # 2) Capture dates: the first is "Date Filed", second is "Closing Date"
-        dates = re.findall(r"\d{2}/\d{2}/\d{4}", row_text)
+        # 2) Find up to two dates
+        dates = re.findall(r'\d{2}/\d{2}/\d{4}', row_text)
         if len(dates) >= 1:
             parsed_data["Date Filed"] = dates[0]
         if len(dates) >= 2:
             parsed_data["Closing Date"] = dates[1]
+            
+            # Now we want to find the substring from the end of Date Filed
+            # to the start of Closing Date => "Case Name"
+            date1_index = row_text.find(dates[0])
+            date2_index = row_text.find(dates[1])
+            if date1_index != -1 and date2_index != -1:
+                end_of_date1 = date1_index + len(dates[0])
+                # 'Case Name' is what's between the two dates
+                case_name_sub = row_text[end_of_date1 : date2_index]
+                parsed_data["Case Name"] = case_name_sub.strip()
 
-            # Everything after the second date
-            remainder = row_text.split(dates[1], 1)[-1].strip()
+            # 'Remainder' is anything after the second date
+            # (plus the length of that date string)
+            remainder_start = date2_index + len(dates[1])
+            remainder = row_text[remainder_start:].strip()
 
-            # --- Special Exception ---
+            # Special exception check
             if SPECIAL_EXCEPTION_PATTERN.search(remainder):
-                # Attempt to find a "Jurisdiction" match
                 jur_match = JURISDICTION_REGEX.search(remainder)
                 if jur_match:
                     parsed_data["Closing Acts"] = jur_match.group(1).strip()
                     parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                    parsed_data["Basis"]        = jur_match.group(3).strip()
+                    leftover = jur_match.group(3).strip()
                 else:
-                    # If no recognized substring for Jurisdiction, lump everything into "Closing Acts"
                     parsed_data["Closing Acts"] = remainder
+                    leftover = ""
             else:
-                # --- Normal Path (No special exception triggered) ---
-                normal_match = JURISDICTION_REGEX.search(remainder)
-                if normal_match:
-                    parsed_data["Closing Acts"] = normal_match.group(1).strip()
-                    parsed_data["Jurisdiction"] = normal_match.group(2).strip()
-                    parsed_data["Basis"]        = normal_match.group(3).strip()
+                # Normal path
+                jur_match = JURISDICTION_REGEX.search(remainder)
+                if jur_match:
+                    parsed_data["Closing Acts"] = jur_match.group(1).strip()
+                    parsed_data["Jurisdiction"] = jur_match.group(2).strip()
+                    leftover = jur_match.group(3).strip()
                 else:
-                    # If no approximate match, store all in "Closing Acts"
                     parsed_data["Closing Acts"] = remainder
+                    leftover = ""
 
-        # For debugging
+            # Now parse the leftover as 'Basis' and 'Acts'
+            if leftover:
+                basis_part, acts_part = parse_basis_acts(leftover)
+                parsed_data["Basis"] = basis_part
+                parsed_data["Acts"] = acts_part
+
+        # Debug
         print("Parsed row:")
         for k, v in parsed_data.items():
             print(f"  {k}: {v}")
-        print("-" * 80)
-        
+        print("-"*80)
+
         return parsed_data
 
-    def should_skip_row(row):
+    def should_skip_row(line):
         """
-        If the line does NOT start with 7 or 8 digits, 
-        treat it as a continuation of the current row.
+        If a line does NOT start with 7 or 8 digits, treat it as a continuation.
         """
-        return not re.match(r'^\d{7,8}', row.strip())
+        return not re.match(r'^\d{7,8}', line.strip())
 
-    # Collect data from all PDFs in split_pdf_dir
+    # Iterate all PDF files
     split_pdf_files = sorted(
         [f for f in os.listdir(split_pdf_dir) if f.lower().endswith('.pdf')]
     )
@@ -165,8 +195,8 @@ def extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path):
         print(f"Processing: {split_pdf_file}")
 
         with pdfplumber.open(split_pdf_path) as pdf:
-            for page_number, page in enumerate(pdf.pages, start=1):
-                print(f"  Page {page_number}")
+            for page_num, page in enumerate(pdf.pages, start=1):
+                print(f"  Page {page_num}")
                 text = page.extract_text()
                 if not text:
                     continue  # skip blank pages
@@ -174,17 +204,17 @@ def extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path):
                 current_row = ""
                 for line in text.split('\n'):
                     line = line.strip()
-                    # If line does NOT start with digits, it's continuation
                     if should_skip_row(line):
+                        # Continuation
                         current_row += " " + line
                     else:
-                        # Parse the accumulated text if we have it
+                        # Parse the previous row if we have one
                         if current_row.strip():
                             all_rows.append(parse_row(current_row))
                         # Start a new row
                         current_row = line
 
-                # Handle leftover text
+                # End of page: parse leftover
                 if current_row.strip():
                     all_rows.append(parse_row(current_row))
 
