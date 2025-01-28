@@ -41,15 +41,6 @@ def split_pdf(input_pdf_path, output_dir, pages_per_split=100):
                 writer.write(split_pdf_file)
             print(f"Created split PDF: {split_pdf_path}")
 
-import os
-import re
-import pdfplumber
-import pandas as pd
-import os
-import re
-import pdfplumber
-import pandas as pd
-
 
 import os
 import re
@@ -78,105 +69,123 @@ def extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path):
 
     def parse_basis_acts(text):
         """
-        Splits leftover text into 'Basis' (ending in semicolon)
-        and 'Acts' (which does not end in a semicolon).
+        Refined logic: first try to split on ' ; ' near the end. 
+        If not found, fall back to the old 'last semicolon' approach.
         """
         text = text.strip()
+
+        # 1) Look for a ' ; ' near the end. We take the *last* occurrence:
+        boundary_index = text.rfind(' ; ')
+        if boundary_index != -1:
+            # We found ' ; ' => treat everything before it as Basis, everything after it as Acts
+            basis = text[:boundary_index].rstrip()
+            acts = text[boundary_index + 3 :].lstrip()  # skip over ' ; '
+            
+            # Strip trailing semicolons from the basis
+            while basis.endswith(';'):
+                basis = basis[:-1].rstrip()
+            
+            return (basis, acts)
+
+        # 2) If we didn't find ' ; ', revert to the old "last semicolon" logic:
         last_semicolon_index = text.rfind(';')
 
         if last_semicolon_index == -1:
-            # No semicolon => all goes to Acts
+            # No semicolon at all => all goes to Acts, none to Basis
             return ("", text)
 
-        # If text ends in ';', there's no Acts portion
+        # Check if text ends with a semicolon => no Acts
         if last_semicolon_index == len(text) - 1:
+            # Means text ends in semicolon => everything is Basis, Acts is empty
             basis = text
             acts = ""
         else:
-            # Split at the final semicolon
+            # Separate at the final semicolon
             basis = text[: last_semicolon_index + 1].strip()
-            acts = text[last_semicolon_index + 1 :].strip()
+            acts  = text[last_semicolon_index + 1 :].strip()
 
-        # Remove any trailing semicolons/spaces in the Basis
+        # Strip trailing semicolons from basis
         while basis.endswith(';'):
             basis = basis[:-1].rstrip()
+
         return (basis, acts)
 
+
     def parse_row(row_text):
-        row_text = clean_text(row_text)
-        
-        parsed_data = {
-            "Case ID": "",
-            "Date Filed": "",
-            "Closing Date": "",
-            "Case Name": "",
-            "Closing Acts": "",
-            "Jurisdiction": "",
-            "Basis": "",
-            "Acts": ""
-        }
-
-        # 1) Case ID (7 or 8 digits at start of row)
-        m_id = re.search(r'^(\d{7,8})', row_text)
-        if m_id:
-            parsed_data["Case ID"] = m_id.group(1)
-
-        # 2) Find up to two dates
-        dates = re.findall(r'\d{2}/\d{2}/\d{4}', row_text)
-        if len(dates) >= 1:
-            parsed_data["Date Filed"] = dates[0]
-        if len(dates) >= 2:
-            parsed_data["Closing Date"] = dates[1]
+            row_text = clean_text(row_text)
             
-            # Now we want to find the substring from the end of Date Filed
-            # to the start of Closing Date => "Case Name"
-            date1_index = row_text.find(dates[0])
-            date2_index = row_text.find(dates[1])
-            if date1_index != -1 and date2_index != -1:
-                end_of_date1 = date1_index + len(dates[0])
-                # 'Case Name' is what's between the two dates
-                case_name_sub = row_text[end_of_date1 : date2_index]
-                parsed_data["Case Name"] = case_name_sub.strip()
+            parsed_data = {
+                "Case ID": "",
+                "Date Filed": "",
+                "Closing Date": "",
+                "Case Name": "",
+                "Closing Acts": "",
+                "Jurisdiction": "",
+                "Basis": "",
+                "Acts": ""
+            }
 
-            # 'Remainder' is anything after the second date
-            # (plus the length of that date string)
-            remainder_start = date2_index + len(dates[1])
-            remainder = row_text[remainder_start:].strip()
+            # 1) Case ID (7 or 8 digits at start of row)
+            m_id = re.search(r'^(\d{7,8})', row_text)
+            if m_id:
+                parsed_data["Case ID"] = m_id.group(1)
 
-            # Special exception check
-            if SPECIAL_EXCEPTION_PATTERN.search(remainder):
-                jur_match = JURISDICTION_REGEX.search(remainder)
-                if jur_match:
-                    parsed_data["Closing Acts"] = jur_match.group(1).strip()
-                    parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                    leftover = jur_match.group(3).strip()
+            # 2) Find up to two dates
+            dates = re.findall(r'\d{2}/\d{2}/\d{4}', row_text)
+            if len(dates) >= 1:
+                parsed_data["Date Filed"] = dates[0]
+            if len(dates) >= 2:
+                parsed_data["Closing Date"] = dates[1]
+                
+                # Now we want to find the substring from the end of Date Filed
+                # to the start of Closing Date => "Case Name"
+                date1_index = row_text.find(dates[0])
+                date2_index = row_text.find(dates[1])
+                if date1_index != -1 and date2_index != -1:
+                    end_of_date1 = date1_index + len(dates[0])
+                    # 'Case Name' is what's between the two dates
+                    case_name_sub = row_text[end_of_date1 : date2_index]
+                    parsed_data["Case Name"] = case_name_sub.strip()
+
+                # 'Remainder' is anything after the second date
+                # (plus the length of that date string)
+                remainder_start = date2_index + len(dates[1])
+                remainder = row_text[remainder_start:].strip()
+
+                # Special exception check
+                if SPECIAL_EXCEPTION_PATTERN.search(remainder):
+                    jur_match = JURISDICTION_REGEX.search(remainder)
+                    if jur_match:
+                        parsed_data["Closing Acts"] = jur_match.group(1).strip()
+                        parsed_data["Jurisdiction"] = jur_match.group(2).strip()
+                        leftover = jur_match.group(3).strip()
+                    else:
+                        parsed_data["Closing Acts"] = remainder
+                        leftover = ""
                 else:
-                    parsed_data["Closing Acts"] = remainder
-                    leftover = ""
-            else:
-                # Normal path
-                jur_match = JURISDICTION_REGEX.search(remainder)
-                if jur_match:
-                    parsed_data["Closing Acts"] = jur_match.group(1).strip()
-                    parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                    leftover = jur_match.group(3).strip()
-                else:
-                    parsed_data["Closing Acts"] = remainder
-                    leftover = ""
+                    # Normal path
+                    jur_match = JURISDICTION_REGEX.search(remainder)
+                    if jur_match:
+                        parsed_data["Closing Acts"] = jur_match.group(1).strip()
+                        parsed_data["Jurisdiction"] = jur_match.group(2).strip()
+                        leftover = jur_match.group(3).strip()
+                    else:
+                        parsed_data["Closing Acts"] = remainder
+                        leftover = ""
 
-            # Now parse the leftover as 'Basis' and 'Acts'
-            if leftover:
-                basis_part, acts_part = parse_basis_acts(leftover)
-                parsed_data["Basis"] = basis_part
-                parsed_data["Acts"] = acts_part
+                # Now parse the leftover as 'Basis' and 'Acts'
+                if leftover:
+                    basis_part, acts_part = parse_basis_acts(leftover)
+                    parsed_data["Basis"] = basis_part
+                    parsed_data["Acts"] = acts_part
 
-        # Debug
-        print("Parsed row:")
-        for k, v in parsed_data.items():
-            print(f"  {k}: {v}")
-        print("-"*80)
+            # Debug
+            print("Parsed row:")
+            for k, v in parsed_data.items():
+                print(f"  {k}: {v}")
+            print("-"*80)
 
-        return parsed_data
+            return parsed_data
 
     def should_skip_row(line):
         """
