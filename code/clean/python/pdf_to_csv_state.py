@@ -1,7 +1,7 @@
 import getpass
 import PyPDF2
 import pdfplumber
-import csv
+import tabula
 import os
 import pandas as pd
 
@@ -19,8 +19,9 @@ input_pdf_path = root + '/raw/NY/Jiang_FOIL_Report__amemnded_with_acts_of_discri
 split_pdf_dir = root + '/raw/NY/split_pdfs'
 output_csv_path = root + '/raw/NY/ny_raw_cases.csv'
 
-# Ensure the split directory exists
+
 os.makedirs(split_pdf_dir, exist_ok=True)
+
 
 # Step 1: Split the Large PDF into Smaller Files
 def split_pdf(input_pdf_path, output_dir, pages_per_split=100):
@@ -41,57 +42,68 @@ def split_pdf(input_pdf_path, output_dir, pages_per_split=100):
                 writer.write(split_pdf_file)
             print(f"Created split PDF: {split_pdf_path}")
 
-import tabula
-import os
-import pandas as pd
 
+# Step 2: Read in Smaller Files using tabula
 def convert_and_append_pdfs_to_csv(split_pdf_dir, output_csv_path, columns):
     all_dfs = []
 
-    # Get list of split PDF files
-    split_pdf_files = sorted([f for f in os.listdir(split_pdf_dir) if f.lower().endswith('.pdf')])
+    # Get a sorted list of PDFs
+    pdf_files = sorted(f for f in os.listdir(split_pdf_dir) if f.lower().endswith('.pdf'))
 
-    for i, split_pdf_file in enumerate(split_pdf_files):
-        split_pdf_path = os.path.join(split_pdf_dir, split_pdf_file)
-        print(f"Processing {split_pdf_file}")
+    # Define the expected column order
+    expected_columns = [
+        "case_id", "date_filed", "case_name",
+        "closing_date", "closing_acts",
+        "jurisdiction", "basis", "acts"
+    ]
 
-        # Convert PDF to a temporary CSV
-        temp_csv_path = split_pdf_path.replace('.pdf', '.csv')
-        tabula.convert_into(
-            split_pdf_path,
-            temp_csv_path,
-            output_format="csv",
+    for pdf_file in pdf_files:
+        pdf_path = os.path.join(split_pdf_dir, pdf_file)
+        print(f"Processing {pdf_file}")
+
+        # Read PDF into a list of DataFrames
+        list = tabula.read_pdf(
+            input_path = pdf_path,
             pages="all",
-            stream=True,    # or lattice=True if your table has solid ruling lines
+            stream=True,  
             guess=False,
-            columns=columns
+            columns=columns,
+            multiple_tables=False,
+            pandas_options={'header': None}  # Tell tabula not to use first row as header
         )
 
-        # Decide whether to treat the first row as header or not:
-        if i == 0:
-            # For the very first PDF, interpret the first row as headers
-            df = pd.read_csv(temp_csv_path, header=0)
-            # Rename columns to match your known layout
-            df.columns = [
-                "case_id", "date_filed", "case_name",
-                "closing_date", "closing_acts",
-                "jurisdiction", "basis", "acts"
-            ]
-        else:
-            # For subsequent PDFs, read with no header (the first row is data)
-            df = pd.read_csv(temp_csv_path, header=None)
+        # Tabula returns a list of dataframes, so need to get the first one (the only one)
+        df = list[0] if list else None
+
+        print(f"Extracted {len(df.columns)} columns from {pdf_path}")
+        print(df.shape)
+
+        # Delete the first unnamed column
+        del df[0]
+
+        # Assign correct column names
+        df.columns = expected_columns
 
         all_dfs.append(df)
 
-    # Concatenate all DataFrames
-    final_df = pd.concat(all_dfs, ignore_index=True)
+    if all_dfs:
+        final_df = pd.concat(all_dfs, ignore_index=True)
+        final_df.to_csv(output_csv_path, index=False)
+        print(f"Successfully saved extracted data to {output_csv_path}")
+    else:
+        print("No valid data found in any PDFs.")
 
-    # Save to the final CSV
-    final_df.to_csv(output_csv_path, index=False)
-    print(f"All data has been successfully extracted and appended to {output_csv_path}")
-
-columns = [160, 250, 670, 730, 950, 1050, 1328, 2170]
+# Example usage
+columns = [0, 160, 250, 670, 730, 950, 1050, 1328]  # 7 cut points → 8 columns
 convert_and_append_pdfs_to_csv(split_pdf_dir, output_csv_path, columns)
+
+
+
+
+
+
+
+
 
 
 column_coords = {
