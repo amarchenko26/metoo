@@ -41,273 +41,80 @@ def split_pdf(input_pdf_path, output_dir, pages_per_split=100):
                 writer.write(split_pdf_file)
             print(f"Created split PDF: {split_pdf_path}")
 
-
-
-with pdfplumber.open(f'{split_pdf_dir}/split_5.pdf') as pdf:
-    page = pdf.pages[70]
-    # Try a bounding box
-    print(page.width, page.height)
-    test_bbox = (1060, 0, 1328, page.height) # (left, top, right, bottom)
-    cropped = page.within_bbox(test_bbox)
-    print(cropped.extract_text())
-
-
-with pdfplumber.open(f'{split_pdf_dir}/split_2.pdf') as pdf:
-    page = pdf.pages[4]
-    # Try a bounding box
-    test_bbox = (1328, 0, page.width, page.height) # (left, top, right, bottom)
-    cropped = page.within_bbox(test_bbox)
-    print(cropped.extract_text())
-
-with pdfplumber.open(f'{split_pdf_dir}/split_2.pdf') as pdf:
-    page = pdf.pages[0]
-    print("Number of lines found:", len(page.lines))
-    for i, ln in enumerate(page.lines):
-        print(i, ln)
-
-
+import tabula
 import os
-import re
 import pandas as pd
-import pdfplumber
 
-def extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path):
-    """
-    Extract and parse PDF tables with proper alignment of basis/acts with metadata rows
-    """
-    def clean_text(text):
-        return ' '.join(text.split())
+def convert_and_append_pdfs_to_csv(split_pdf_dir, output_csv_path, columns):
+    all_dfs = []
 
-    JURISDICTION_REGEX = re.compile(
-        r'(.*?)(\S*mploy\w+|Hous\w+|Educ\w+|Public\sAccomm\w+)(.*)',
-        re.IGNORECASE
-    )
-    SPECIAL_EXCEPTION_PATTERN = re.compile(
-        r'(?i)Serve Order After Hearing:\s*Dismissing'
-    )
+    # Get list of split PDF files
+    split_pdf_files = sorted([f for f in os.listdir(split_pdf_dir) if f.lower().endswith('.pdf')])
 
-    def parse_row(row_text):
-        """
-        Parse only the main metadata: Case ID, Dates, Case Name, Closing Acts, Jurisdiction.
-        """
-        row_text = clean_text(row_text)
-        parsed_data = {
-            "Case ID": "",
-            "Date Filed": "",
-            "Closing Date": "",
-            "Case Name": "",
-            "Closing Acts": "",
-            "Jurisdiction": ""
-        }
+    for i, split_pdf_file in enumerate(split_pdf_files):
+        split_pdf_path = os.path.join(split_pdf_dir, split_pdf_file)
+        print(f"Processing {split_pdf_file}")
 
-        # 1) Case ID
-        m_id = re.search(r'^(\d{7,8})', row_text)
-        if m_id:
-            parsed_data["Case ID"] = m_id.group(1)
+        # Convert PDF to a temporary CSV
+        temp_csv_path = split_pdf_path.replace('.pdf', '.csv')
+        tabula.convert_into(
+            split_pdf_path,
+            temp_csv_path,
+            output_format="csv",
+            pages="all",
+            stream=True,    # or lattice=True if your table has solid ruling lines
+            guess=False,
+            columns=columns
+        )
 
-        # 2) Dates
-        dates = re.findall(r'\d{2}/\d{2}/\d{4}', row_text)
-        if len(dates) >= 1:
-            parsed_data["Date Filed"] = dates[0]
-        if len(dates) >= 2:
-            parsed_data["Closing Date"] = dates[1]
+        # Decide whether to treat the first row as header or not:
+        if i == 0:
+            # For the very first PDF, interpret the first row as headers
+            df = pd.read_csv(temp_csv_path, header=0)
+            # Rename columns to match your known layout
+            df.columns = [
+                "case_id", "date_filed", "case_name",
+                "closing_date", "closing_acts",
+                "jurisdiction", "basis", "acts"
+            ]
+        else:
+            # For subsequent PDFs, read with no header (the first row is data)
+            df = pd.read_csv(temp_csv_path, header=None)
 
-            # Grab "Case Name" between date1 and date2
-            date1_index = row_text.find(dates[0])
-            date2_index = row_text.find(dates[1])
-            if date1_index != -1 and date2_index != -1:
-                end_of_date1 = date1_index + len(dates[0])
-                case_name_sub = row_text[end_of_date1:date2_index]
-                parsed_data["Case Name"] = case_name_sub.strip()
+        all_dfs.append(df)
 
-            # Remainder after second date => "Closing Acts" and "Jurisdiction"
-            remainder_start = row_text.find(dates[1]) + len(dates[1])
-            remainder = row_text[remainder_start:].strip()
+    # Concatenate all DataFrames
+    final_df = pd.concat(all_dfs, ignore_index=True)
 
-            # Special exception
-            if SPECIAL_EXCEPTION_PATTERN.search(remainder):
-                jur_match = JURISDICTION_REGEX.search(remainder)
-                if jur_match:
-                    parsed_data["Closing Acts"] = jur_match.group(1).strip()
-                    parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                else:
-                    parsed_data["Closing Acts"] = remainder
-            else:
-                # Normal path
-                jur_match = JURISDICTION_REGEX.search(remainder)
-                if jur_match:
-                    parsed_data["Closing Acts"] = jur_match.group(1).strip()
-                    parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                else:
-                    parsed_data["Closing Acts"] = remainder
+    # Save to the final CSV
+    final_df.to_csv(output_csv_path, index=False)
+    print(f"All data has been successfully extracted and appended to {output_csv_path}")
 
-        # Debug
-        print("Parsed main row (no Basis/Acts here):")
-        for k, v in parsed_data.items():
-            print(f"  {k}: {v}")
-        print("-"*80)
-
-        return parsed_data
-
-    def should_skip_row(line):
-        """
-        If line does NOT start with 7 or 8 digits, treat it as continuation.
-        """
-        return not re.match(r'^\d{7,8}', line.strip())
-
-    # Bounding boxes
-    BASIS_BBOX = (1060, 0, 1328, 612)  # (x0, y0, x1, y1) page.height = 612
-    ACTS_BBOX  = (1328, 0, 2160, 612)  # (x0, y0, x1, y1) page.width = 2160
-
-    def slice_rows_in_bbox(page, bbox):
-        """
-        Gather horizontal lines within 'bbox', sort them by y0 ascending,
-        then slice from one line's y0 to the next line's y0.
-        """
-        (x0, y0, x1, y1) = bbox
-
-        # 1) Gather lines that intersect this bbox
-        lines_in_bbox = []
-        for ln in page.lines:
-            lx0, ly0, lx1, ly1 = ln["x0"], ln["y0"], ln["x1"], ln["y1"]
-            # Check if it's essentially horizontal
-            if abs(ly1 - ly0) < 1e-3:
-                # Check if line is within vertical range
-                if ly0 >= y0 and ly0 <= y1:
-                    # Check horizontal overlap
-                    if not (lx1 < x0 or lx0 > x1):
-                        lines_in_bbox.append(ln)
-
-        # Sort lines by y0 ascending
-        lines_in_bbox.sort(key=lambda l: l["y0"])
-
-        all_rows = []
-        current_bottom = y0
-
-        # 2) Slice row by row
-        for i, ln in enumerate(lines_in_bbox, start=1):
-            line_y = ln["y0"]
-            if line_y > current_bottom:
-                print(f"[DEBUG] Row slice {i}: from y={current_bottom} up to y={line_y}")
-                row_crop = page.within_bbox((x0, current_bottom, x1, line_y))
-                extracted = (row_crop.extract_text() or "").strip()
-                print(" -> Extracted text:\n", extracted)
-                print("-" * 40)
-                if extracted:
-                    all_rows.append(extracted)
-                current_bottom = line_y
-
-        # After the last line, slice up to the top of bbox
-        if current_bottom < y1:
-            print(f"[DEBUG] Final row slice from y={current_bottom} up to y={y1}")
-            row_crop = page.within_bbox((x0, current_bottom, x1, y1))
-            extracted = (row_crop.extract_text() or "").strip()
-            print(" -> Extracted text:\n", extracted)
-            print("=" * 40)
-            if extracted:
-                all_rows.append(extracted)
-
-        return all_rows
-
-    # Main processing
-    metadata_rows = []
-    current_page_metadata = []
-    current_page_basis = []
-    current_page_acts = []
-
-    split_pdf_files = sorted(
-        [f for f in os.listdir(split_pdf_dir) if f.lower().endswith('.pdf')]
-    )
-
-    for split_pdf_file in split_pdf_files:
-        pdf_path = os.path.join(split_pdf_dir, split_pdf_file)
-        print(f"Processing file: {split_pdf_file}")
-        
-        with pdfplumber.open(pdf_path) as pdf:
-            for page_index, page in enumerate(pdf.pages, start=1):
-                print(f"\n--- PAGE {page_index} ---")
-                
-                # Reset page-specific trackers
-                current_page_metadata = []
-                current_page_basis = []
-                current_page_acts = []
-
-                # 1) Extract metadata rows for this page
-                full_text = page.extract_text() or ""
-                current_row = ""
-                for line in full_text.split('\n'):
-                    line = line.strip()
-                    if should_skip_row(line):
-                        current_row += " " + line
-                    else:
-                        if current_row.strip():
-                            parsed = parse_row(current_row)
-                            if parsed["Case ID"]:  # Only add rows with valid Case IDs
-                                current_page_metadata.append(parsed)
-                        current_row = line
-                
-                # Handle last row of page
-                if current_row.strip():
-                    parsed = parse_row(current_row)
-                    if parsed["Case ID"]:
-                        current_page_metadata.append(parsed)
-
-                # 2) Extract basis rows for this page
-                basis_rows = [row.strip() for row in slice_rows_in_bbox(page, BASIS_BBOX) if row.strip()]
-                # Remove empty rows and normalize whitespace
-                current_page_basis = [row for row in basis_rows if row]
-
-                # 3) Extract acts rows for this page
-                acts_rows = [row.strip() for row in slice_rows_in_bbox(page, ACTS_BBOX) if row.strip()]
-                # Remove empty rows and normalize whitespace
-                current_page_acts = [row for row in acts_rows if row]
-
-                # 4) Align and merge the rows for this page
-                num_valid_rows = len(current_page_metadata)
-                
-                # Debug output for row counts
-                print(f"\nPage {page_index} row counts before alignment:")
-                print(f"Metadata rows: {len(current_page_metadata)}")
-                print(f"Basis rows: {len(current_page_basis)}")
-                print(f"Acts rows: {len(current_page_acts)}")
-
-                # Trim or pad basis/acts to match number of metadata rows
-                current_page_basis = (current_page_basis[:num_valid_rows] + 
-                                    [""] * (num_valid_rows - len(current_page_basis)))
-                current_page_acts = (current_page_acts[:num_valid_rows] + 
-                                   [""] * (num_valid_rows - len(current_page_acts)))
-
-                # Merge the aligned rows
-                for i in range(num_valid_rows):
-                    merged = current_page_metadata[i].copy()
-                    merged["Basis"] = current_page_basis[i] if i < len(current_page_basis) else ""
-                    merged["Acts"] = current_page_acts[i] if i < len(current_page_acts) else ""
-                    
-                    # Debug output for merged row
-                    print(f"\nMerged row {i+1}:")
-                    print(f"Case ID: {merged['Case ID']}")
-                    print(f"Basis: {merged['Basis']}")
-                    print(f"Acts: {merged['Acts']}")
-                    
-                    metadata_rows.append(merged)
-
-    # Save to CSV
-    df = pd.DataFrame(metadata_rows)
-    if not df.empty:
-        df.to_csv(output_csv_path, index=False)
-        print(f"\nData extracted and saved to {output_csv_path}")
-        print(f"Total rows processed: {len(metadata_rows)}")
-    else:
-        print("No rows found to parse.")
+columns = [160, 250, 670, 730, 950, 1050, 1328, 2170]
+convert_and_append_pdfs_to_csv(split_pdf_dir, output_csv_path, columns)
 
 
-# Run the split and extraction functions
-#split_pdf(input_pdf_path, split_pdf_dir)
-extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path)
+column_coords = {
+    'case_id':      {'x0': 0, 'x1': 160},          # Fill in your values
+    'date_filed':   {'x0': 160, 'x1': 250},     # Fill in your values
+    'case_name':    {'x0': 250, 'x1': 670},      # Fill in your values
+    'closing_date': {'x0': 670, 'x1': 750},   # Fill in your values
+    'closing_acts': {'x0': 730, 'x1': 956},   # Fill in your values
+    'jurisdiction': {'x0': 950, 'x1': 1050},  # Fill in your values
+    'basis':        {'x0': 1060, 'x1': 1328},        # Fill in your values
+    'acts':         {'x0': 1328, 'x1': 2160}          # Fill in your values
+}
+
+
 print(f"New York data has been successfully extracted to {output_csv_path}")
 
-
-
+# with pdfplumber.open(f'{split_pdf_dir}/split_2.pdf') as pdf:
+#     page = pdf.pages[4]
+#     print(page.width) 
+#     # Try a bounding box
+#     test_bbox = (1328, 0, page.width, page.height) # (left, top, right, bottom)
+#     cropped = page.within_bbox(test_bbox)
+#     print(cropped.extract_text())
 
 
 
