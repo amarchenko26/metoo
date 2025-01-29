@@ -42,198 +42,264 @@ def split_pdf(input_pdf_path, output_dir, pages_per_split=100):
             print(f"Created split PDF: {split_pdf_path}")
 
 
+
+with pdfplumber.open(f'{split_pdf_dir}/split_5.pdf') as pdf:
+    page = pdf.pages[70]
+    # Try a bounding box
+    print(page.width, page.height)
+    test_bbox = (1060, 0, 1328, page.height) # (left, top, right, bottom)
+    cropped = page.within_bbox(test_bbox)
+    print(cropped.extract_text())
+
+
+with pdfplumber.open(f'{split_pdf_dir}/split_2.pdf') as pdf:
+    page = pdf.pages[4]
+    # Try a bounding box
+    test_bbox = (1328, 0, page.width, page.height) # (left, top, right, bottom)
+    cropped = page.within_bbox(test_bbox)
+    print(cropped.extract_text())
+
+with pdfplumber.open(f'{split_pdf_dir}/split_2.pdf') as pdf:
+    page = pdf.pages[0]
+    print("Number of lines found:", len(page.lines))
+    for i, ln in enumerate(page.lines):
+        print(i, ln)
+
+
 import os
 import re
-import pdfplumber
 import pandas as pd
+import pdfplumber
 
 def extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path):
     """
-    This version introduces a new 'Case Name' field to keep multi-line
-    case names out of the 'Basis' or 'Acts' columns.
+    Extract and parse PDF tables with proper alignment of basis/acts with metadata rows
     """
-
     def clean_text(text):
         return ' '.join(text.split())
 
-    # Loose matching of "employment," "housing," etc., to handle OCR typos
     JURISDICTION_REGEX = re.compile(
         r'(.*?)(\S*mploy\w+|Hous\w+|Educ\w+|Public\sAccomm\w+)(.*)',
         re.IGNORECASE
     )
-
-    # Special-exception trigger (case-insensitive)
     SPECIAL_EXCEPTION_PATTERN = re.compile(
         r'(?i)Serve Order After Hearing:\s*Dismissing'
     )
 
-    def parse_basis_acts(text):
-        """
-        Refined logic: first try to split on ' ; ' near the end. 
-        If not found, fall back to the old 'last semicolon' approach.
-        """
-        text = text.strip()
-
-        # 1) Look for a ' ; ' near the end. We take the *last* occurrence:
-        boundary_index = text.rfind(' ; ')
-        if boundary_index != -1:
-            # We found ' ; ' => treat everything before it as Basis, everything after it as Acts
-            basis = text[:boundary_index].rstrip()
-            acts = text[boundary_index + 3 :].lstrip()  # skip over ' ; '
-            
-            # Strip trailing semicolons from the basis
-            while basis.endswith(';'):
-                basis = basis[:-1].rstrip()
-            
-            return (basis, acts)
-
-        # 2) If we didn't find ' ; ', revert to the old "last semicolon" logic:
-        last_semicolon_index = text.rfind(';')
-
-        if last_semicolon_index == -1:
-            # No semicolon at all => all goes to Acts, none to Basis
-            return ("", text)
-
-        # Check if text ends with a semicolon => no Acts
-        if last_semicolon_index == len(text) - 1:
-            # Means text ends in semicolon => everything is Basis, Acts is empty
-            basis = text
-            acts = ""
-        else:
-            # Separate at the final semicolon
-            basis = text[: last_semicolon_index + 1].strip()
-            acts  = text[last_semicolon_index + 1 :].strip()
-
-        # Strip trailing semicolons from basis
-        while basis.endswith(';'):
-            basis = basis[:-1].rstrip()
-
-        return (basis, acts)
-
-
     def parse_row(row_text):
-            row_text = clean_text(row_text)
-            
-            parsed_data = {
-                "Case ID": "",
-                "Date Filed": "",
-                "Closing Date": "",
-                "Case Name": "",
-                "Closing Acts": "",
-                "Jurisdiction": "",
-                "Basis": "",
-                "Acts": ""
-            }
+        """
+        Parse only the main metadata: Case ID, Dates, Case Name, Closing Acts, Jurisdiction.
+        """
+        row_text = clean_text(row_text)
+        parsed_data = {
+            "Case ID": "",
+            "Date Filed": "",
+            "Closing Date": "",
+            "Case Name": "",
+            "Closing Acts": "",
+            "Jurisdiction": ""
+        }
 
-            # 1) Case ID (7 or 8 digits at start of row)
-            m_id = re.search(r'^(\d{7,8})', row_text)
-            if m_id:
-                parsed_data["Case ID"] = m_id.group(1)
+        # 1) Case ID
+        m_id = re.search(r'^(\d{7,8})', row_text)
+        if m_id:
+            parsed_data["Case ID"] = m_id.group(1)
 
-            # 2) Find up to two dates
-            dates = re.findall(r'\d{2}/\d{2}/\d{4}', row_text)
-            if len(dates) >= 1:
-                parsed_data["Date Filed"] = dates[0]
-            if len(dates) >= 2:
-                parsed_data["Closing Date"] = dates[1]
-                
-                # Now we want to find the substring from the end of Date Filed
-                # to the start of Closing Date => "Case Name"
-                date1_index = row_text.find(dates[0])
-                date2_index = row_text.find(dates[1])
-                if date1_index != -1 and date2_index != -1:
-                    end_of_date1 = date1_index + len(dates[0])
-                    # 'Case Name' is what's between the two dates
-                    case_name_sub = row_text[end_of_date1 : date2_index]
-                    parsed_data["Case Name"] = case_name_sub.strip()
+        # 2) Dates
+        dates = re.findall(r'\d{2}/\d{2}/\d{4}', row_text)
+        if len(dates) >= 1:
+            parsed_data["Date Filed"] = dates[0]
+        if len(dates) >= 2:
+            parsed_data["Closing Date"] = dates[1]
 
-                # 'Remainder' is anything after the second date
-                # (plus the length of that date string)
-                remainder_start = date2_index + len(dates[1])
-                remainder = row_text[remainder_start:].strip()
+            # Grab "Case Name" between date1 and date2
+            date1_index = row_text.find(dates[0])
+            date2_index = row_text.find(dates[1])
+            if date1_index != -1 and date2_index != -1:
+                end_of_date1 = date1_index + len(dates[0])
+                case_name_sub = row_text[end_of_date1:date2_index]
+                parsed_data["Case Name"] = case_name_sub.strip()
 
-                # Special exception check
-                if SPECIAL_EXCEPTION_PATTERN.search(remainder):
-                    jur_match = JURISDICTION_REGEX.search(remainder)
-                    if jur_match:
-                        parsed_data["Closing Acts"] = jur_match.group(1).strip()
-                        parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                        leftover = jur_match.group(3).strip()
-                    else:
-                        parsed_data["Closing Acts"] = remainder
-                        leftover = ""
+            # Remainder after second date => "Closing Acts" and "Jurisdiction"
+            remainder_start = row_text.find(dates[1]) + len(dates[1])
+            remainder = row_text[remainder_start:].strip()
+
+            # Special exception
+            if SPECIAL_EXCEPTION_PATTERN.search(remainder):
+                jur_match = JURISDICTION_REGEX.search(remainder)
+                if jur_match:
+                    parsed_data["Closing Acts"] = jur_match.group(1).strip()
+                    parsed_data["Jurisdiction"] = jur_match.group(2).strip()
                 else:
-                    # Normal path
-                    jur_match = JURISDICTION_REGEX.search(remainder)
-                    if jur_match:
-                        parsed_data["Closing Acts"] = jur_match.group(1).strip()
-                        parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                        leftover = jur_match.group(3).strip()
-                    else:
-                        parsed_data["Closing Acts"] = remainder
-                        leftover = ""
+                    parsed_data["Closing Acts"] = remainder
+            else:
+                # Normal path
+                jur_match = JURISDICTION_REGEX.search(remainder)
+                if jur_match:
+                    parsed_data["Closing Acts"] = jur_match.group(1).strip()
+                    parsed_data["Jurisdiction"] = jur_match.group(2).strip()
+                else:
+                    parsed_data["Closing Acts"] = remainder
 
-                # Now parse the leftover as 'Basis' and 'Acts'
-                if leftover:
-                    basis_part, acts_part = parse_basis_acts(leftover)
-                    parsed_data["Basis"] = basis_part
-                    parsed_data["Acts"] = acts_part
+        # Debug
+        print("Parsed main row (no Basis/Acts here):")
+        for k, v in parsed_data.items():
+            print(f"  {k}: {v}")
+        print("-"*80)
 
-            # Debug
-            print("Parsed row:")
-            for k, v in parsed_data.items():
-                print(f"  {k}: {v}")
-            print("-"*80)
-
-            return parsed_data
+        return parsed_data
 
     def should_skip_row(line):
         """
-        If a line does NOT start with 7 or 8 digits, treat it as a continuation.
+        If line does NOT start with 7 or 8 digits, treat it as continuation.
         """
         return not re.match(r'^\d{7,8}', line.strip())
 
-    # Iterate all PDF files
+    # Bounding boxes
+    BASIS_BBOX = (1060, 0, 1328, 612)  # (x0, y0, x1, y1) page.height = 612
+    ACTS_BBOX  = (1328, 0, 2160, 612)  # (x0, y0, x1, y1) page.width = 2160
+
+    def slice_rows_in_bbox(page, bbox):
+        """
+        Gather horizontal lines within 'bbox', sort them by y0 ascending,
+        then slice from one line's y0 to the next line's y0.
+        """
+        (x0, y0, x1, y1) = bbox
+
+        # 1) Gather lines that intersect this bbox
+        lines_in_bbox = []
+        for ln in page.lines:
+            lx0, ly0, lx1, ly1 = ln["x0"], ln["y0"], ln["x1"], ln["y1"]
+            # Check if it's essentially horizontal
+            if abs(ly1 - ly0) < 1e-3:
+                # Check if line is within vertical range
+                if ly0 >= y0 and ly0 <= y1:
+                    # Check horizontal overlap
+                    if not (lx1 < x0 or lx0 > x1):
+                        lines_in_bbox.append(ln)
+
+        # Sort lines by y0 ascending
+        lines_in_bbox.sort(key=lambda l: l["y0"])
+
+        all_rows = []
+        current_bottom = y0
+
+        # 2) Slice row by row
+        for i, ln in enumerate(lines_in_bbox, start=1):
+            line_y = ln["y0"]
+            if line_y > current_bottom:
+                print(f"[DEBUG] Row slice {i}: from y={current_bottom} up to y={line_y}")
+                row_crop = page.within_bbox((x0, current_bottom, x1, line_y))
+                extracted = (row_crop.extract_text() or "").strip()
+                print(" -> Extracted text:\n", extracted)
+                print("-" * 40)
+                if extracted:
+                    all_rows.append(extracted)
+                current_bottom = line_y
+
+        # After the last line, slice up to the top of bbox
+        if current_bottom < y1:
+            print(f"[DEBUG] Final row slice from y={current_bottom} up to y={y1}")
+            row_crop = page.within_bbox((x0, current_bottom, x1, y1))
+            extracted = (row_crop.extract_text() or "").strip()
+            print(" -> Extracted text:\n", extracted)
+            print("=" * 40)
+            if extracted:
+                all_rows.append(extracted)
+
+        return all_rows
+
+    # Main processing
+    metadata_rows = []
+    current_page_metadata = []
+    current_page_basis = []
+    current_page_acts = []
+
     split_pdf_files = sorted(
         [f for f in os.listdir(split_pdf_dir) if f.lower().endswith('.pdf')]
     )
-    all_rows = []
 
     for split_pdf_file in split_pdf_files:
-        split_pdf_path = os.path.join(split_pdf_dir, split_pdf_file)
-        print(f"Processing: {split_pdf_file}")
+        pdf_path = os.path.join(split_pdf_dir, split_pdf_file)
+        print(f"Processing file: {split_pdf_file}")
+        
+        with pdfplumber.open(pdf_path) as pdf:
+            for page_index, page in enumerate(pdf.pages, start=1):
+                print(f"\n--- PAGE {page_index} ---")
+                
+                # Reset page-specific trackers
+                current_page_metadata = []
+                current_page_basis = []
+                current_page_acts = []
 
-        with pdfplumber.open(split_pdf_path) as pdf:
-            for page_num, page in enumerate(pdf.pages, start=1):
-                print(f"  Page {page_num}")
-                text = page.extract_text()
-                if not text:
-                    continue  # skip blank pages
-
+                # 1) Extract metadata rows for this page
+                full_text = page.extract_text() or ""
                 current_row = ""
-                for line in text.split('\n'):
+                for line in full_text.split('\n'):
                     line = line.strip()
                     if should_skip_row(line):
-                        # Continuation
                         current_row += " " + line
                     else:
-                        # Parse the previous row if we have one
                         if current_row.strip():
-                            all_rows.append(parse_row(current_row))
-                        # Start a new row
+                            parsed = parse_row(current_row)
+                            if parsed["Case ID"]:  # Only add rows with valid Case IDs
+                                current_page_metadata.append(parsed)
                         current_row = line
-
-                # End of page: parse leftover
+                
+                # Handle last row of page
                 if current_row.strip():
-                    all_rows.append(parse_row(current_row))
+                    parsed = parse_row(current_row)
+                    if parsed["Case ID"]:
+                        current_page_metadata.append(parsed)
 
-    # Convert to DataFrame and save
-    if all_rows:
-        df = pd.DataFrame(all_rows)
+                # 2) Extract basis rows for this page
+                basis_rows = [row.strip() for row in slice_rows_in_bbox(page, BASIS_BBOX) if row.strip()]
+                # Remove empty rows and normalize whitespace
+                current_page_basis = [row for row in basis_rows if row]
+
+                # 3) Extract acts rows for this page
+                acts_rows = [row.strip() for row in slice_rows_in_bbox(page, ACTS_BBOX) if row.strip()]
+                # Remove empty rows and normalize whitespace
+                current_page_acts = [row for row in acts_rows if row]
+
+                # 4) Align and merge the rows for this page
+                num_valid_rows = len(current_page_metadata)
+                
+                # Debug output for row counts
+                print(f"\nPage {page_index} row counts before alignment:")
+                print(f"Metadata rows: {len(current_page_metadata)}")
+                print(f"Basis rows: {len(current_page_basis)}")
+                print(f"Acts rows: {len(current_page_acts)}")
+
+                # Trim or pad basis/acts to match number of metadata rows
+                current_page_basis = (current_page_basis[:num_valid_rows] + 
+                                    [""] * (num_valid_rows - len(current_page_basis)))
+                current_page_acts = (current_page_acts[:num_valid_rows] + 
+                                   [""] * (num_valid_rows - len(current_page_acts)))
+
+                # Merge the aligned rows
+                for i in range(num_valid_rows):
+                    merged = current_page_metadata[i].copy()
+                    merged["Basis"] = current_page_basis[i] if i < len(current_page_basis) else ""
+                    merged["Acts"] = current_page_acts[i] if i < len(current_page_acts) else ""
+                    
+                    # Debug output for merged row
+                    print(f"\nMerged row {i+1}:")
+                    print(f"Case ID: {merged['Case ID']}")
+                    print(f"Basis: {merged['Basis']}")
+                    print(f"Acts: {merged['Acts']}")
+                    
+                    metadata_rows.append(merged)
+
+    # Save to CSV
+    df = pd.DataFrame(metadata_rows)
+    if not df.empty:
         df.to_csv(output_csv_path, index=False)
-        print(f"Data extracted and saved to {output_csv_path}")
+        print(f"\nData extracted and saved to {output_csv_path}")
+        print(f"Total rows processed: {len(metadata_rows)}")
     else:
         print("No rows found to parse.")
+
 
 # Run the split and extraction functions
 #split_pdf(input_pdf_path, split_pdf_dir)
