@@ -1,7 +1,7 @@
 import getpass
 import PyPDF2
 import pdfplumber
-import csv
+import tabula
 import os
 import pandas as pd
 
@@ -19,8 +19,9 @@ input_pdf_path = root + '/raw/NY/Jiang_FOIL_Report__amemnded_with_acts_of_discri
 split_pdf_dir = root + '/raw/NY/split_pdfs'
 output_csv_path = root + '/raw/NY/ny_raw_cases.csv'
 
-# Ensure the split directory exists
+
 os.makedirs(split_pdf_dir, exist_ok=True)
+
 
 # Step 1: Split the Large PDF into Smaller Files
 def split_pdf(input_pdf_path, output_dir, pages_per_split=100):
@@ -42,206 +43,90 @@ def split_pdf(input_pdf_path, output_dir, pages_per_split=100):
             print(f"Created split PDF: {split_pdf_path}")
 
 
-import os
-import re
-import pdfplumber
-import pandas as pd
+# Step 2: Read in Smaller Files using tabula
+def convert_and_append_pdfs_to_csv(split_pdf_dir, output_csv_path, columns):
+    all_dfs = []
 
-def extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path):
-    """
-    This version introduces a new 'Case Name' field to keep multi-line
-    case names out of the 'Basis' or 'Acts' columns.
-    """
+    # Get a sorted list of PDFs
+    pdf_files = sorted(f for f in os.listdir(split_pdf_dir) if f.lower().endswith('.pdf'))
 
-    def clean_text(text):
-        return ' '.join(text.split())
+    # Define the expected column order
+    expected_columns = [
+        "case_id", "date_filed", "case_name",
+        "closing_date", "closing_acts",
+        "jurisdiction", "basis", "acts"
+    ]
 
-    # Loose matching of "employment," "housing," etc., to handle OCR typos
-    JURISDICTION_REGEX = re.compile(
-        r'(.*?)(\S*mploy\w+|Hous\w+|Educ\w+|Public\sAccomm\w+)(.*)',
-        re.IGNORECASE
-    )
+    for pdf_file in pdf_files:
+        pdf_path = os.path.join(split_pdf_dir, pdf_file)
+        print(f"Processing {pdf_file}")
 
-    # Special-exception trigger (case-insensitive)
-    SPECIAL_EXCEPTION_PATTERN = re.compile(
-        r'(?i)Serve Order After Hearing:\s*Dismissing'
-    )
+        # Read PDF into a list of DataFrames
+        list = tabula.read_pdf(
+            input_path = pdf_path,
+            pages="all",
+            stream=True,  
+            guess=False,
+            columns=columns,
+            multiple_tables=False,
+            pandas_options={'header': None}  # Tell tabula not to use first row as header
+        )
 
-    def parse_basis_acts(text):
-        """
-        Refined logic: first try to split on ' ; ' near the end. 
-        If not found, fall back to the old 'last semicolon' approach.
-        """
-        text = text.strip()
+        # Tabula returns a list of dataframes, so need to get the first one (the only one)
+        df = list[0] if list else None
 
-        # 1) Look for a ' ; ' near the end. We take the *last* occurrence:
-        boundary_index = text.rfind(' ; ')
-        if boundary_index != -1:
-            # We found ' ; ' => treat everything before it as Basis, everything after it as Acts
-            basis = text[:boundary_index].rstrip()
-            acts = text[boundary_index + 3 :].lstrip()  # skip over ' ; '
-            
-            # Strip trailing semicolons from the basis
-            while basis.endswith(';'):
-                basis = basis[:-1].rstrip()
-            
-            return (basis, acts)
+        print(f"Extracted {len(df.columns)} columns from {pdf_path}")
+        print(df.shape)
 
-        # 2) If we didn't find ' ; ', revert to the old "last semicolon" logic:
-        last_semicolon_index = text.rfind(';')
+        # Delete the first unnamed column
+        del df[0]
 
-        if last_semicolon_index == -1:
-            # No semicolon at all => all goes to Acts, none to Basis
-            return ("", text)
+        # Assign correct column names
+        df.columns = expected_columns
 
-        # Check if text ends with a semicolon => no Acts
-        if last_semicolon_index == len(text) - 1:
-            # Means text ends in semicolon => everything is Basis, Acts is empty
-            basis = text
-            acts = ""
-        else:
-            # Separate at the final semicolon
-            basis = text[: last_semicolon_index + 1].strip()
-            acts  = text[last_semicolon_index + 1 :].strip()
+        all_dfs.append(df)
 
-        # Strip trailing semicolons from basis
-        while basis.endswith(';'):
-            basis = basis[:-1].rstrip()
-
-        return (basis, acts)
-
-
-    def parse_row(row_text):
-            row_text = clean_text(row_text)
-            
-            parsed_data = {
-                "Case ID": "",
-                "Date Filed": "",
-                "Closing Date": "",
-                "Case Name": "",
-                "Closing Acts": "",
-                "Jurisdiction": "",
-                "Basis": "",
-                "Acts": ""
-            }
-
-            # 1) Case ID (7 or 8 digits at start of row)
-            m_id = re.search(r'^(\d{7,8})', row_text)
-            if m_id:
-                parsed_data["Case ID"] = m_id.group(1)
-
-            # 2) Find up to two dates
-            dates = re.findall(r'\d{2}/\d{2}/\d{4}', row_text)
-            if len(dates) >= 1:
-                parsed_data["Date Filed"] = dates[0]
-            if len(dates) >= 2:
-                parsed_data["Closing Date"] = dates[1]
-                
-                # Now we want to find the substring from the end of Date Filed
-                # to the start of Closing Date => "Case Name"
-                date1_index = row_text.find(dates[0])
-                date2_index = row_text.find(dates[1])
-                if date1_index != -1 and date2_index != -1:
-                    end_of_date1 = date1_index + len(dates[0])
-                    # 'Case Name' is what's between the two dates
-                    case_name_sub = row_text[end_of_date1 : date2_index]
-                    parsed_data["Case Name"] = case_name_sub.strip()
-
-                # 'Remainder' is anything after the second date
-                # (plus the length of that date string)
-                remainder_start = date2_index + len(dates[1])
-                remainder = row_text[remainder_start:].strip()
-
-                # Special exception check
-                if SPECIAL_EXCEPTION_PATTERN.search(remainder):
-                    jur_match = JURISDICTION_REGEX.search(remainder)
-                    if jur_match:
-                        parsed_data["Closing Acts"] = jur_match.group(1).strip()
-                        parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                        leftover = jur_match.group(3).strip()
-                    else:
-                        parsed_data["Closing Acts"] = remainder
-                        leftover = ""
-                else:
-                    # Normal path
-                    jur_match = JURISDICTION_REGEX.search(remainder)
-                    if jur_match:
-                        parsed_data["Closing Acts"] = jur_match.group(1).strip()
-                        parsed_data["Jurisdiction"] = jur_match.group(2).strip()
-                        leftover = jur_match.group(3).strip()
-                    else:
-                        parsed_data["Closing Acts"] = remainder
-                        leftover = ""
-
-                # Now parse the leftover as 'Basis' and 'Acts'
-                if leftover:
-                    basis_part, acts_part = parse_basis_acts(leftover)
-                    parsed_data["Basis"] = basis_part
-                    parsed_data["Acts"] = acts_part
-
-            # Debug
-            print("Parsed row:")
-            for k, v in parsed_data.items():
-                print(f"  {k}: {v}")
-            print("-"*80)
-
-            return parsed_data
-
-    def should_skip_row(line):
-        """
-        If a line does NOT start with 7 or 8 digits, treat it as a continuation.
-        """
-        return not re.match(r'^\d{7,8}', line.strip())
-
-    # Iterate all PDF files
-    split_pdf_files = sorted(
-        [f for f in os.listdir(split_pdf_dir) if f.lower().endswith('.pdf')]
-    )
-    all_rows = []
-
-    for split_pdf_file in split_pdf_files:
-        split_pdf_path = os.path.join(split_pdf_dir, split_pdf_file)
-        print(f"Processing: {split_pdf_file}")
-
-        with pdfplumber.open(split_pdf_path) as pdf:
-            for page_num, page in enumerate(pdf.pages, start=1):
-                print(f"  Page {page_num}")
-                text = page.extract_text()
-                if not text:
-                    continue  # skip blank pages
-
-                current_row = ""
-                for line in text.split('\n'):
-                    line = line.strip()
-                    if should_skip_row(line):
-                        # Continuation
-                        current_row += " " + line
-                    else:
-                        # Parse the previous row if we have one
-                        if current_row.strip():
-                            all_rows.append(parse_row(current_row))
-                        # Start a new row
-                        current_row = line
-
-                # End of page: parse leftover
-                if current_row.strip():
-                    all_rows.append(parse_row(current_row))
-
-    # Convert to DataFrame and save
-    if all_rows:
-        df = pd.DataFrame(all_rows)
-        df.to_csv(output_csv_path, index=False)
-        print(f"Data extracted and saved to {output_csv_path}")
+    if all_dfs:
+        final_df = pd.concat(all_dfs, ignore_index=True)
+        final_df.to_csv(output_csv_path, index=False)
+        print(f"Successfully saved extracted data to {output_csv_path}")
     else:
-        print("No rows found to parse.")
+        print("No valid data found in any PDFs.")
 
-# Run the split and extraction functions
-#split_pdf(input_pdf_path, split_pdf_dir)
-extract_tables_from_split_pdfs_dynamic(split_pdf_dir, output_csv_path)
+# Example usage
+columns = [0, 160, 250, 670, 730, 950, 1050, 1328]  # 7 cut points → 8 columns
+convert_and_append_pdfs_to_csv(split_pdf_dir, output_csv_path, columns)
+
+
+
+
+
+
+
+
+
+
+column_coords = {
+    'case_id':      {'x0': 0, 'x1': 160},          # Fill in your values
+    'date_filed':   {'x0': 160, 'x1': 250},     # Fill in your values
+    'case_name':    {'x0': 250, 'x1': 670},      # Fill in your values
+    'closing_date': {'x0': 670, 'x1': 750},   # Fill in your values
+    'closing_acts': {'x0': 730, 'x1': 956},   # Fill in your values
+    'jurisdiction': {'x0': 950, 'x1': 1050},  # Fill in your values
+    'basis':        {'x0': 1060, 'x1': 1328},        # Fill in your values
+    'acts':         {'x0': 1328, 'x1': 2160}          # Fill in your values
+}
+
+
 print(f"New York data has been successfully extracted to {output_csv_path}")
 
-
-
+# with pdfplumber.open(f'{split_pdf_dir}/split_2.pdf') as pdf:
+#     page = pdf.pages[4]
+#     print(page.width) 
+#     # Try a bounding box
+#     test_bbox = (1328, 0, page.width, page.height) # (left, top, right, bottom)
+#     cropped = page.within_bbox(test_bbox)
+#     print(cropped.extract_text())
 
 
 
