@@ -10,16 +10,17 @@ rename BasisSelected basis_raw
 rename ClosureTypes outcomes
 rename Conciliation relief
 g juris = "Housing"
-save "$clean_data/clean_ga.dta", replace
+save "$raw_data/GA/ga_raw_cases.dta", replace
 import excel "$raw_data/GA/Employment.xlsx", firstrow clear
 drop GCEOCaseNumber
 rename BasisSelected basis_raw
 rename DISPOSITION outcomes
 rename Mediation relief
 g juris = "Employment"
-append using "$clean_data/clean_ga.dta"
+append using "$raw_data/GA/ga_raw_cases.dta"
 drop AllegationLocation
 rename DateClosed charge_res_date
+save "$raw_data/GA/ga_raw_cases.dta", replace
 
 
 /*******************************************************************************

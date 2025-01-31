@@ -4,7 +4,7 @@ Clean Maryland cases
 
 *******************************************************************************/
 
-import excel "$raw_data/MD/Receipt Report - 06012010 thru 06012023.xlsx", firstrow clear
+import excel "$raw_data/MD/md_raw_cases.xlsx", firstrow clear
 
 
 /*******************************************************************************
