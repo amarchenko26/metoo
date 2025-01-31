@@ -4,12 +4,14 @@ Clean New York cases
 
 *******************************************************************************/
 
-import delimited "$raw_data/NY/ny_raw_cases_first_page_manually_cleaned.csv", varnames(2) clear
+import delimited "$raw_data/NY/ny_cases_with_gender.csv", varnames(1) clear
 
 
 /*******************************************************************************
 Clean vars
 *******************************************************************************/
+drop first_name probability
+
 drop if case_id == "Total"
 
 g tag = case_id == ""
@@ -30,6 +32,7 @@ ren closing_acts outcome
 ren jurisdiction juris
 ren basis basis_raw
 ren acts issue
+ren gender victim_f
 
 
 /*******************************************************************************
@@ -75,6 +78,12 @@ replace basis = "Sex" 			if regexm(basis_raw, "Sex|Pregnancy")
 // SH
 g sh = 0
 replace sh = 1 if regexm(issue, "Sexual")
+
+// Victim female
+replace victim_f = "1" if victim_f == "female"
+replace victim_f = "0" if victim_f == "male"
+replace victim_f = "." if victim_f == ""
+destring victim_f, replace
 
 // Sex
 g sex_cases = 0 
