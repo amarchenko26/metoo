@@ -16,7 +16,6 @@ The following variables are cleaned separately for each state.
 ### Basis 
 `basis` takes the following categories
 - Sex
-- LGBTQ
 - Religion
 - Race
 - Nationality
@@ -84,6 +83,64 @@ The following variables are cleaned altogether, after state and federal data is 
 
 
 ## Description of datasets
+
+**$raw_data/NY/ny_raw_cases_first_page_manually_cleaned.csv**  
+These data contain all employment and housing cases filed in New York from June 2010 to June 2023.
+- N: 86775
+- SH: 8234
+- case_id: unique identifier for each case
+- date_filed: date case was filed
+- case_name: plaintiff v. respondent
+- closing_date: date case was closed
+- closing_acts: how case was closed
+- jurisdiction
+- basis: basis of discrimination
+- acts: adverse action alleged by complainant
+
+**$raw_data/NC/nc_raw_cases.xlsx**  
+These data contain all employment and housing cases filed in North Carolina from June 2010 to June 2023.
+- N: 801
+- SH:
+- respondentcompany: respondent name
+- basis/c: basis of discrimination
+- datefiled: date case was filed
+- dateclosed: date case was closed
+- decision/outcome: how case was closed
+
+**$raw_data/MD/md_raw_cases.xlsx**  
+These data contain all employment and housing cases filed in Maryland from June 2019 to June 2023.
+- N: 2484
+- SH: 131
+- CaseType: jurisdiction
+- InitialInquiryDate: date case was filed
+- ClosureType: how case was closed
+- ClosureDate: date case was closed
+- Statute: statute of protection
+- Basis: basis of discrimination
+- Issue: adverse action alleged by complainant
+
+**$raw_data/GA/ga_raw_cases.dta**  
+These data contain all employment and housing cases filed in Georgia.
+- N: 350
+- SH: 
+- charge_res_date: date case was closed
+- basis_raw: basis of discrimination
+- outcomes: how case was closed
+- relief
+- juris: jurisdiction
+
+**$raw_data/CA/ca_raw_cases.csv**  
+These data contain all employment and public accommodations cases filed in California from January 1, 2017 to April 29, 2024.
+- N: 139717
+- SH: 26547
+- no: unique identifier for each case
+- ccrscaserecordtype: jurisdiction
+- casefiledate: date case was filed
+- closedate: date case was closed
+- legacybasis/discriminationbasis/harassmentbasis: basis of discrimination
+- legacyharms/discriminationactofharm/retaliationactofharm: adverse action alleged by complainant
+- typeofprotectedactivity: type of protected activity the plaintiff alleges was retaliated against
+- closereason: how case was closed
 
 **$raw_data/FL/fl_raw_cases.dta**  
 These data contain all employment and housing cases filed in Delaware from June 1, 2010 to June 30, 2023.
