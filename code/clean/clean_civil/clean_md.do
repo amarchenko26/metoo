@@ -18,6 +18,7 @@ ren InitialInquiryDate charge_file_date
 ren ClosureType outcome
 ren ClosureDate charge_res_date
 ren Basis basis_raw
+rename Issue issue
 
 
 /*******************************************************************************
@@ -55,7 +56,8 @@ replace basis = "Sex" 			if regexm(basis_raw, "Sex|Equal Pay")
 drop Statute
 
 // SH
-
+g sh = 0
+replace sh = 1 if regexm(issue, "Sexual Harassment")
 
 // Sex
 g sex_cases = 0 
