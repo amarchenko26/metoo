@@ -140,6 +140,7 @@ g missing_relief = (relief == .)
 g win = .
 replace win = 1 if strpos(outcome, "PC Determination") > 0
 replace win = 1 if strpos(outcome, "Conc") > 0
+replace win = 1 if outcome == "Conicliation"
 replace win = 0 if strpos(outcome, "NPC") > 0
 
 // Settle
