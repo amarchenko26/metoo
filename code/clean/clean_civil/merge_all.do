@@ -194,11 +194,11 @@ replace duration = 0 if duration < 0
 winsor duration, p(.01) gen(duration_w)
 
 // Gen ym var
-g ym = ym(year(common_file_date), month(common_file_date)) 
+g ym = ym(year(common_res_date), month(common_res_date)) 
 format ym %tm 
-la var ym "Year-month var of file date"
+la var ym "Year-month var of resolution date"
 
-g common_year = year(common_file_date)
+g common_year = year(common_res_date)
 
 // Get year
 g charge_file_year = year(charge_file_date)
@@ -350,7 +350,7 @@ Treatment
 // drop if sh == 1 & basis != "Sex" // N = 27,811
 
 // Post
-g post = (common_file_date > date("$metoo", "DMY"))
+g post = (common_res_date > date("$metoo", "DMY"))
 
 //***** SH cases ******* //
 g sample_sh = 1 if eeoc == 0 
@@ -358,7 +358,6 @@ replace sample_sh = . if basis == "Sex" & sh == 0 //drop all sex cases that are 
 
 // Treat for SH 
 g treat 	  = post * sh // When regressing on treat, restrict to sample_sh == 1 to avoid including non-SH sex cases
-replace treat = 1 if overlap_all == 1 & sh == 1 // 1 if SH and overlaps with MeToo
 
 g treat_f 	= treat * victim_f
 g state_did = treat * state_cat
@@ -371,7 +370,6 @@ g overlap_treat_f 	= overlap_all * sh * victim_f
 //***** Sex cases ******* //
 // Treat for sex 
 g treat_sex = post * sex_cases
-replace treat_sex = 1 if overlap_all == 1 & sex_cases == 1 
 
 g treat_sex_f = treat_sex * victim_f
 g state_did_sex = treat_sex * state_cat
@@ -425,7 +423,7 @@ la var basis_raw "Basis of discrimination alleged"
 la var basis "Basis of discrimination, standardized"
 la var sh "Sexual harassment"
 la var sex_cases "Sex-related charge" // Title VII / Sex‐Female or Title VII / Sex‐Female / Sexual-Harassment for EEOC
-la var post "Filed after MeToo"
+la var post "Resolved after MeToo"
 la var treat "Post = 1 and case is SH or overlap"
 la var juris "Employment, housing, public accommodations, or education"
 la var duration "Duration (days)"
