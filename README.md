@@ -84,7 +84,7 @@ The following variables are cleaned altogether, after state and federal data is 
 
 ## Description of datasets
 
-**$raw_data/NY/ny_raw_cases_first_page_manually_cleaned.csv**  
+**$raw_data/NY/ny_cases_with_gender.csv**  
 These data contain all employment and housing cases filed in New York from June 2010 to June 2023.
 - N: 86775
 - SH: 8234
@@ -96,6 +96,9 @@ These data contain all employment and housing cases filed in New York from June 
 - jurisdiction
 - basis: basis of discrimination
 - acts: adverse action alleged by complainant
+- first_name: plaintiff's first name
+- gender: plaintiff's assumed gender
+- probability: probability of that gender being correct based on name
 
 **$raw_data/NC/nc_raw_cases.xlsx**  
 These data contain all employment and housing cases filed in North Carolina from June 2010 to June 2023.
