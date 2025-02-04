@@ -85,18 +85,18 @@ replace win = 1 if regexm(decision, "Mixed")
 g settle = 0 
 replace settle = 1 if regexm(decision, "fter Resolution|Settle|onciliat|esol")
 replace settle = 0 if regexm(decision, "ithout|W/O")
-replace settle = . if regexm(decision, "pen|Closed|Reactivated|HUD|Closure W/O Resolution")
+replace settle = . if regexm(decision, "pen|Closed|Reactivated|HUD|Closure W/O Resolution|INVESTIGATED- NO COURT")
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if regexm(decision, "Closure|Withdr|Complain|Dismiss|Fail|Unable|not") & settle == 0
-replace dismissed = . if regexm(decision, "pen|Closed|Reactivated|HUD|Closure W/O Resolution")
+replace dismissed = . if regexm(decision, "pen|Closed|Reactivated|HUD|Closure W/O Resolution|INVESTIGATED- NO COURT")
 
 // Court
 g court = 0
 replace court = 1 if inlist(outcome, "COURT-DISMISSED BY JUDGE", "FILED IN SUPERIOR COURT")
 replace court = 1 if regexm(decision, "FHAP|Legal|udicial")
-replace court = . if regexm(decision, "pen|Closed|Reactivated|HUD|Closure W/O Resolution") & court == 0
+replace court = . if regexm(decision, "pen|Closed|Reactivated|HUD|Closure W/O Resolution|INVESTIGATED- NO COURT") & court == 0
 
 
 /*******************************************************************************

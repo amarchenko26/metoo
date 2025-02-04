@@ -111,7 +111,7 @@ g missing_relief = (relief == .)
 // Probable cause
 g win = .
 replace win = 1 if regexm(outcome,"Conciliation/Settlemen t Successful|Judgment - Favorable")
-replace win = 0 if regexm(outcome, "Insufficient Evidence|No Cause Determination")
+replace win = 0 if regexm(outcome, "Insufficient Evidence|No Cause Determination|Judgment - Unfavorable")
 
 // Settle
 g settle = 0 

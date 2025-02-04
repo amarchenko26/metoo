@@ -87,30 +87,30 @@ replace win = 0 if inlist(outcome, "No Cause", "Notice of Rights")
 // Settle
 g settle = 0 
 replace settle = 1 if inlist(outcome, "FHAP judicial consent order", "Mediation/Settlement", "Withdraw with Settlement", "Withdrawal with Resolution/Settlement")
-replace settle = . if inlist(outcome, "Intake closure|Reactivation", "Reactivation")
+replace settle = . if inlist(outcome, "", "Intake closure|Reactivation", "Reactivation")
 
 // Administrative closure
 g admin_close = 0
 replace admin_close = 1 if inlist(outcome, "Failure to Cooperate", "Failure to Locate", "No Jurisdiction")
 replace admin_close = 1 if strpos(outcome, "Duplicate") > 0
 replace admin_close = 1 if strpos(outcome, "losure") > 0
-replace admin_close = . if inlist(outcome, "Intake closure|Reactivation", "Reactivation")
+replace admin_close = . if inlist(outcome, "", "Intake closure|Reactivation", "Reactivation")
 
 // Withdrawn
 g withdraw = 0
 replace withdraw = 1 if inlist(outcome, "Withdraw Without Settlement", "Withdrawal", "Withdrawal without Resolution/Settlement")
-replace withdraw = . if inlist(outcome, "Intake closure|Reactivation", "Reactivation")
+replace withdraw = . if inlist(outcome, "", "Intake closure|Reactivation", "Reactivation")
 
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
 replace dismissed = 1 if outcome == "Dismissal"
-replace dismissed = . if inlist(outcome, "Intake closure|Reactivation", "Reactivation")
+replace dismissed = . if inlist(outcome, "", "Intake closure|Reactivation", "Reactivation")
 
 // Court
 g court = 0
 replace court = 1 if inlist(outcome, "Right to Sue")
-replace court = . if inlist(outcome, "Intake closure|Reactivation", "Reactivation")
+replace court = . if inlist(outcome, "", "Intake closure|Reactivation", "Reactivation")
 
 
 /*******************************************************************************

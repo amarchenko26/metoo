@@ -15,6 +15,7 @@ Already merged:
 	- HI
 	- MI
 	- IL
+	- TX
 	- WA
 	- ND
 	- MN
@@ -27,6 +28,9 @@ Already merged:
 	- FL
 	- NC
 	- CA
+	- GA (waiting for SH and date filed, all post)
+	- MD (all post)
+	- NY
 	
 *******************************************************************************/
 
@@ -155,6 +159,24 @@ Append to CA
 
 append using "$clean_data/clean_ca.dta"
 
+// /*******************************************************************************
+// Append to GA
+// *******************************************************************************/
+//
+// append using "$clean_data/clean_ga.dta"
+//
+// /*******************************************************************************
+// Append to MD
+// *******************************************************************************/
+//
+// append using "$clean_data/clean_md.dta"
+
+/*******************************************************************************
+Append to NY
+*******************************************************************************/
+
+append using "$clean_data/clean_ny.dta"
+
 
 /*******************************************************************************
 Clean dates
@@ -226,8 +248,10 @@ drop if inlist(outcome, "C02 - Allegations contained in duplicate EEOC case", "C
 
 // Drop outcomes
 drop if inlist(outcome, "A10 - Unperfected Complaint", "A3 - Lack of Jurisdiction", "A8 - Tribal Sovereign Immunity", "Bankruptcy of Respondent", "Closed - Bankruptcy", "Closed - Lack of Jurisdiction", "Duplicate", "E02 - Lack of jurisdiction for MDCR", "I08 - Respondent out of business")
-drop if inlist(outcome, "I09 - Duplicate complaint", "I10 - Federal agency assumed jurisdiction", "Lack of Jurisdiction", "No Jurisdiction", "No Jurisdiction/Other", "Non-jurisdictional", "RP Bankruptcy", "Respondent Bankruptcy", "Transfer to Tacoma")
+drop if inlist(outcome, "I09 - Duplicate complaint", "I10 - Federal agency assumed jurisdiction", "Lack of Jurisdiction", "Non-jurisdictional", "RP Bankruptcy", "Respondent Bankruptcy", "Transfer to Tacoma")
+drop if inlist(outcome, "Administrative Dismissal - Waived to Another Agency", "Agency Discretion", "Respondent Bankrupt", "Remand - Failure To Prosecute", "No significant relief available")
 drop if regexm(outcome, "Case listed in October 2013 Commission Book|Duplicate/Referral")
+drop if regexm(outcome, "No Jurisdiction")
 drop if inlist(dismissalrejectionbasis, "Non-Jurisdictional Matter")
 
 replace win = 0 if outcome == "Transfer to EEOC (Closed at Commission)"
