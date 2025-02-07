@@ -68,6 +68,7 @@ program define plot_lpolyci
            legend(order(3 1) lab(3 "Sex complaints, 95% CI") lab(1 "Other complaints, 95% CI") size(medium) ring(0) pos(11) rows(2))
            xtitle("Date filed", size(medium))
            xline(693, lpattern(solid))
+          xline(722, lpattern(solid))
            `xlabel_cmd'
            ytitle(`"`ylabel'"', size(medium)) title(`"`title'"')
     ;

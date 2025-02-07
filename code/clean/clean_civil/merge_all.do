@@ -198,6 +198,10 @@ g ym = ym(year(common_res_date), month(common_res_date))
 format ym %tm 
 la var ym "Year-month var of resolution date"
 
+g ym_filed = ym(year(common_file_date), month(common_file_date)) 
+format ym_filed %tm 
+la var ym_filed "Year-month var of filing date"
+
 g common_year = year(common_res_date)
 
 // Get year
@@ -214,12 +218,6 @@ replace eeoc_took_to_court = 0 if eeoc == 0 // Make sure to make eeoc_took_to_co
 
 replace civil_action_number = "" if civil_action_number == "null"
 
-// Gen earliest available dates
-bysort state: egen earliest_date = min(common_file_date)
-bysort state: egen last_date 	= max(common_file_date)
-
-format earliest_date last_date %td
-
 
 /*******************************************************************************
 Consistent sample 
@@ -230,11 +228,11 @@ drop if common_file_date > common_res_date
 
 // Drop obs before Jun 1 2010
 di tm(2010m6) // 605
-drop if ym < 605
+drop if ym_filed < 605
 
 // Drop obs after June 1 2023 (our FOIA cutoff)
 di tm(2023m6)
-drop if ym > 761
+drop if ym_filed > 761
 
 // Drop missing bases (N=10 obs in PA) 
 cap drop if basis == ""
@@ -257,6 +255,25 @@ drop if inlist(dismissalrejectionbasis, "Non-Jurisdictional Matter")
 replace win = 0 if outcome == "Transfer to EEOC (Closed at Commission)"
 
 /*******************************************************************************
+Create time to treat - 0 is the pre-period before MeToo
+*******************************************************************************/
+
+do "$droot/code/programs/programs.do"
+
+// Create time_to_treat for half-years
+create_time_to_treat, period(6) period_label("Half-years relative to MeToo")
+
+// Create time_to_treat for years
+create_time_to_treat, period(12) period_label("Years relative to MeToo")
+
+// Gen earliest available dates
+bysort state: egen earliest_date = min(common_file_date)
+bysort state: egen last_date 	= max(common_file_date)
+
+format earliest_date last_date %td
+
+
+/*******************************************************************************
 Fixed effects  
 *******************************************************************************/
 
@@ -266,6 +283,8 @@ encode basis, g(basis_cat)
 // Gen state/unit and state/time FE
 g basis_state = basis_cat * state_cat
 g ym_state 	  = ym * state_cat
+g year_state = months_to_treat_12 * state_cat
+g ym_filed_state = ym_filed * state_cat
 
 /*******************************************************************************
 Outcomes
@@ -378,17 +397,6 @@ g state_did_sex = treat_sex * state_cat
 g overlap_treat_sex = overlap_all * sex_cases 
 g overlap_treat_sex_f = overlap_all * sex_cases * victim_f
 
-/*******************************************************************************
-Create time to treat - 0 is the pre-period before MeToo
-*******************************************************************************/
-
-do "$droot/code/programs/programs.do"
-
-// Create time_to_treat for half-years
-create_time_to_treat, period(6) period_label("Half-years relative to MeToo")
-
-// Create time_to_treat for years
-create_time_to_treat, period(12) period_label("Years relative to MeToo")
 
 /*******************************************************************************
 Label all variables

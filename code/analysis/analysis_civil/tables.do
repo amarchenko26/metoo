@@ -4,10 +4,10 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did_sex 	= 0
-loc run_did_state 	= 0
+loc run_did_sex 	= 1
+loc run_did_state 	= 1
 loc run_did_gender	= 1
-loc run_did_alt_win = 0
+loc run_did_alt_win = 1
 loc	run_did_all  	= 0
 loc run_did_robust 	= 0
 loc run_selection 	= 0
@@ -104,13 +104,13 @@ if `run_did_sex' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' overlap_treat_sex, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex, absorb(basis ym_filed) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui: sum ``y'' if overlap_treat_sex == 0 
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' overlap_treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex, absorb(basis_state ym_filed_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui: sum ``y'' if overlap_treat_sex == 0
@@ -226,13 +226,13 @@ if `run_did_gender' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' overlap_treat_sex overlap_treat_sex_f, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex overlap_treat_sex_f, absorb(basis ym_filed) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui: sum ``y'' if overlap_treat_sex ==0
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' overlap_treat_sex overlap_treat_sex_f, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex overlap_treat_sex_f, absorb(basis_state ym_filed_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui: sum ``y'' if overlap_treat_sex == 0
@@ -314,14 +314,14 @@ if `run_did_alt_win' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' overlap_treat_sex, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex, absorb(basis ym_filed) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		qui: sum ``y'' if overlap_treat_sex == 0
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' overlap_treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex, absorb(basis_state ym_filed_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -406,14 +406,14 @@ if `run_did_state' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' overlap_treat, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' overlap_treat, absorb(basis ym_filed) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		qui: sum ``y'' if overlap_treat == 0 
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' overlap_treat, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' overlap_treat, absorb(basis_state ym_filed_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
@@ -538,14 +538,14 @@ if `run_did_all' == 1 {
 	
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' overlap_treat_sex, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex, absorb(basis ym_filed) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
 		qui: sum ``y'' if overlap_treat_sex == 0
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' overlap_treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' overlap_treat_sex, absorb(basis_state ym_filed_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui estadd loc fetime_s "\checkmark", replace
