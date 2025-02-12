@@ -7,9 +7,9 @@ use "$clean_data/clean_cases.dta", replace
 
 loc selection 	= 0
 loc event 	   	= 0
-loc timeseries 	= 0
+loc timeseries 	= 1
 loc timeseries_basis = 0
-loc state_did  	= 1
+loc state_did  	= 0
 loc state_did_all = 0
 loc event_all  	= 0
 loc run_placebo = 0
@@ -235,18 +235,18 @@ if `timeseries' == 1 {
 
 	preserve 
 	keep if eeoc == 0 
-	drop if state == "CA" //CA data starts 2017, messes up timeseries graph
+	drop if inlist(state, "RI", "PA", "CA", "WI", "FL", "MN", "GA", "MD")
 
 	* Women winning vs men winning vs. other complaints 
-	plot_lpolyci_gender win ym_filed, title("Probability of Winning by Complainant Gender") ylabel("Probability of win")
+	plot_lpolyci_gender win ym_filed, title("Probability of Winning by Complainant Gender (balanced panel)") ylabel("Probability of win")
 
-	plot_lpolyci settle ym_filed, title("Probability Complainant Settles Over Time") ylabel("Probability settled")
+	plot_lpolyci settle ym_filed, title("Probability Complainant Settles Over Time (balanced panel)") ylabel("Probability settled")
 
-	plot_lpolyci dismissed ym_filed, title("Probability Complaint Dismissed Over Time") ylabel("Probability dismissed")
+	plot_lpolyci dismissed ym_filed, title("Probability Complaint Dismissed Over Time (balanced panel)") ylabel("Probability dismissed")
 
-	plot_lpolyci win_alt ym_filed, title("Probability of Complainant Winning Over Time") ylabel("Probability of win")
-	
-	plot_lpolyci relief_scale ym_filed, title("Compensation Paid to Complainant (conditional on winning)") ylabel("Compensation in $1000s")
+	plot_lpolyci win_alt ym_filed, title("Probability of Complainant Winning Over Time (balanced panel)") ylabel("Probability of win")
+
+	plot_lpolyci relief_scale ym_filed, title("Compensation Paid to Complainant (conditional on winning, balanced panel)") ylabel("Compensation in $1000s")
 	restore
 
 	* Number of complaints filed over time
