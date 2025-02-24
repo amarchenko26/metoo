@@ -266,6 +266,10 @@ create_time_to_treat, period(6) period_label("Half-years relative to MeToo")
 // Create time_to_treat for years
 create_time_to_treat, period(12) period_label("Years relative to MeToo")
 
+create_years_to_treat, varname(years_to_treat_res) datevar(common_res_date) label("Years to treat, resolution date")
+
+create_years_to_treat, varname(years_to_treat_file) datevar(common_file_date) label("Years to treat, filing date")
+
 // Gen earliest available dates
 bysort state: egen earliest_date = min(common_file_date)
 bysort state: egen last_date 	= max(common_file_date)
@@ -282,9 +286,11 @@ encode basis, g(basis_cat)
 
 // Gen state/unit and state/time FE
 g basis_state = basis_cat * state_cat
-g ym_state 	  = ym * state_cat
-g year_state = months_to_treat_12 * state_cat
-g ym_filed_state = ym_filed * state_cat
+g ym_res_state 	  = ym * state_cat
+
+g year_filed_state = years_to_treat_file * state_cat
+g year_res_state   = years_to_treat_res * state_cat
+g ym_filed_state   = ym_filed * state_cat
 
 /*******************************************************************************
 Outcomes

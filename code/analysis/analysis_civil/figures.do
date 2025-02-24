@@ -5,19 +5,19 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc selection 	= 0
-loc event 	   	= 0
-loc timeseries 	= 1
+loc selection 		= 0
+loc event 	   		= 1
+loc timeseries 		= 0
 loc timeseries_basis = 0
-loc state_did  	= 0
-loc state_did_all = 0
-loc event_all  	= 0
-loc run_placebo = 0
+loc state_did  		= 0
+loc state_did_all 	= 0
+loc event_all  		= 0
+loc run_placebo 	= 1
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
-loc run_placebo_f = 0
-loc duration   	= 0
-loc yhat		= 0
+loc run_placebo_f 	= 0
+loc duration   		= 0
+loc yhat			= 0
 
 /*******************************************************************************
 Selection 
@@ -86,21 +86,23 @@ if `selection' == 1 {
 Event-study
 *******************************************************************************/
 
-local outcomes "settle dismissed win win_alt relief_scale"
+local outcomes "settle dismissed win win_alt relief_scale court"
 
 if `event' == 1 {
+
+gen zero = 0 
 
 	foreach y in `outcomes' {
 		preserve
 		keep if eeoc == 0
 
 		cap drop event 		
-		g event = months_to_treat_12 * sex_cases
+		g event = years_to_treat_res * sex_cases
 		replace event = event + 9 
 
 		// Run dynamic DiD
 		reghdfe `y' ib8.event, ///
-			absorb(basis_state year_state) ///
+			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
 
@@ -117,15 +119,88 @@ if `event' == 1 {
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
 			xline(8.5)
 			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
-			note("Fixed effects: unit/state and time/state", size(small))
+			ytitle("Effect of MeToo on `y'", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
 		graph export "$figures/eventstudy_`y'_state.png", replace 
-		
 		estimates clear
+
+
+
+		******** Overlap event study ********
+		preserve
+		keep if eeoc == 0
+		keep if common_file_date < date("$metoo", "DMY")
+
+		cap drop event 		
+		g event = years_to_treat_res * sex_cases
+		replace event = event + 9 
+
+		// Run dynamic DiD
+		reghdfe `y' ib8.event, ///
+			absorb(basis_state ym_res_state) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+
+		// Run Rambachan & Roth (2021)
+		honestdid, numpre(8) omit ///
+			coefplot xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honestdid_`y'_state.png", replace
+
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			xline(8.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on `y'", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_`y'_state.png", replace 
+		estimates clear
+
+
+
+
+
+		/* sum years_to_treat_res
+		loc min = r(min)
+		loc max = r(max)
+
+		loc j = 1
+		forvalues i = `min'(1)`max' {
+			gen treatyr`j' = 0
+			replace treatyr`j' = 1 if sex_cases == 1 & years_to_treat_res == `i'
+			loc j = `j' + 1
+		}
+
+		reghdfe `y' treatyr1-treatyr7 zero treatyr9-treatyr14, ///
+			absorb(basis_state ym_res_state) ///
+			vce(cluster basis) 
+			
+		estimates store TWFE
+				
+		#delimit ;
+		coefplot TWFE, drop(_cons) omitted vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			xline(8.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on `y'", size(medium)) xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium)) 
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+		graph export "$figures/eventstudy_`y'_state_new.png", replace  */
+
 		restore
 	}	
 }
@@ -516,7 +591,7 @@ if `state_did' == 1 {
 
 	// FWL regression
 	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
-	reghdfe treat_sex, absorb(basis_state ym_state) vce(cluster basis) resid 
+	reghdfe treat_sex, absorb(basis_state ym_res_state) vce(cluster basis) resid 
 	predict treat_tilde, residuals
 
 	// Calculate weights 
@@ -557,10 +632,10 @@ if `state_did' == 1 {
 	keep if eeoc == 0
 
 	label values state_did_sex state_cat
-	reghdfe win_alt i.state_did_sex, absorb(basis_state ym_state) vce(cluster basis) noconstant
+	reghdfe win_alt i.state_did_sex, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
 	eststo A
 
-	reghdfe win_alt treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+	reghdfe win_alt treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
     loc att: display %5.4f _b[treat_sex]
 	
 	local my_blue "0 102 204"  
@@ -629,7 +704,7 @@ if `state_did_all' == 1{
 	******* All cases
 	// FWL regression
 	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
-	reghdfe treat_sex, absorb(basis_state ym_state) vce(cluster basis) resid 
+	reghdfe treat_sex, absorb(basis_state ym_res_state) vce(cluster basis) resid 
 	predict treat_tilde, residuals
 
 	// Calculate weights 
@@ -665,10 +740,10 @@ if `state_did_all' == 1{
 	label values state_did state_cat
 	drop if inlist(state_did, 42, 54) //drop US territories and WV bc coefficient is too high 
 
-	reghdfe win_alt i.state_did, absorb(basis_state ym_state) vce(cluster basis)
+	reghdfe win_alt i.state_did, absorb(basis_state ym_res_state) vce(cluster basis)
 	eststo A
 
-	reghdfe win_alt treat_sex, absorb(basis_state ym_state) vce(cluster basis)
+	reghdfe win_alt treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
     loc att: display %5.4f _b[treat_sex]
 	
 	local my_blue "0 102 204"  
@@ -775,7 +850,7 @@ if `run_placebo' == 1 {
 	// placebo treatment effects
 	foreach y of local outcome_vars {
 		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_state) vce(cluster basis)
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
 			eststo s_r_`i'
 			loc ++i
 		}
@@ -784,7 +859,7 @@ if `run_placebo' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex if eeoc == 0, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex if eeoc == 0, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -826,7 +901,7 @@ if `run_placebo_single' == 1 {
 
 	foreach y of local outcome_vars {
 		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_state) vce(cluster basis)
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
 			eststo s_r_`i'
 			loc ++i
 		}
@@ -835,7 +910,7 @@ if `run_placebo_single' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex if eeoc == 0, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex if eeoc == 0, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -877,7 +952,7 @@ if `run_placebo_overlap' == 1 {
 
 	foreach y of local outcome_vars {
 		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_state) vce(cluster basis)
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
 			eststo s_r_`i'
 			loc ++i
 		}
@@ -886,7 +961,7 @@ if `run_placebo_overlap' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex if overlap_2 != . & eeoc == 0, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex if overlap_2 != . & eeoc == 0, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -928,7 +1003,7 @@ if `run_placebo_f' == 1 {
 
 	foreach y of local outcome_vars {
 		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_state) vce(cluster basis)
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
 			eststo s_r_`i'
 			loc ++i
 		}
@@ -937,7 +1012,7 @@ if `run_placebo_f' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex_f if eeoc == 0, absorb(basis_state ym_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex_f if eeoc == 0, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}

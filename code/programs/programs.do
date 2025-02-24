@@ -103,6 +103,27 @@ program define create_time_to_treat
 end
 
 
+cap program drop create_years_to_treat
+program define create_years_to_treat
+    syntax, varname(name) datevar(varname) [label(string)]
+
+    gen event_date = date("$metoo", "DMY")
+
+    // Calculate the months_to_treat variable with a fixed 12-month period
+    gen `varname' = floor((`datevar' - event_date) / (12 * 30.4375))
+
+    // Label the time_to_treat variable
+    if "`label'" != "" {
+        label var `varname' "`label'"
+    }
+    else {
+        label var `varname' "Periods relative to MeToo"
+    }
+    
+    drop event_date
+end
+
+
 /*******************************************************************************
 program to create balance tables
 *******************************************************************************/
