@@ -84,6 +84,17 @@ The following variables are cleaned altogether, after state and federal data is 
 
 ## Description of datasets
 
+**$raw_data/MT/mt_raw_cases.xlsx**  
+These data contain all employment, housing, public accommodations, and education cases filed in Montana from January 2015 to October 2024.
+- N: 5006
+- SH: 364
+- Random ID: unique identifier for each case
+- OPEN: date case was filed
+- HRB DECISION DATE: date case was closed
+- CLAIM: basis of discrimination and adverse action alleged by complainant
+- HRB DECISION: how case was closed
+- AREA: jurisdiction
+
 **$raw_data/NY/ny_cases_with_gender.csv**  
 These data contain all employment and housing cases filed in New York from June 2010 to June 2023.
 - N: 86775
