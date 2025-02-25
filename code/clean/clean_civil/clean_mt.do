@@ -120,6 +120,8 @@ g court = 0
 Export data
 *******************************************************************************/
 
+drop id
+
 save "$clean_data/clean_mt.dta", replace
 
 
