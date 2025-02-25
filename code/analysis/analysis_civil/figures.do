@@ -5,6 +5,7 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
+loc tabulations		= 1
 loc selection 		= 0
 loc event 	   		= 0
 loc timeseries 		= 0
@@ -18,6 +19,65 @@ loc run_placebo_overlap = 0
 loc run_placebo_f 	= 0
 loc duration   		= 0
 loc yhat			= 0
+
+/*******************************************************************************
+Tabulations
+*******************************************************************************/
+
+if `tabulations' == 1 {
+	
+	preserve
+	keep if eeoc == 0
+	// Complaint flow diagram
+	tab dismissed //arrow to "Dismissed": 10.22 when run on Feb 25, 2025
+	tab settle //arrow to "Settled": 10.82 when run on Feb 25, 2025
+	tab court //arrow to "Court": 29.95 when run on Feb 25, 2025
+	tab investigation //added to court for arrow to "Investigation or Court": 49.19 when run on Feb 25, 2025
+	tab win_investigation //arrow to "Won": 7.30 when run on Feb 25, 2025
+	tab lose_investigation //arrow to "Lost": 41.89 when run on Feb 25, 2025
+	restore
+	
+	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
+	preserve
+	keep if eeoc == 0
+	di td($metoo) // 21107
+	tab state if charge_file_date > 21107 & charge_file_date < 21472
+	tab state if charge_file_date < 21107 & charge_file_date > 20742
+	drop if inlist(state, "FL", "PA", "WI") // based on tabbing and seeing if there were large differences
+	count if charge_file_date > 21107 & charge_file_date < 21472 & sex_cases == 1
+	gen sex_post_metoo = r(N)
+	count if charge_file_date > 21107 & charge_file_date < 21472 & sex_cases == 0
+	gen no_sex_post_metoo = r(N)
+	count if charge_file_date < 21107 & charge_file_date > 20742 & sex_cases == 1
+	gen sex_pre_metoo = r(N)
+	count if charge_file_date < 21107 & charge_file_date > 20742 & sex_cases == 0
+	gen no_sex_pre_metoo = r(N)
+	gen metoo_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
+	tab metoo_percent_increase
+	drop *metoo
+	restore
+	
+	// Percent change in cases filed (Pre-COVID): 0.0513324 when run on Feb 25, 2025
+	preserve
+	keep if eeoc == 0
+	di tm(2020m3) // 722
+	di tm(2017m10) // 693
+	tab state if ym_filed > 693 & ym_filed < 722
+	tab state if ym_filed < 693 & ym_filed > 664
+	drop if inlist(state, "CA", "FL", "PA", "WI") // based on tabbing and seeing if there were large differences
+	count if ym_filed > 693 & ym_filed < 722 & sex_cases == 1
+	gen sex_post_metoo = r(N)
+	count if ym_filed > 693 & ym_filed < 722 & sex_cases == 0
+	gen no_sex_post_metoo = r(N)
+	count if ym_filed < 693 & ym_filed > 664 & sex_cases == 1
+	gen sex_pre_metoo = r(N)
+	count if ym_filed < 693 & ym_filed > 664 & sex_cases == 0
+	gen no_sex_pre_metoo = r(N)
+	gen covid_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
+	tab covid_percent_increase
+	drop *metoo
+	restore
+}
 
 /*******************************************************************************
 Selection 

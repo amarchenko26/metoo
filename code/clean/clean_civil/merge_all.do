@@ -18,10 +18,10 @@ Already merged:
 	- TX
 	- WA
 	- ND
-	- MN
+	- MN (all post)
 	- RI
 	- AK
-	- PA
+	- PA (all post)
 	- WI
 	- KY
 	- DE
@@ -31,6 +31,7 @@ Already merged:
 	- GA (waiting for SH and date filed, all post)
 	- MD (all post)
 	- NY
+	- MT
 	
 *******************************************************************************/
 
@@ -99,11 +100,11 @@ Append to WA
 
 append using "$clean_data/clean_wa.dta"
 
-/*******************************************************************************
-Append to MN
-*******************************************************************************/
-
-append using "$clean_data/clean_mn.dta"
+// /*******************************************************************************
+// Append to MN
+// *******************************************************************************/
+//
+// append using "$clean_data/clean_mn.dta"
 
 /*******************************************************************************
 Append to RI
@@ -117,11 +118,11 @@ Append to AK
 
 append using "$clean_data/clean_ak.dta"
 
-/*******************************************************************************
-Append to PA
-*******************************************************************************/
-
-append using "$clean_data/clean_pa.dta"
+// /*******************************************************************************
+// Append to PA
+// *******************************************************************************/
+//
+// append using "$clean_data/clean_pa.dta"
 
 /*******************************************************************************
 Append to WI
@@ -176,6 +177,12 @@ Append to NY
 *******************************************************************************/
 
 append using "$clean_data/clean_ny.dta"
+
+/*******************************************************************************
+Append to MT
+*******************************************************************************/
+
+append using "$clean_data/clean_mt.dta"
 
 
 /*******************************************************************************
@@ -271,8 +278,8 @@ create_years_to_treat, varname(years_to_treat_res) datevar(common_res_date) labe
 create_years_to_treat, varname(years_to_treat_file) datevar(common_file_date) label("Years to treat, filing date")
 
 // Gen earliest available dates
-bysort state: egen earliest_date = min(common_file_date)
-bysort state: egen last_date 	= max(common_file_date)
+bysort state eeoc: egen earliest_date = min(common_file_date)
+bysort state eeoc: egen last_date = max(common_file_date)
 
 format earliest_date last_date %td
 
