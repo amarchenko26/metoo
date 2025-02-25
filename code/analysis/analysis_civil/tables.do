@@ -4,12 +4,12 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did		 	= 0
-loc run_did_gender	= 0
+loc run_did		 	= 1
+loc run_did_gender	= 1
 loc run_did_sh	 	= 0
 loc run_did_win_old = 0
 loc	run_did_all  	= 0
-loc run_did_robust 	= 1
+loc run_did_robust 	= 0
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
@@ -22,6 +22,7 @@ DiD with Sex as treated
 loc y1 settle
 loc y2 win_alt
 loc y3 relief_scale
+
 
 loc outcome_vars y1 y2 y3
 loc i 1
@@ -49,7 +50,7 @@ if `run_did' == 1 {
 	#delimit ;	
 	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_sex.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Main effects}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mgroups("Settled" "Won (or not dismissed)" "Compensation", pattern(1 0 1 0 1 0) 
@@ -85,7 +86,7 @@ if `run_did' == 1 {
 
 	#delimit ;
 	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_sex.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Overlaps with MeToo}} \\ \midrule")
 		fragment
 		append
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
@@ -135,7 +136,7 @@ if `run_did_gender' == 1 {
 	#delimit ;	
 	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_gender.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Gender non-missing}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Gender non-missing}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mgroups("Settled" "Won (or not dismissed)" "Compensation", pattern(1 0 1 0 1 0) 
@@ -172,7 +173,7 @@ if `run_did_gender' == 1 {
 
 	#delimit ;	
 	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_gender.tex", style(tex) 
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Complainant is female}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Complainant is female}} \\ \midrule")
 		fragment
 		append
 		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f)
@@ -207,7 +208,7 @@ if `run_did_gender' == 1 {
 
 	#delimit ;
 	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_gender.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel C: Overlaps with MeToo}} \\ \midrule")
 		fragment
 		append
 		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f)
@@ -349,7 +350,7 @@ if `run_did_sh' == 1 {
 	}
 
 	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_state.tex", style(tex) replace 
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_sh.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
 		fragment
@@ -388,7 +389,7 @@ if `run_did_sh' == 1 {
 	}
 
 	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_state.tex", style(tex)
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_sh.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
 		fragment
 		append

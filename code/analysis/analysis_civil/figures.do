@@ -6,13 +6,13 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc selection 		= 0
-loc event 	   		= 1
+loc event 	   		= 0
 loc timeseries 		= 0
 loc timeseries_basis = 0
-loc state_did  		= 0
+loc state_did  		= 1
 loc state_did_all 	= 0
 loc event_all  		= 0
-loc run_placebo 	= 1
+loc run_placebo 	= 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f 	= 0
@@ -129,48 +129,6 @@ gen zero = 0
 		estimates clear
 
 
-
-		******** Overlap event study ********
-		preserve
-		keep if eeoc == 0
-		keep if common_file_date < date("$metoo", "DMY")
-
-		cap drop event 		
-		g event = years_to_treat_res * sex_cases
-		replace event = event + 9 
-
-		// Run dynamic DiD
-		reghdfe `y' ib8.event, ///
-			absorb(basis_state ym_res_state) ///
-			vce(cluster basis) noconstant
-		estimates store TWFE
-
-		// Run Rambachan & Roth (2021)
-		honestdid, numpre(8) omit ///
-			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'_state.png", replace
-
-		// Make graph
-		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical
-			ciopts(recast(rcap) msize(medium) color(orange_red))
-			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			xline(8.5)
-			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo on `y'", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
-		;
-		#delimit cr
-					
-		graph export "$figures/eventstudy_`y'_state.png", replace 
-		estimates clear
-
-
-
-
-
 		/* sum years_to_treat_res
 		loc min = r(min)
 		loc max = r(max)
@@ -202,8 +160,94 @@ gen zero = 0
 		graph export "$figures/eventstudy_`y'_state_new.png", replace  */
 
 		restore
-	}	
+	}
+
+		******** Overlap event study ********
+		preserve 
+		keep if eeoc == 0
+
+		cap drop event 		
+		g event = years_to_treat_res * sex_cases
+		replace event = event + 9 
+
+		reghdfe win_alt ib8.event if common_file_date < date("$metoo", "DMY"), ///
+			absorb(basis_state ym_res_state) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			xline(8.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_win_alt_overlap_state.png", replace 
+		estimates clear
+
+
+		******** Female complainants only ********
+		cap drop event 		
+		g event = years_to_treat_res * sex_cases * victim_f
+		replace event = event + 9 
+
+		// Run dynamic DiD
+		reghdfe win_alt ib8.event, ///
+			absorb(basis_state ym_res_state) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			xline(8.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on P(win) for Women", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_win_alt_female_state.png", replace 
+		estimates clear
+
+
+		******** Female complainants OVERLAP ********
+		// Run dynamic DiD
+		reghdfe win_alt ib8.event if common_file_date < date("$metoo", "DMY"), ///
+			absorb(basis_state ym_res_state) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			xline(8.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on P(win) for Women", size(medium))
+			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_win_alt_female_overlap_state.png", replace 
+		estimates clear	
+		restore
 }
+
 
 if `event_all' == 1 {
 	
@@ -688,11 +732,10 @@ if `state_did' == 1 {
 		yline(0, lcolor(black)) 
 		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
 		ytitle("Treatment effect on P(win)", size(medium))
-		title("Treatment effects on P(win) by state", size(medium))
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel) //yscale(range(-.1 .5)) ylabel(-.1(.2).5, labsize(small))
 		note("Controls include State X Unit and State X Time FE", size(small)) 
-		text(0.08 3 "Overall ATT: `att'")
+		text(0.05 2.5 "Overall ATT: `att'")
 		;
 	#delimit cr
 
