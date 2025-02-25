@@ -278,8 +278,8 @@ create_years_to_treat, varname(years_to_treat_res) datevar(common_res_date) labe
 create_years_to_treat, varname(years_to_treat_file) datevar(common_file_date) label("Years to treat, filing date")
 
 // Gen earliest available dates
-bysort state: egen earliest_date = min(common_file_date)
-bysort state: egen last_date 	= max(common_file_date)
+bysort state eeoc: egen earliest_date = min(common_file_date)
+bysort state eeoc: egen last_date = max(common_file_date)
 
 format earliest_date last_date %td
 
