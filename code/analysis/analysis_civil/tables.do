@@ -7,11 +7,11 @@ use "$clean_data/clean_cases.dta", replace
 loc run_did		 	= 1
 loc run_did_gender	= 1
 loc run_did_sh	 	= 0
-loc run_did_win_old = 0
+loc run_did_win_old = 1
 loc	run_did_all  	= 0
 loc run_did_robust 	= 0
-loc run_selection 	= 0
-loc run_summary  	= 0
+loc run_selection 	= 1
+loc run_summary  	= 1
 loc run_balance  	= 0
 loc run_duration 	= 0
 loc run_sdid   		= 0
@@ -750,8 +750,6 @@ if `run_summary' == 1 {
 		sh
 		victim_f
 		post 
-		charge_file_year 
-		charge_res_year 
 		duration 
 	// Basis
 		basis_dummy1 
@@ -781,8 +779,6 @@ if `run_summary' == 1 {
 		sh
 		victim_f
 		post 
-		charge_file_year 
-		charge_res_year 
 		duration 
 	// Basis
 		/* basis_dummy1 
