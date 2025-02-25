@@ -29,15 +29,15 @@ if `tabulations' == 1 {
 	preserve
 	keep if eeoc == 0
 	// Complaint flow diagram
-	tab dismissed //arrow to "Dismissed"
-	tab settle //arrow to "Settled"
-	tab court //arrow to "Court"
-	tab investigation //added to court for arrow to "Investigation or Court"
-	tab win_investigation //arrow to "Won"
-	tab lose_investigation //arrow to "Lost"
+	tab dismissed //arrow to "Dismissed": 10.22 when run on Feb 25, 2025
+	tab settle //arrow to "Settled": 10.82 when run on Feb 25, 2025
+	tab court //arrow to "Court": 29.95 when run on Feb 25, 2025
+	tab investigation //added to court for arrow to "Investigation or Court": 49.19 when run on Feb 25, 2025
+	tab win_investigation //arrow to "Won": 7.30 when run on Feb 25, 2025
+	tab lose_investigation //arrow to "Lost": 41.89 when run on Feb 25, 2025
 	restore
 	
-	// Percent change in cases filed (MeToo)
+	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
 	preserve
 	keep if eeoc == 0
 	di td($metoo) // 21107
@@ -57,7 +57,7 @@ if `tabulations' == 1 {
 	drop *metoo
 	restore
 	
-	// Percent change in cases filed (Pre-COVID)
+	// Percent change in cases filed (Pre-COVID): 0.0513324 when run on Feb 25, 2025
 	preserve
 	keep if eeoc == 0
 	di tm(2020m3) // 722
