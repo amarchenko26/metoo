@@ -5,10 +5,10 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc tabulations		= 0
+loc tabulations		= 1
 loc selection 		= 0
 loc event 	   		= 0
-loc timeseries 		= 1
+loc timeseries 		= 0
 loc state_did  		= 0
 loc state_did_all 	= 0
 loc event_all  		= 0
@@ -43,20 +43,53 @@ if `tabulations' == 1 {
 	di td($metoo) // 21107
 	tab state if charge_file_date > 21107 & charge_file_date < 21472
 	tab state if charge_file_date < 21107 & charge_file_date > 20742
-	drop if inlist(state, "FL", "PA", "WI") // based on tabbing and seeing if there were large differences
-	count if charge_file_date > 21107 & charge_file_date < 21472 & sex_cases == 1
+	drop if inlist(state, "PA", "WI") // based on tabbing and seeing if there were large differences
+
+	g filed_first_year_post = 1 if charge_file_date > 21107 & charge_file_date < 21472
+	g filed_first_year_pre  = 1 if charge_file_date < 21107 & charge_file_date > 20742
+
+	// Total increase in number of complaints filed 
+	count if filed_first_year_post == 1
+	gen filed_first_year_post_count = r(N)
+	count if filed_first_year_pre == 1
+	gen filed_first_year_pre_count = r(N)
+	// Percent change in number of complaints filed
+	g total_change = (filed_first_year_post_count - filed_first_year_pre_count) / filed_first_year_pre_count
+	tab total_change
+
+	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
+	count if filed_first_year_post == 1 & sex_cases == 1
 	gen sex_post_metoo = r(N)
-	count if charge_file_date > 21107 & charge_file_date < 21472 & sex_cases == 0
+	count if filed_first_year_post == 1 & sex_cases == 0
 	gen no_sex_post_metoo = r(N)
-	count if charge_file_date < 21107 & charge_file_date > 20742 & sex_cases == 1
+	count if filed_first_year_pre == 1 & sex_cases == 1
 	gen sex_pre_metoo = r(N)
-	count if charge_file_date < 21107 & charge_file_date > 20742 & sex_cases == 0
+	count if filed_first_year_pre == 1 & sex_cases == 0
 	gen no_sex_pre_metoo = r(N)
+
 	gen metoo_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
 	tab metoo_percent_increase
 	drop *metoo
-	restore
-	
+
+	// Male complainants as share of total sex complaints after MeToo: -.3072776 when run on Feb 26, 2025
+	keep if sex_cases == 1
+
+	count if filed_first_year_post == 1 & victim_f == 0 
+	gen sex_post_metoo_men = r(N)
+	count if filed_first_year_post == 1 
+	gen sex_post_metoo = r(N)
+
+	count if filed_first_year_pre == 1 & victim_f == 0 
+	gen sex_pre_metoo_men = r(N)
+	count if filed_first_year_pre == 1 
+	gen sex_pre_metoo = r(N)
+
+	gen metoo_percent_increase_men = ((sex_post_metoo_men/sex_post_metoo) - (sex_pre_metoo_men/sex_pre_metoo))/(sex_pre_metoo_men/sex_pre_metoo)
+	tab metoo_percent_increase_men
+	drop *metoo
+	restore 
+
+
 	// Percent change in cases filed (Pre-COVID): 0.0513324 when run on Feb 25, 2025
 	preserve
 	keep if eeoc == 0
