@@ -62,7 +62,7 @@ drop _merge
 Append to MA
 *******************************************************************************/
 
-append using "$clean_data/clean_ma.dta"
+use "$clean_data/clean_ma.dta"
 
 /*******************************************************************************
 Append to HI
@@ -201,9 +201,9 @@ replace duration = 0 if duration < 0
 winsor duration, p(.01) gen(duration_w)
 
 // Gen ym var
-g ym = ym(year(common_res_date), month(common_res_date)) 
-format ym %tm 
-la var ym "Year-month var of resolution date"
+g ym_res = ym(year(common_res_date), month(common_res_date)) 
+format ym_res %tm 
+la var ym_res "Year-month var of resolution date"
 
 g ym_filed = ym(year(common_file_date), month(common_file_date)) 
 format ym_filed %tm 
@@ -293,7 +293,7 @@ encode basis, g(basis_cat)
 
 // Gen state/unit and state/time FE
 g basis_state = basis_cat * state_cat
-g ym_res_state 	  = ym * state_cat
+g ym_res_state 	  = ym_res * state_cat
 
 g year_filed_state = years_to_treat_file * state_cat
 g year_res_state   = years_to_treat_res * state_cat
@@ -307,7 +307,7 @@ Outcomes
 g y = 1
 
 // Gen filed_per_year for sex_cases vs non
-bys ym sex_cases: egen total_cases_per_month_sex_cases = total(y)
+bys ym_res sex_cases: egen total_cases_per_month_sex_cases = total(y)
 g ln_total_cases_per_month_by_sex = ln(total_cases_per_month_sex_cases)
 
 bys common_year: gen total_cases_per_year = _N

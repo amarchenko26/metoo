@@ -217,7 +217,7 @@ if `run_did_gender_appendix' == 1 {
 	keep if eeoc == 0
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex if victim_f != ., absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex if victim_f != ., absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui: sum ``y'' if treat_sex == 0 & victim_f != .
@@ -255,7 +255,7 @@ if `run_did_gender_appendix' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui: sum ``y'' if treat_sex_f == 0
@@ -291,7 +291,7 @@ if `run_did_gender_appendix' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui: sum ``y'' if treat_sex_f ==0 & common_file_date < date("$metoo", "DMY")
@@ -325,6 +325,57 @@ if `run_did_gender_appendix' == 1 {
 }
 
 /*******************************************************************************
+Overlap placebo regression 
+*******************************************************************************/
+// Take cases filed before MeToo, some overlap and some don't
+// for every month in 2015, 2016, and 2017
+// we take the complaints that did and didn't overlap in each month 
+// we sum the % that are sex_cases 
+
+// From 2016m1 to 2017m10
+forvalues i = 672(1)693 {
+	sum sex_cases if overlap_all == 1 & ym_filed == `i'
+	sum sex_cases if overlap_all == 0 & ym_filed == `i'
+}
+
+preserve
+keep if ym_filed < 693 
+collapse (mean) avg_sex_cases = sex_cases, by(ym_filed overlap_all)
+
+twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
+       (line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
+       legend(label(1 "Resolved before") label(2 "Overlap")) ///
+       xtitle("Year-month filed") ytitle("% sex cases") ///
+       title("Trends in overlap and non-overlap cases filed in the same year-month") 
+restore
+
+
+preserve
+keep if ym_filed < 693 
+collapse (mean) avg_sex_cases = win_alt, by(ym_filed overlap_all)
+
+twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
+       (line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
+       legend(label(1 "Resolved before") label(2 "Overlap")) ///
+       xtitle("Year-month filed") ytitle("Win rate") ///
+       title("% sex cases in overlap and non-overlap cases filed in the same year-month") 
+restore
+
+
+preserve
+keep if ym_filed < 693 
+collapse (mean) avg_sex_cases = duration, by(ym_filed overlap_all)
+
+twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
+       (line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
+       legend(label(1 "Resolved before") label(2 "Overlap")) ///
+       xtitle("Year-month filed") ytitle("Win rate") ///
+       title("% sex cases in overlap and non-overlap cases filed in the same year-month") 
+restore
+
+
+
+/*******************************************************************************
 DiD regression with win old 
 *******************************************************************************/
 loc y1 settle
@@ -341,7 +392,7 @@ if `run_did_win_old' == 1 {
 	keep if eeoc == 0
 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -381,7 +432,7 @@ if `run_did_win_old' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex if common_file_date < date("$metoo", "DMY"), absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex if common_file_date < date("$metoo", "DMY"), absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -434,7 +485,7 @@ if `run_did_sh' == 1 {
 	keep if sample_sh == 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat, absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -474,7 +525,7 @@ if `run_did_sh' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat if common_file_date < date("$metoo", "DMY"), absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat if common_file_date < date("$metoo", "DMY"), absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -526,7 +577,7 @@ if `run_did_all' == 1 {
 
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -568,7 +619,7 @@ if `run_did_all' == 1 {
 	
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -607,7 +658,7 @@ if `run_did_all' == 1 {
 	
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex if common_file_date < date("$metoo", "DMY"), absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex if common_file_date < date("$metoo", "DMY"), absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -661,7 +712,7 @@ if `run_did_robust' == 1 {
 	keep if eeoc == 0
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -703,7 +754,7 @@ if `run_did_robust' == 1 {
 	keep if eeoc == 0
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -742,7 +793,7 @@ if `run_did_robust' == 1 {
 	keep if eeoc == 0
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex, absorb(basis ym) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym_res) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
@@ -1091,7 +1142,7 @@ if `run_balance' == 1 {
     balancetable_program `balance', sample(sex_cases == 1) using("$tables/balance_sex.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(robust)
 
     // Filed pre-covid
-    balancetable_program `balance', sample(ym < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
+    balancetable_program `balance', sample(ym_filed < 721) using("$tables/balance_covid.tex") ctitles("Before" "After" "Diff" "p-value") wide(mean diff pval) by(post) errors(cluster basis)
 
 	g covid = date("11mar2020", "DMY")
 	
@@ -1164,7 +1215,7 @@ if `run_sdid' == 1 {
 
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex, absorb(basis ym ym#basis_cat) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis ym_res ym_res#basis_cat) vce(cluster basis)
 		eststo u`j'
 		qui estadd loc feunit "\checkmark", replace
 		qui estadd loc fetime "\checkmark", replace
