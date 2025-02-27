@@ -8,7 +8,7 @@ loc run_did		 	= 1
 loc run_did_gender	= 1
 loc run_did_gender_appendix	= 1
 loc run_did_sh	 	= 0
-loc run_did_win_old = 0
+loc run_did_win_old = 1
 loc	run_did_all  	= 0
 loc run_did_robust 	= 0
 loc run_selection 	= 0
@@ -25,6 +25,7 @@ loc y2 dismissed
 loc y3 court
 loc y4 win_alt
 loc y5 relief_scale
+
 
 loc outcome_vars y1 y2 y3
 loc i 1
@@ -46,7 +47,7 @@ if `run_did' == 1 {
 	#delimit ;	
 	esttab s1 s2 s3 using "$tables/did_sex.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Main effects}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mgroups("Settled" "Won (or not dismissed)" "Compensation", pattern(1 1 1) 
@@ -230,7 +231,7 @@ if `run_did_gender_appendix' == 1 {
 	#delimit ;	
 	esttab a1 s1 a2 s2 a3 s3 using "$tables/did_gender_appendix.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Gender non-missing}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Gender non-missing}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mgroups("Settled" "Won (or not dismissed)" "Compensation", pattern(1 0 1 0 1 0) 
@@ -444,7 +445,7 @@ if `run_did_sh' == 1 {
 	}
 
 	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_state.tex", style(tex) replace 
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_sh.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
 		fragment
@@ -483,7 +484,7 @@ if `run_did_sh' == 1 {
 	}
 
 	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_state.tex", style(tex)
+	esttab a1 s1 a2 s2 a3 s3 a4 s4 using "$tables/did_sh.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
 		fragment
 		append
@@ -844,8 +845,6 @@ if `run_summary' == 1 {
 		sh
 		victim_f
 		post 
-		charge_file_year 
-		charge_res_year 
 		duration 
 	// Basis
 		basis_dummy1 
@@ -875,8 +874,6 @@ if `run_summary' == 1 {
 		sh
 		victim_f
 		post 
-		charge_file_year 
-		charge_res_year 
 		duration 
 	// Basis
 		/* basis_dummy1 
