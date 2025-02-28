@@ -43,7 +43,7 @@ if `tabulations' == 1 {
 	di td($metoo) // 21107
 	tab state if charge_file_date > 21107 & charge_file_date < 21472
 	tab state if charge_file_date < 21107 & charge_file_date > 20742
-	drop if inlist(state, "PA", "WI") // based on tabbing and seeing if there were large differences
+	drop if inlist(state, "FL", "WI") // based on tabbing and seeing if there were large differences
 
 	g filed_first_year_post = 1 if charge_file_date > 21107 & charge_file_date < 21472
 	g filed_first_year_pre  = 1 if charge_file_date < 21107 & charge_file_date > 20742
@@ -97,7 +97,7 @@ if `tabulations' == 1 {
 	di tm(2017m10) // 693
 	tab state if ym_filed > 693 & ym_filed < 722
 	tab state if ym_filed < 693 & ym_filed > 664
-	drop if inlist(state, "CA", "FL", "PA", "WI") // based on tabbing and seeing if there were large differences
+	drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
 	count if ym_filed > 693 & ym_filed < 722 & sex_cases == 1
 	gen sex_post_metoo = r(N)
 	count if ym_filed > 693 & ym_filed < 722 & sex_cases == 0
