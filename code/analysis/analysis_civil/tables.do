@@ -4,8 +4,8 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did		 	= 1
-loc run_did_gender	= 1
+loc run_did		 	= 0
+loc run_did_gender	= 0
 loc run_did_gender_appendix	= 0
 loc run_did_sh	 	= 0
 loc run_did_win_old = 0
@@ -14,6 +14,7 @@ loc run_did_robust 	= 0
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
+loc run_overlap_balance = 1
 loc run_duration 	= 0
 loc run_sdid   		= 0
 
@@ -1097,6 +1098,48 @@ if `run_duration' == 1 {
 	#delimit cr
 	estimates clear
 	eststo clear
+}
+
+/****************************************************************************
+Overlap balance table
+****************************************************************************/
+
+if `run_overlap_balance' == 1 {
+
+	preserve
+	
+	keep if eeoc == 0
+	
+	tab juris, gen(juris_dummy)
+	
+	la var juris_dummy1 "Education"
+	la var juris_dummy2 "Employment"
+	la var juris_dummy3 "Housing"
+	la var juris_dummy4 "Other"
+	la var juris_dummy5 "Public Accommodation"
+	la var juris_dummy6 "Unspecified"
+	
+	loc balance ///
+    sex_cases ///
+	victim_f ///
+	juris_dummy1 ///
+	juris_dummy2 ///
+	juris_dummy3 ///
+	juris_dummy4 ///
+	juris_dummy5 ///
+	juris_dummy6
+	
+	g overlap_balance = 1 if overlap_2 == 1
+	replace overlap_balance = 0 if common_file_date < 20742 & common_res_date > 20742 
+	replace overlap_balance = . if common_file_date < 20377 & overlap_balance == 0
+	replace overlap_balance = . if common_res_date > 21107 & overlap_balance == 0
+	
+    balancetable overlap_balance `balance' using "$tables/overlap_balance.tex" if overlap_balance != ., ///
+        varlabels vce(robust) replace ///
+        ctitles("2016" "2017" "Diff" "p-value") ///
+        pvalues staraux pval(nopar) format(%9.2f) ///
+        wide(mean diff pval)
+	restore
 }
 
 /****************************************************************************
