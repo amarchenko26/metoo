@@ -14,9 +14,9 @@ loc run_did_robust 	= 0
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
-loc run_overlap_balance = 1
+loc run_overlap_balance = 0
 loc run_duration 	= 0
-loc run_sdid   		= 0
+loc run_unit   		= 1
 
 /*******************************************************************************
 DiD with Sex as treated
@@ -483,7 +483,7 @@ loc i 1
 
 if `run_did_sh' == 1 {
 	preserve 
-	keep if sample_sh == 1
+	keep if eeoc == 0 
 	foreach y of local outcome_vars {
 		
 		reghdfe ``y'' treat, absorb(basis ym_res) vce(cluster basis)
@@ -1195,6 +1195,53 @@ if `run_balance' == 1 {
 	restore
 }
 
+
+/*******************************************************************************
+Unit trends 
+*******************************************************************************/
+
+loc y1 settle
+loc y2 win_alt
+loc y3 dismissed
+	
+loc outcome_vars y1 y2 y3
+
+// Same locals as above 
+loc j 1
+
+if `run_unit' == 1 {
+
+	keep if eeoc == 0
+
+	foreach y of local outcome_vars {
+		
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state ym_res_state#basis_state) vce(cluster basis)
+		eststo u`j'
+		qui estadd loc feunit "\checkmark", replace
+		qui estadd loc fetime "\checkmark", replace
+		qui estadd loc unit_time "\checkmark", replace
+				
+		loc ++j
+	}
+	
+	#delimit ;	
+	estout u1 u2 u3 using "$tables/sdid.tex", style(tex) replace
+		varlabels(treat_sex "ATT") keep(treat_sex)
+		mgroups("Unit trends", pattern(1 0 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel("Settle" "Win" "Compensation", pattern(1 1 1) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		stats(feunit fetime unit_time N r2, label("Case FE" "Time FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") ;
+	#delimit cr
+	estimates clear
+}
+
+
 /*******************************************************************************
 Synthetic DiD
 
@@ -1208,13 +1255,11 @@ D: Dummy of treatement, equal to 1 if units are treated, and otherwise 0 (numeri
 , method() // change option to did for DiD and SC for synthetic control
 *******************************************************************************/
 
-loc y1 settle
-loc y2 win_alt
-loc y3 relief_scale
-	
-loc outcome_vars y1 y2 y3
 
-if `run_sdid' == 1 {
+
+/* if `run_sdid' == 1 {
+
+	keep if eeoc == 0
 
 	loc time years_to_treat_res
 	loc unit basis
@@ -1244,42 +1289,4 @@ if `run_sdid' == 1 {
 			loc ++i
 		restore
 	}
-}
-
-
-/*******************************************************************************
-Unit trends 
-*******************************************************************************/
-
-// Same locals as above 
-loc j 1
-
-if `run_sdid' == 1 {
-
-	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' treat_sex, absorb(basis ym_res ym_res#basis_cat) vce(cluster basis)
-		eststo u`j'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui estadd loc unit_time "\checkmark", replace
-				
-		loc ++j
-	}
-	
-	#delimit ;	
-	estout u1 u2 u3 sdid1 sdid2 sdid3 using "$tables/sdid.tex", style(tex) replace
-		varlabels(treat_sex "ATT") keep(treat_sex)
-		mgroups("Unit trends" "SDID", pattern(1 0 0 1 0 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel("Settle" "Win" "Comp." "Settle" "Win" "Comp.", pattern(1 1 1 1 1 1) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		stats(feunit fetime unit_time N r2, label("Case FE" "Time FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") ;
-	#delimit cr
-	estimates clear
-}
+} */
