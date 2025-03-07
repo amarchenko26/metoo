@@ -5,8 +5,8 @@ Tables for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc run_did		 	= 0
-loc run_did_gender	= 0
-loc run_did_gender_appendix	= 1
+loc run_did_gender	= 1
+loc run_did_gender_appendix	= 0
 loc run_did_sh	 	= 0
 loc	run_did_all  	= 0
 loc run_did_robust 	= 0
@@ -98,11 +98,11 @@ if `run_did' == 1 {
 /*******************************************************************************
 DiD with gender
 *******************************************************************************/
-loc y1 settle
+loc y1 win 
 loc y2 dismissed
-loc y3 court
-loc y4 win
-loc y5 relief_scale
+loc y3 relief_scale
+loc y4 settle
+loc y5 court
 
 
 loc outcome_vars y1 y2 y3 y4 y5
@@ -127,7 +127,7 @@ if `run_did_gender' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Gender non-missing}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
-		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 1 1 1 1) 
+		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit_s N r2 control_mean, 
