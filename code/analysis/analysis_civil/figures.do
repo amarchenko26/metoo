@@ -8,10 +8,9 @@ use "$clean_data/clean_cases.dta", replace
 loc tabulations		= 0
 loc selection 		= 0
 loc event 	   		= 0
-loc timeseries 		= 0
-loc state_did  		= 0
+loc timeseries 		= 1
+loc state_did  		= 1
 loc state_did_all 	= 0
-loc event_all  		= 0
 loc run_placebo 	= 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
@@ -20,6 +19,8 @@ loc duration   		= 0
 loc yhat			= 0
 loc timeseries_basis = 0
 
+keep if eeoc == 0 
+
 /*******************************************************************************
 Tabulations
 *******************************************************************************/
@@ -27,7 +28,6 @@ Tabulations
 if `tabulations' == 1 {
 	
 	preserve
-	keep if eeoc == 0
 	// Complaint flow diagram
 	tab dismissed //arrow to "Dismissed": 10.22 when run on Feb 25, 2025
 	tab settle //arrow to "Settled": 10.82 when run on Feb 25, 2025
@@ -39,7 +39,6 @@ if `tabulations' == 1 {
 	
 	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
 	preserve
-	keep if eeoc == 0
 	di td($metoo) // 21107
 	tab state if charge_file_date > 21107 & charge_file_date < 21472
 	tab state if charge_file_date < 21107 & charge_file_date > 20742
@@ -92,7 +91,6 @@ if `tabulations' == 1 {
 
 	// Percent change in cases filed (Pre-COVID): 0.0513324 when run on Feb 25, 2025
 	preserve
-	keep if eeoc == 0
 	di tm(2020m3) // 722
 	di tm(2017m10) // 693
 	tab state if ym_filed > 693 & ym_filed < 722
@@ -179,15 +177,14 @@ if `selection' == 1 {
 Event-study
 *******************************************************************************/
 
-local outcomes "settle dismissed win win_alt relief_scale court"
+local outcomes "settle dismissed win relief_scale court"
 
 if `event' == 1 {
 
-gen zero = 0 
+	gen zero = 0 
 
 	foreach y in `outcomes' {
 		preserve
-		keep if eeoc == 0
 
 		cap drop event 		
 		g event = years_to_treat_res * sex_cases
@@ -202,7 +199,7 @@ gen zero = 0
 		// Run Rambachan & Roth (2021)
 		honestdid, numpre(8) omit ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'_state.png", replace
+		graph export "$figures/honestdid_`y'.png", replace
 
 		// Make graph
 		#delimit ;
@@ -218,7 +215,7 @@ gen zero = 0
 		;
 		#delimit cr
 					
-		graph export "$figures/eventstudy_`y'_state.png", replace 
+		graph export "$figures/eventstudy_`y'.png", replace 
 		estimates clear
 
 
@@ -257,13 +254,12 @@ gen zero = 0
 
 		******** Overlap event study ********
 		preserve 
-		keep if eeoc == 0
 
 		cap drop event 		
 		g event = years_to_treat_res * sex_cases
 		replace event = event + 9 
 
-		reghdfe win_alt ib8.event if common_file_date < date("$metoo", "DMY"), ///
+		reghdfe win ib8.event if common_file_date < date("$metoo", "DMY"), ///
 			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
@@ -282,7 +278,7 @@ gen zero = 0
 		;
 		#delimit cr
 					
-		graph export "$figures/eventstudy_win_alt_overlap_state.png", replace 
+		graph export "$figures/eventstudy_win_overlap.png", replace 
 		estimates clear
 
 
@@ -292,7 +288,7 @@ gen zero = 0
 		replace event = event + 9 
 
 		// Run dynamic DiD
-		reghdfe win_alt ib8.event, ///
+		reghdfe win ib8.event, ///
 			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
@@ -311,13 +307,13 @@ gen zero = 0
 		;
 		#delimit cr
 					
-		graph export "$figures/eventstudy_win_alt_female_state.png", replace 
+		graph export "$figures/eventstudy_win_female.png", replace 
 		estimates clear
 
 
 		******** Female complainants OVERLAP ********
 		// Run dynamic DiD
-		reghdfe win_alt ib8.event if common_file_date < date("$metoo", "DMY"), ///
+		reghdfe win ib8.event if common_file_date < date("$metoo", "DMY"), ///
 			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
@@ -336,49 +332,12 @@ gen zero = 0
 		;
 		#delimit cr
 					
-		graph export "$figures/eventstudy_win_alt_female_overlap_state.png", replace 
+		graph export "$figures/eventstudy_win_female_overlap.png", replace 
 		estimates clear	
 		restore
 }
 
 
-if `event_all' == 1 {
-	
-	cap drop event 
-	g event = months_to_treat_12 * sex_cases
-	replace event = event + 9
-
-	foreach y in `outcomes' {
-		// Run dynamic DiD
-		reghdfe `y' ib8.event, ///
-			absorb(basis_state year_state) ///
-			vce(cluster basis) noconstant
-		estimates store TWFE
-		
-		// Run Rambachan & Roth (2021)
-		honestdid, numpre(8) omit ///
-			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'_all.png", replace
-
-		// Make graph
-		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical
-			ciopts(recast(rcap) msize(medium) color(orange_red))
-			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash))
-			xline(8.5)
-			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium))
-			note("Fixed effects: unit/state and time/state", size(small))
-		;
-		#delimit cr
-					
-		graph export "$figures/eventstudy_`y'_all.png", replace 
-		
-		estimates clear
-	}
-}
 
 /*******************************************************************************
 Cases/outcomes over time 
@@ -387,7 +346,6 @@ Cases/outcomes over time
 if `timeseries' == 1 {
 
     preserve
-	keep if eeoc == 0 
 	keep if sex_cases == 1
 
 	collapse (sum) mean_y = y, by(ym_filed state_cat)
@@ -410,43 +368,50 @@ if `timeseries' == 1 {
 		title("Number of sex complaints filed over time (residualized)")
 		ytitle("Residualized number of complaints", axis(1) size(medium))
 		text(`height' 730 "Covid-19", color("gs3") place(r) size(medlarge))
-		text(`height' 685 "MeToo", color("gs3") place(l) size(medlarge)) //note("Each dot plots the mean residuals from a regression of number of monthly complaints on state fixed effects.", size(medium))
+		text(`height' 685 "MeToo", color("gs3") place(l) size(medlarge)) 
 	;
 	#delimit cr
     graph export "$figures/timeseries_sex_filed.png", replace
     restore
 
-    preserve
-	keep if eeoc == 0 
-	keep if sex_cases == 1
+
+	**** TIMESERIES WIN ALT WITH BALANCED PANEL 
+	preserve 
 	drop if inlist(state, "CA", "WI")
 
-    collapse (sum) mean_y = y, by(ym_filed sex_cases)
+	loc Yvar win
+	loc Xvar ym_filed
+ 	collapse (mean) mean_y = `Yvar', by(`Xvar' sex_cases)
     
-	loc height = 400
+    summarize `Xvar', detail
+    local xmin = r(min)
+    local xmax = r(max)
+    
+    local xlabel_cmd `"xlabel(`xmin'(12)`xmax', angle(45) format(%tm))"'
 
-	#delimit ;
-	twoway 
-		scatter mean_y ym_filed, mcolor("orange_red") msize(small) yaxis(1)
-		||	lpolyci mean_y ym_filed, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
-		|| pcarrowi `height' 729 `height' 723, mlabsize(small) mcolor(black) lcolor(black)
-		|| pcarrowi `height' 686 `height' 692, mlabsize(small) mcolor(black) lcolor(black)
-		legend(off)
-		xtitle("Date filed", size(medium))
-		xline(693, lpattern(solid))
-		xline(722, lpattern(solid))
-		title("Number of sex complaints filed over time (balanced panel)")
-		ytitle("Number of complaints", axis(1) size(medium))
-		text(`height' 730 "Covid-19", color("gs3") place(r) size(medlarge))
-		text(`height' 685 "MeToo", color("gs3") place(l) size(medlarge)) 
-	;
-	#delimit cr
-    graph export "$figures/timeseries_sex_filed_balanced_panel.png", replace
+    #delimit ;
+    twoway 
+        lpolyci mean_y `Xvar' if sex_cases == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black)
+        || lpolyci mean_y `Xvar' if sex_cases == 1, acolor("orange_red %65") lwidth(medium) clpattern(dasex_cases) clcolor(black)
+        || scatter mean_y `Xvar' if sex_cases == 0, mcolor("gs3") msize(small)
+        || scatter mean_y `Xvar' if sex_cases == 1, mcolor("orange_red") msize(small)
+		|| pcarrowi .35 729 .35 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi .35 686 .35 692, mlabsize(small) mcolor(black) lcolor(black)
+        legend(order(3 1) lab(3 "Sex complaints, 95% CI") lab(1 "Other complaints, 95% CI") size(medium) ring(0) pos(11) rows(2))
+        xtitle("Date filed", size(medium))
+        xline(693, lpattern(solid))
+        xline(722, lpattern(solid))
+		text(.35 685 "MeToo", color("gs3") place(l) size(medium)) 
+        text(.35 730 "Covid-19", color("gs3") place(r) size(medium))
+        `xlabel_cmd'
+        ytitle("Probability of win", size(medium))
+    ;
+    #delimit cr
+	graph export "$figures/timeseries_win.png", replace
     restore
 
 
 	preserve 
-	keep if eeoc == 0 
 	drop if inlist(state, "CA", "WI")
 
 	* Women winning vs men winning vs. other complaints 
@@ -456,41 +421,9 @@ if `timeseries' == 1 {
 
 	plot_lpolyci dismissed ym_filed, title("Probability Complaint Dismissed Over Time (balanced panel)") ylabel("Probability dismissed")
 
-	plot_lpolyci win_alt ym_filed, title("Probability of Complainant Winning Over Time (balanced panel)") ylabel("Probability of win")
-
 	plot_lpolyci relief_scale ym_filed, title("Compensation Paid to Complainant (conditional on winning, balanced panel)") ylabel("Compensation in $1000s")
 	restore
 
-	* Number of complaints filed over time
-    preserve
-	keep if eeoc == 0 
-
-    local Yvar y
-    local Xvar ym_filed
-
-    collapse (sum) mean_y = `Yvar', by(`Xvar' sex_cases)
-    
-	#delimit ;
-	twoway 
-		lpolyci mean_y `Xvar' if sex_cases == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black) yaxis(2)
-		|| scatter mean_y `Xvar' if sex_cases == 0, mcolor("gs3") msize(small) yaxis(2)
-		|| lpolyci mean_y `Xvar' if sex_cases == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
-		|| scatter mean_y `Xvar' if sex_cases == 1, mcolor("orange_red") msize(small) yaxis(1)
-		|| pcarrowi 67 729 67 723, mlabsize(small) mcolor(black) lcolor(black)
-		|| pcarrowi 85 689 85 692, mlabsize(small) mcolor(black) lcolor(black)
-		legend(order(4 1) lab(4 "Sex, 95% CI") lab(1 "Non-sex, 95% CI") size(small) ring(0) pos(11) rows(2))
-		xtitle("Date filed", size(medium))
-		xline(693, lpattern(solid))
-		xline(722, lpattern(solid))
-		title("Number of complaints filed over time")
-		ytitle("Number non-sex complaints", axis(2)) 
-		ytitle("Number sex complaints", axis(1))
-		text(67 730 "Covid-19", color("gs3") place(r) size(small))
-		text(85 688 "MeToo", color("gs3") place(l) size(small))
-	;
-	#delimit cr
-    graph export "$figures/timeseries_filed.png", replace
-    restore
 }
 
 /*******************************************************************************
@@ -501,7 +434,6 @@ if `state_did' == 1 {
 
 	** State sample
 	preserve 
-	keep if eeoc == 0
 
 	// FWL regression
 	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
@@ -543,13 +475,12 @@ if `state_did' == 1 {
 
 		
 	preserve 
-	keep if eeoc == 0
 
 	label values state_did_sex state_cat
-	reghdfe win_alt i.state_did_sex, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
+	reghdfe win i.state_did_sex, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
 	eststo A
 
-	reghdfe win_alt treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
     loc att: display %5.4f _b[treat_sex]
 	
 	local my_blue "0 102 204"  
@@ -655,10 +586,10 @@ if `state_did_all' == 1{
 	label values state_did state_cat
 	drop if inlist(state_did, 42, 54) //drop US territories and WV bc coefficient is too high 
 
-	reghdfe win_alt i.state_did, absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win i.state_did, absorb(basis_state ym_res_state) vce(cluster basis)
 	eststo A
 
-	reghdfe win_alt treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
     loc att: display %5.4f _b[treat_sex]
 	
 	local my_blue "0 102 204"  
@@ -742,7 +673,7 @@ Placebo coef plots
 
 loc y1 dismissed
 loc y2 settle
-loc y3 win_alt
+loc y3 win
 loc y4 relief_scale
 
 loc outcome_vars y1 y2 y3 y4
@@ -754,7 +685,6 @@ if `run_placebo' == 1 {
 
 	// Placebo treatment effects
 	preserve
-	keep if eeoc == 0 
 	drop if basis == "Sex" // drop real treated cases
 
 	levelsof basis_cat, local(levels)
@@ -774,7 +704,7 @@ if `run_placebo' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex if eeoc == 0, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -806,7 +736,6 @@ if `run_placebo_single' == 1 {
 
 	// Single-tagged placebo treatment effects
 	preserve
-	keep if eeoc == 0 
 	drop if basis == "Sex" // drop real treated cases
 
 	levelsof basis_cat, local(levels)
@@ -825,7 +754,7 @@ if `run_placebo_single' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex if eeoc == 0, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -857,7 +786,6 @@ if `run_placebo_overlap' == 1 {
 
 	// Single-tagged placebo treatment effects
 	preserve	
-	keep if eeoc == 0 
 	drop if basis == "Sex"  // drop real treated cases
 
 	levelsof basis_cat, local(levels)
@@ -876,7 +804,7 @@ if `run_placebo_overlap' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex if overlap_2 != . & eeoc == 0, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex if overlap_2 != ., absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -908,7 +836,6 @@ if `run_placebo_f' == 1 {
 
 	// VICTIM FEMALE Placebo treatment effects
 	preserve
-	keep if eeoc == 0 
 	drop if basis == "Sex" // drop real treated cases
 
 	levelsof basis_cat, local(levels)
@@ -927,7 +854,7 @@ if `run_placebo_f' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex_f if eeoc == 0, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex_f, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -957,7 +884,7 @@ Duration
 
 if `duration' == 1{
 	
-	binscatter win_alt duration_w , n(50) ///
+	binscatter win duration_w , n(50) ///
 		xtitle("Duration (winsorized at 1%)") ytitle("Probability of win")
 	graph export "$figures/duration_cause.png", replace 	
 
@@ -1004,7 +931,6 @@ Beta-hat
 if `yhat' == 1{
 	preserve 
 	loc y settle
-	keep if eeoc == 0
 
 	* Fit model on data pre MeToo
 	#delimit ;
@@ -1216,7 +1142,7 @@ if `timeseries_basis' == 1 {
     restore
 	
 	preserve
-	collapse (mean) mean_prob_cause = win_alt, by(ym_filed basis)
+	collapse (mean) mean_prob_cause = win, by(ym_filed basis)
 		lowess mean_prob_cause ym_filed if basis == "Age", gen(lowess1) nograph
 		lowess mean_prob_cause ym_filed if basis == "Race", gen(lowess2) nograph
 		lowess mean_prob_cause ym_filed if basis == "Disability", gen(lowess3) nograph
