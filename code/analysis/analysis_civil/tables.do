@@ -8,7 +8,7 @@ loc run_did		 	= 0
 loc run_did_gender	= 0
 loc run_did_gender_appendix	= 1
 loc run_did_sh	 	= 1
-loc	run_did_all  	= 0
+loc	run_did_all  	= 1
 loc run_did_robust 	= 1
 loc run_selection 	= 0
 loc run_summary  	= 0
@@ -1099,9 +1099,11 @@ Unit trends
 *******************************************************************************/
 loc y1 win 
 loc y2 dismissed
-loc y3 settle
+loc y3 relief_scale
+loc y4 settle
+loc y5 court
 	
-loc outcome_vars y1 y2 y3
+loc outcome_vars y1 y2 y3 y4 y5
 
 // Same locals as above 
 loc j 1
@@ -1120,11 +1122,11 @@ if `run_unit' == 1 {
 	}
 	
 	#delimit ;	
-	estout u1 u2 u3 using "$tables/sdid.tex", style(tex) replace
+	estout u1 u2 u3 u4 u5 using "$tables/sdid.tex", style(tex) replace
 		varlabels(treat_sex "ATT") keep(treat_sex)
-		mgroups("Unit trends", pattern(1 0 0) 
+		mgroups("Unit trends", pattern(1 0 0 0 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel("Won" "Dismissed" "Settled", pattern(1 1 1) 
+		mlabel("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		stats(feunit fetime unit_time N r2, label("Case FE" "Time FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
