@@ -5,17 +5,17 @@ Tables for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc run_did		 	= 0
-loc run_did_gender	= 1
-loc run_did_gender_appendix	= 0
-loc run_did_sh	 	= 0
+loc run_did_gender	= 0
+loc run_did_gender_appendix	= 1
+loc run_did_sh	 	= 1
 loc	run_did_all  	= 0
-loc run_did_robust 	= 0
+loc run_did_robust 	= 1
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
 loc run_overlap_balance = 0
 loc run_duration 	= 0
-loc run_unit   		= 0
+loc run_unit   		= 1
 loc overlap_placebo = 0
 
 keep if eeoc == 0
@@ -204,11 +204,11 @@ if `run_did_gender' == 1 {
 /*******************************************************************************
 DiD with gender (appendix)
 *******************************************************************************/
-loc y1 settle
+loc y1 win 
 loc y2 dismissed
-loc y3 court
-loc y4 win
-loc y5 relief_scale
+loc y3 relief_scale
+loc y4 settle
+loc y5 court
 
 loc outcome_vars y1 y2 y3 y4 y5
 loc i 1
@@ -238,7 +238,7 @@ if `run_did_gender_appendix' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Gender non-missing}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
-		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0 1 0) 
+		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 0 1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit feunit_s N r2 control_mean, 
@@ -354,7 +354,7 @@ if `overlap_placebo' == 1 {
 
 	preserve
 	keep if ym_filed < 693 
-	collapse (mean) avg_sex_cases = win_alt, by(ym_filed overlap_all)
+	collapse (mean) avg_sex_cases = win, by(ym_filed overlap_all)
 
 	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
 		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
@@ -380,12 +380,11 @@ if `overlap_placebo' == 1 {
 /*******************************************************************************
 DiD with SH as treated
 *******************************************************************************/
-
-loc y1 settle
+loc y1 win 
 loc y2 dismissed
-loc y3 court
-loc y4 win
-loc y5 relief_scale
+loc y3 relief_scale
+loc y4 settle
+loc y5 court
 
 loc outcome_vars y1 y2 y3 y4 y5
 loc i 1
@@ -417,7 +416,7 @@ if `run_did_sh' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0 1 0) 
+		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 0 1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit feunit_s N r2 control_mean, 
@@ -473,11 +472,11 @@ if `run_did_sh' == 1 {
 /*******************************************************************************
 DiD regression with all data  
 *******************************************************************************/
-loc y1 settle
+loc y1 win 
 loc y2 dismissed
-loc y3 court
-loc y4 win
-loc y5 relief_scale
+loc y3 relief_scale
+loc y4 settle
+loc y5 court
 
 loc outcome_vars y1 y2 y3 y4 y5
 loc i 1
@@ -509,7 +508,7 @@ if `run_did_all' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
-		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0 1 0) 
+		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 0 1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit feunit_s N r2 control_mean, 
@@ -604,11 +603,11 @@ if `run_did_all' == 1 {
 /*******************************************************************************
 DiD regression - Robustness Check
 *******************************************************************************/
-loc y1 settle
+loc y1 win 
 loc y2 dismissed
-loc y3 court
-loc y4 win
-loc y5 relief_scale
+loc y3 relief_scale
+loc y4 settle
+loc y5 court
 
 loc outcome_vars y1 y2 y3 y4 y5
 loc i 1
@@ -639,7 +638,7 @@ if `run_did_robust' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Single-tagged cases}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
-		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0 1 0) 
+		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 0 1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit feunit_s N r2 control_mean, 
@@ -1098,10 +1097,9 @@ if `run_balance' == 1 {
 /*******************************************************************************
 Unit trends 
 *******************************************************************************/
-
-loc y1 settle
-loc y2 win_alt
-loc y3 dismissed
+loc y1 win 
+loc y2 dismissed
+loc y3 settle
 	
 loc outcome_vars y1 y2 y3
 
@@ -1126,7 +1124,7 @@ if `run_unit' == 1 {
 		varlabels(treat_sex "ATT") keep(treat_sex)
 		mgroups("Unit trends", pattern(1 0 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel("Settle" "Win" "Compensation", pattern(1 1 1) 
+		mlabel("Won" "Dismissed" "Settled", pattern(1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		stats(feunit fetime unit_time N r2, label("Case FE" "Time FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
