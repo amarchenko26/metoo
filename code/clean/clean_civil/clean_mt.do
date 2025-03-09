@@ -38,7 +38,7 @@ drop temp
 replace duration = charge_res_date - charge_file_date
 
 // Jurisdiction
-replace juris = "Other"
+replace juris = "Unspecified"
 replace juris = "Education" if regexm(juris, "EDUCATION")
 replace juris = "Public Accommodation" if regexm(juris, "PUB ACCOM")
 replace juris = "Housing" if juris == "HSNG"

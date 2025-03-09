@@ -6,16 +6,16 @@ use "$clean_data/clean_cases.dta", replace
 
 loc run_did		 	= 0
 loc run_did_gender	= 0
-loc run_did_gender_appendix	= 1
-loc run_did_sh	 	= 1
-loc	run_did_all  	= 1
-loc run_did_robust 	= 1
+loc run_did_gender_appendix	= 0
+loc run_did_sh	 	= 0
+loc	run_did_all  	= 0
+loc run_did_robust 	= 0
 loc run_selection 	= 0
-loc run_summary  	= 0
+loc run_summary  	= 1
 loc run_balance  	= 0
 loc run_overlap_balance = 0
 loc run_duration 	= 0
-loc run_unit   		= 1
+loc run_unit   		= 0
 loc overlap_placebo = 0
 
 keep if eeoc == 0

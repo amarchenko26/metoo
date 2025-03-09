@@ -36,6 +36,7 @@ format charge_file_date %td
 format charge_res_date %td
 
 // Jurisdiction
+replace juris = "Unspecified" if juris == ""
 replace juris = "Public Accommodation" if juris == "Public Accommodation/Public Service"
 
 g state = "MI"
