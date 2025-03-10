@@ -8,8 +8,8 @@ use "$clean_data/clean_cases.dta", replace
 loc tabulations		= 0
 loc selection 		= 0
 loc event 	   		= 0
-loc timeseries 		= 1
-loc state_did  		= 1
+loc timeseries 		= 0
+loc state_did  		= 0
 loc state_did_all 	= 0
 loc run_placebo 	= 0
 loc run_placebo_single = 0
@@ -492,22 +492,22 @@ if `state_did' == 1 {
 		(A, keep(1.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
 		(A, keep(6.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CA
 		(A, keep(10.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
-		(A, keep(11.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
+		(A, keep(11.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // FL
 		(A, keep(14.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
 		(A, keep(17.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
 		(A, keep(20.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
 		(A, keep(22.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
-		(A, keep(25.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
+		(A, keep(25.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // MI
 		(A, keep(26.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
 		(A, keep(29.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // MT
-		(A, keep(30.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NC
+		(A, keep(30.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // NC
 		(A, keep(31.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
 		(A, keep(37.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NY
-		(A, keep(41.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // PA
-		(A, keep(43.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // RI
+		(A, keep(41.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // PA
+		(A, keep(43.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // RI
 		(A, keep(47.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // TX
 		(A, keep(52.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
-		(A, keep(53.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WI
+		(A, keep(53.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))), // WI
 		drop(_cons)
 		vertical omitted 
 		legend(off)
@@ -601,16 +601,16 @@ if `state_did_all' == 1{
 		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
 		(A, keep(2.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AL
 		(A, keep(3.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AR
-		(A, keep(5.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AZ
+		(A, keep(5.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // AZ
 		(A, keep(6.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CA
 		(A, keep(7.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CO
 		(A, keep(8.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CT
 		(A, keep(9.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DC
 		(A, keep(10.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
-		(A, keep(11.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // FL
-		(A, keep(12.state_did) mcolor("`my_red'") ciopts(color("`my_blue'"))) // GA
+		(A, keep(11.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // FL
+		(A, keep(12.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // GA
 		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
-		(A, keep(15.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // IA
+		(A, keep(15.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // IA
 		(A, keep(16.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ID
 		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
 		(A, keep(18.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // IN
@@ -620,7 +620,7 @@ if `state_did_all' == 1{
 		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
 		(A, keep(23.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MD
 		(A, keep(24.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // ME
-		(A, keep(25.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MI
+		(A, keep(25.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // MI
 		(A, keep(26.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
 		(A, keep(27.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // MO
 		(A, keep(28.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // MS
@@ -631,12 +631,12 @@ if `state_did_all' == 1{
 		(A, keep(33.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NH
 		(A, keep(34.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NJ
 		(A, keep(35.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NM
-		(A, keep(36.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NV
+		(A, keep(36.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // NV
 		(A, keep(37.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NY
-		(A, keep(38.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // OH
+		(A, keep(38.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // OH
 		(A, keep(39.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // OK
 		(A, keep(40.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // OR
-		(A, keep(41.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // PA
+		(A, keep(41.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // PA
 		(A, keep(43.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // RI
 		(A, keep(44.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // SC
 		(A, keep(45.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // SD
@@ -645,7 +645,7 @@ if `state_did_all' == 1{
 		(A, keep(48.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // UT
 		(A, keep(49.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // VA
 		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
-		(A, keep(53.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))), // WI
+		(A, keep(53.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))), // WI
 		drop(_cons)
 		vertical omitted 
 		legend(off)
