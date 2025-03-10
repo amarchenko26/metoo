@@ -5,11 +5,11 @@ Tables for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc run_did		 	= 0
-loc run_did_gender	= 1
+loc run_did_gender	= 0
 loc run_did_gender_appendix	= 0
 loc run_did_sh	 	= 0
 loc	run_did_all  	= 0
-loc run_did_robust 	= 0
+loc run_did_robust 	= 1
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
@@ -393,14 +393,7 @@ loc i 1
 if `run_did_sh' == 1 {
 	preserve 
 	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' treat, absorb(basis ym_res) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat == 0
-		estadd scalar control_mean = `r(mean)'
-		
+				
 		reghdfe ``y'' treat, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
@@ -412,12 +405,12 @@ if `run_did_sh' == 1 {
 	}
 
 	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 a5 s5 using "$tables/did_sh.tex", style(tex) replace 
+	esttab s1 s2 s3 s4 s5 using "$tables/did_sh.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Main effects}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post") keep(treat)
-		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0 1 0) 
+		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit feunit_s N r2 control_mean, 
@@ -434,13 +427,6 @@ if `run_did_sh' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat if common_file_date < date("$metoo", "DMY"), absorb(basis ym_res) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		qui: sum ``y'' if treat ==0 & common_file_date < date("$metoo", "DMY") 
-		estadd scalar control_mean = `r(mean)'
-		
 		reghdfe ``y'' treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
@@ -451,7 +437,7 @@ if `run_did_sh' == 1 {
 	}
 
 	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 a5 s5 using "$tables/did_sh.tex", style(tex)
+	esttab s1 s2 s3 s4 s5 using "$tables/did_sh.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Overlaps with MeToo}} \\ \midrule")
 		fragment
 		append
@@ -620,11 +606,6 @@ if `run_did_robust' == 1 {
 	keep if multi_cat == 0
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex, absorb(basis ym_res) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		
 		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
@@ -634,12 +615,12 @@ if `run_did_robust' == 1 {
 	}
 
 	#delimit ;	
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 a5 s5 using "$tables/did_robust.tex", style(tex) replace 
+	esttab s1 s2 s3 s4 s5 using "$tables/did_robust.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Single-tagged cases}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
-		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 0 1 0 1 0 1 0 1 0) 
+		mgroups("Settled" "Dismissed" "Court" "Won" "Compensation", pattern(1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
 		stats(feunit feunit_s N r2 control_mean, 
@@ -661,11 +642,6 @@ if `run_did_robust' == 1 {
 	drop if basis == "Retaliation"
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex, absorb(basis ym_res) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		
 		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
@@ -675,7 +651,7 @@ if `run_did_robust' == 1 {
 	}
 
 	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 a5 s5 using "$tables/did_robust.tex", style(tex)
+	esttab s1 s2 s3 s4 s5 using "$tables/did_robust.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{No retaliation cases}} \\ \midrule")
 		fragment
 		append
@@ -698,12 +674,7 @@ if `run_did_robust' == 1 {
 	preserve 
 	keep if juris == "Employment"
 	foreach y of local outcome_vars {
-		
-		reghdfe ``y'' treat_sex, absorb(basis ym_res) vce(cluster basis)
-		eststo a`i'
-		qui estadd loc feunit "\checkmark", replace
-		qui estadd loc fetime "\checkmark", replace
-		
+				
 		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
@@ -713,7 +684,7 @@ if `run_did_robust' == 1 {
 	}
 
 	#delimit ;
-	esttab a1 s1 a2 s2 a3 s3 a4 s4 a5 s5 using "$tables/did_robust.tex", style(tex)
+	esttab s1 s2 s3 s4 s5 using "$tables/did_robust.tex", style(tex)
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Employment complaints only}} \\ \midrule")
 		fragment
 		append
@@ -1100,7 +1071,7 @@ Unit trends
 *******************************************************************************/
 
 loc y1 settle
-loc y2 win_alt
+loc y2 win
 loc y3 dismissed
 	
 loc outcome_vars y1 y2 y3
