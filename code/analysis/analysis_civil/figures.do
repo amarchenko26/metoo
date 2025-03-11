@@ -6,7 +6,7 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
-loc selection 		= 0
+loc selection 		= 1
 loc event 	   		= 0
 loc timeseries 		= 0
 loc state_did  		= 0
@@ -122,17 +122,17 @@ if `selection' == 1 {
 	g omega = (_n - 1) / 10
 
 	insobs 1  
-	replace omega = 0.63 if _n == _N // Add method 1 omega
+	replace omega = 0.51 if _n == _N // Add method 1 omega
 
 	insobs 1  
-	replace omega = 0.87 if _n == _N // Add method 2 omega
+	replace omega = 0.88 if _n == _N // Add method 2 omega
 
 	insobs 1  
-	replace omega = 0.65 if _n == _N // Add method 3 omega
+	replace omega = 0.74 if _n == _N // Add method 3 omega
 
 	g omega_c = 1-omega
-	g twfe 	  = .021 
-	g overlap = .050
+	g twfe 	  = .034 
+	g overlap = .021
 
 	// TWFE = omega (A-C) + (1-omega) (B-C)
 	// Selection equation
@@ -140,15 +140,14 @@ if `selection' == 1 {
 	
 	#delimit ;
 	twoway scatter bc omega, yline(0)
-			ytitle("Treatment effect", size(medium))
-			title("Treatment effect on marginal reporters for given values of {&omega}")
+			ytitle("Treatment effect on induced reporters", size(medium))
+			title("Treatment effect on induced reporters for given values of {&omega}")
 			xtitle("{&omega} = Share always reporters", size(medlarge))
 			mlabel(omega) mlabposition(6) 
 			msize(large) mlabsize(medium)
 			mcolor(orange_red) //mcolor("0 102 204")
-			legend(off)
-			xline(.4, lcolor(orange_red) lp(dash) lwidth(medium))
-			text(-.15 .45 "If {&omega} > .4, TEs for" "induced reporters are negative", color("gs3") place(r) size(medlarge))
+			legend(off) //xline(.4, lcolor(orange_red) lp(dash) lwidth(medium))
+			text(.075 .05 "TEs for induced reporters" "positive under all values of {&omega}", color("gs3") place(r) size(medlarge))
 			xlabel(0 `" "All Induced" "Reporters" "' 
 				  .2 " "
 				  .4 " "
