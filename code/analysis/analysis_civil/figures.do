@@ -5,8 +5,8 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc tabulations		= 0
-loc selection 		= 1
+loc tabulations		= 1
+loc selection 		= 0
 loc event 	   		= 0
 loc timeseries 		= 0
 loc state_did  		= 0
@@ -27,7 +27,6 @@ Tabulations
 
 if `tabulations' == 1 {
 	
-	preserve
 	// Complaint flow diagram
 	tab dismissed //arrow to "Dismissed": 10.22 when run on Feb 25, 2025
 	tab settle //arrow to "Settled": 10.82 when run on Feb 25, 2025
@@ -35,7 +34,6 @@ if `tabulations' == 1 {
 	tab investigation //added to court for arrow to "Investigation or Court": 49.19 when run on Feb 25, 2025
 	tab win_investigation //arrow to "Won": 7.30 when run on Feb 25, 2025
 	tab lose_investigation //arrow to "Lost": 41.89 when run on Feb 25, 2025
-	restore
 	
 	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
 	preserve
@@ -46,7 +44,7 @@ if `tabulations' == 1 {
 
 	g filed_first_year_post = 1 if charge_file_date > 21107 & charge_file_date < 21472
 	g filed_first_year_pre  = 1 if charge_file_date < 21107 & charge_file_date > 20742
-
+	
 	// Total increase in number of complaints filed 
 	count if filed_first_year_post == 1
 	gen filed_first_year_post_count = r(N)
@@ -68,6 +66,22 @@ if `tabulations' == 1 {
 
 	gen metoo_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
 	tab metoo_percent_increase
+	
+	// Omegas
+	tab sex_post_metoo
+	tab no_sex_post_metoo
+	tab sex_pre_metoo 
+	tab no_sex_pre_metoo
+	gen control_frac = (no_sex_post_metoo-no_sex_pre_metoo)/no_sex_pre_metoo
+	gen sex_frac = (sex_post_metoo-sex_pre_metoo)/sex_pre_metoo
+	gen omega_1 = control_frac/sex_frac
+	tab omega_1
+	
+	gen omega_2 = sex_pre_metoo/(sex_post_metoo/(1+control_frac))
+	tab omega_2
+	
+	gen omega_3 = sex_pre_metoo/(sex_post_metoo/0.989)
+	tab omega_3
 	drop *metoo
 
 	// Male complainants as share of total sex complaints after MeToo: -.3072776 when run on Feb 26, 2025
@@ -108,6 +122,7 @@ if `tabulations' == 1 {
 	tab covid_percent_increase
 	drop *metoo
 	restore
+	
 }
 
 /*******************************************************************************
