@@ -222,7 +222,7 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			ylabel(-0.075(0.025)0.1)
+			ylabel(-0.1(0.025)0.1)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
@@ -234,26 +234,25 @@ if `event' == 1 {
 		graph export "$figures/eventstudy_`y'.png", replace 
 		estimates clear
 		
-		// Run dynamic DiD
+		// Run dynamic DiD for RELIEF
 		reghdfe relief_scale ib7.event, ///
 			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
 
-		// Run Rambachan & Roth (2021)
 		honestdid, numpre(7) omit ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
 		graph export "$figures/honestdid_relief_scale.png", replace
 
-		// Make graph
 		#delimit ;
 		coefplot (TWFE, omitted baselevel), vertical
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			yline(0, lp(dash)) //yscale(range(-.1 .1)) 
+			ylabel(-15(5)15)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo on `y'", size(medium))
+			ytitle("Effect of MeToo on compensation ($1000s)", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
@@ -315,10 +314,10 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			ylabel(-0.1(0.1)0.6)
+			ylabel(-0.6(0.1)0.6)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
@@ -336,6 +335,7 @@ if `event' == 1 {
 
 		replace event 	= event + 8
 		replace event_f = event_f + 8
+		drop if event   == 0
 		drop if event_f == 0
 
 		// Run dynamic DiD
@@ -351,10 +351,10 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			ylabel(-0.1(0.1)0.6)
+			ylabel(-0.6(0.1)0.6)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo on P(win) for Women", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
@@ -377,10 +377,10 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			ylabel(-0.1(0.1)0.6)
+			ylabel(-0.6(0.1)0.6)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo on P(win) for Women", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;

@@ -5,9 +5,9 @@ Tables for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc run_did		 	= 0
-loc run_did_gender	= 0
-loc run_did_gender_appendix	= 0
-loc run_did_sh	 	= 1
+loc run_did_gender	= 1
+loc run_did_gender_appendix	= 1
+loc run_did_sh	 	= 0
 loc run_did_robust 	= 0
 loc run_selection 	= 0
 loc run_summary  	= 0
