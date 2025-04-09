@@ -5,9 +5,9 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc tabulations		= 1
+loc tabulations		= 0
 loc selection 		= 0
-loc event 	   		= 0
+loc event 	   		= 1
 loc timeseries 		= 0
 loc state_did  		= 0
 loc state_did_all 	= 0
@@ -191,7 +191,7 @@ if `selection' == 1 {
 Event-study
 *******************************************************************************/
 
-local outcomes "settle dismissed win relief_scale court"
+local outcomes "settle dismissed win court"
 
 if `event' == 1 {
 
@@ -202,16 +202,17 @@ if `event' == 1 {
 
 		cap drop event 		
 		g event = years_to_treat_res * sex_cases
-		replace event = event + 9 
+		replace event = event + 8
+		drop if event == 0
 
 		// Run dynamic DiD
-		reghdfe `y' ib8.event, ///
+		reghdfe `y' ib7.event, ///
 			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
 
 		// Run Rambachan & Roth (2021)
-		honestdid, numpre(8) omit ///
+		honestdid, numpre(7) omit ///
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
 		graph export "$figures/honestdid_`y'.png", replace
 
@@ -221,15 +222,44 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			xline(8.5)
+			ylabel(-0.075(0.025)0.1)
+			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
 		graph export "$figures/eventstudy_`y'.png", replace 
+		estimates clear
+		
+		// Run dynamic DiD
+		reghdfe relief_scale ib7.event, ///
+			absorb(basis_state ym_res_state) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+
+		// Run Rambachan & Roth (2021)
+		honestdid, numpre(7) omit ///
+			coefplot xtitle(Mbar) ytitle(95% Robust CI)
+		graph export "$figures/honestdid_relief_scale.png", replace
+
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			xline(7.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on `y'", size(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_relief_scale.png", replace 
 		estimates clear
 
 
@@ -271,9 +301,10 @@ if `event' == 1 {
 
 		cap drop event 		
 		g event = years_to_treat_res * sex_cases
-		replace event = event + 9 
+		replace event = event + 8
+		drop if event == 0
 
-		reghdfe win ib8.event if common_file_date < date("$metoo", "DMY"), ///
+		reghdfe win ib7.event if common_file_date < date("$metoo", "DMY"), ///
 			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
@@ -284,10 +315,11 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			xline(8.5)
+			ylabel(-0.1(0.1)0.6)
+			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
@@ -299,10 +331,11 @@ if `event' == 1 {
 		******** Female complainants only ********
 		cap drop event 		
 		g event = years_to_treat_res * sex_cases * victim_f
-		replace event = event + 9 
+		replace event = event + 8
+		drop if event == 0
 
 		// Run dynamic DiD
-		reghdfe win ib8.event, ///
+		reghdfe win ib7.event, ///
 			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
@@ -313,10 +346,11 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			xline(8.5)
+			ylabel(-0.1(0.1)0.6)
+			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on P(win) for Women", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
@@ -327,7 +361,7 @@ if `event' == 1 {
 
 		******** Female complainants OVERLAP ********
 		// Run dynamic DiD
-		reghdfe win ib8.event if common_file_date < date("$metoo", "DMY"), ///
+		reghdfe win ib7.event if common_file_date < date("$metoo", "DMY"), ///
 			absorb(basis_state ym_res_state) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
@@ -338,10 +372,11 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			xline(8.5)
+			ylabel(-0.1(0.1)0.6)
+			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on P(win) for Women", size(medium))
-			xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5" 15 "6", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
