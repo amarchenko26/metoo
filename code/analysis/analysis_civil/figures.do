@@ -330,13 +330,13 @@ if `event' == 1 {
 
 		******** Female complainants only ********
 		cap drop event 		
-
+		cap drop event_f
 		g event   = years_to_treat_res * sex_cases
 		g event_f = years_to_treat_res * sex_cases * victim_f
 
 		replace event 	= event + 8
 		replace event_f = event_f + 8
-		drop if event == 0
+		drop if event_f == 0
 
 		// Run dynamic DiD
 		reghdfe win ib7.event_f ib7.event, ///
@@ -347,7 +347,7 @@ if `event' == 1 {
 		// Make graph
 		fvexpand i.event
 		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical drop(`r(varlist)')
+		coefplot (TWFE, omitted baselevel), vertical drop(`r(varlist)') //drops event and only plots event_f
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
@@ -365,15 +365,15 @@ if `event' == 1 {
 
 
 		******** Female complainants OVERLAP ********
-		// Run dynamic DiD
-		reghdfe win ib7.event if common_file_date < date("$metoo", "DMY"), ///
-			absorb(basis_state ym_res_state) ///
+		reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
+			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
 
 		// Make graph
+		fvexpand i.event
 		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical
+		coefplot (TWFE, omitted baselevel), vertical drop(`r(varlist)')
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
