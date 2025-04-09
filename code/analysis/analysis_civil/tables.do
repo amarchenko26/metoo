@@ -143,7 +143,7 @@ if `run_did_gender' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui: sum ``y'' if treat_sex_f == 0
@@ -173,7 +173,7 @@ if `run_did_gender' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui: sum ``y'' if treat_sex_f == 0 & common_file_date < date("$metoo", "DMY")
@@ -254,13 +254,13 @@ if `run_did_gender_appendix' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis ym_res) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis_cat##victim_f ym_res##victim_f) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui: sum ``y'' if treat_sex_f == 0
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui: sum ``y'' if treat_sex_f == 0
@@ -290,13 +290,13 @@ if `run_did_gender_appendix' == 1 {
 	loc i 1
 	foreach y of local outcome_vars {
 		
-		reghdfe ``y'' treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis ym_res) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##victim_f ym_res##victim_f) vce(cluster basis)
 		eststo a`i'
 		qui estadd loc feunit "\checkmark", replace
 		qui: sum ``y'' if treat_sex_f ==0 & common_file_date < date("$metoo", "DMY")
 		estadd scalar control_mean = `r(mean)'
 		
-		reghdfe ``y'' treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
 		qui: sum ``y'' if treat_sex_f == 0 & common_file_date < date("$metoo", "DMY")

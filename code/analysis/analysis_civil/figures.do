@@ -330,19 +330,24 @@ if `event' == 1 {
 
 		******** Female complainants only ********
 		cap drop event 		
-		g event = years_to_treat_res * sex_cases * victim_f
-		replace event = event + 8
+
+		g event   = years_to_treat_res * sex_cases
+		g event_f = years_to_treat_res * sex_cases * victim_f
+
+		replace event 	= event + 8
+		replace event_f = event_f + 8
 		drop if event == 0
 
 		// Run dynamic DiD
-		reghdfe win ib7.event, ///
-			absorb(basis_state ym_res_state) ///
+		reghdfe win ib7.event_f ib7.event, ///
+			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
 
 		// Make graph
+		fvexpand i.event
 		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical
+		coefplot (TWFE, omitted baselevel), vertical drop(`r(varlist)')
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
@@ -903,7 +908,7 @@ if `run_placebo_f' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex_f, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat_sex_f treat_sex, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
