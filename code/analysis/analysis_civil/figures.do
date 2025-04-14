@@ -343,11 +343,11 @@ if `event' == 1 {
 			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 			vce(cluster basis) noconstant
 		estimates store TWFE
-
+		
 		// Make graph
 		fvexpand i.event
 		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical drop(`r(varlist)') //drops event and only plots event_f
+		coefplot (TWFE, omitted baselevel), vertical keep(*.event_f) //drops event and only plots event_f
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
@@ -373,7 +373,7 @@ if `event' == 1 {
 		// Make graph
 		fvexpand i.event
 		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical drop(`r(varlist)')
+		coefplot (TWFE, omitted baselevel), vertical keep(*.event_f)
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
