@@ -314,7 +314,7 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			ylabel(-0.6(0.1)0.6)
+			ylabel(-1(0.25)1)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
@@ -342,16 +342,25 @@ if `event' == 1 {
 		reghdfe win ib7.event_f ib7.event, ///
 			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 			vce(cluster basis) noconstant
-		estimates store TWFE
-
+		estimates store TWFE1
+		
+		rename (event event_f) (event_f event)
+		reghdfe win ib7.event_f ib7.event, ///
+			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE2
+		
 		// Make graph
-		fvexpand i.event
+		//fvexpand i.event
+		rename (event event_f) (event_f event)
 		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical drop(`r(varlist)') //drops event and only plots event_f
-			ciopts(recast(rcap) msize(medium) color(orange_red))
-			addplot(line @b @at, lcolor(orange_red*0.8))
+		coefplot (TWFE1, omitted baselevel keep(*.event) label(Sex by Post))
+		(TWFE2, omitted baselevel keep(*.event) label(Sex by Post by Female)), vertical
+			ciopts(recast(rcap) msize(medium))
+			recast(connected) offset(0)
+			//addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			ylabel(-0.6(0.1)0.6)
+			ylabel(-1(0.25)1)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
@@ -368,16 +377,25 @@ if `event' == 1 {
 		reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
 			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 			vce(cluster basis) noconstant
-		estimates store TWFE
+		estimates store TWFE1
+		
+		rename (event event_f) (event_f event)
+		reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
+			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE2
 
 		// Make graph
-		fvexpand i.event
+		//fvexpand i.event
+		rename (event event_f) (event_f event)
 		#delimit ;
-		coefplot (TWFE, omitted baselevel), vertical drop(`r(varlist)')
-			ciopts(recast(rcap) msize(medium) color(orange_red))
-			addplot(line @b @at, lcolor(orange_red*0.8))
+		coefplot (TWFE1, omitted baselevel keep(*.event) label(Sex by Post))
+		(TWFE2, omitted baselevel keep(*.event) label(Sex by Post by Female)), vertical
+			ciopts(recast(rcap) msize(medium))
+			recast(connected) offset(0)
+			//addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			ylabel(-0.6(0.1)0.6)
+			ylabel(-1(0.25)1)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
