@@ -295,7 +295,7 @@ if `event' == 1 {
 		restore
 	}
 
-		******** Overlap event study ********
+		******** Overlap event study (all) ********
 		preserve 
 
 		cap drop event 		
@@ -313,53 +313,102 @@ if `event' == 1 {
 		coefplot (TWFE, omitted baselevel), vertical
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			yline(0, lp(dash))
 			ylabel(-1(0.25)1)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_win_overlap_appendix.png", replace 
+		estimates clear
+		
+		
+		******** Overlap event study (new) ********
+		cap drop event 		
+		g event = years_to_treat_res * sex_cases
+		replace event = event + 8
+		drop if inlist(event, 0, 13, 14)
+
+		reghdfe win ib7.event if common_file_date < date("$metoo", "DMY"), ///
+			absorb(basis_state ym_res_state) ///
+			vce(cluster basis) noconstant
+		estimates store TWFE
+
+		// Make graph
+		#delimit ;
+		coefplot (TWFE, omitted baselevel), vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash))
+			ylabel(-.25(0.05).25)
+			xline(7.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
 		graph export "$figures/eventstudy_win_overlap.png", replace 
 		estimates clear
+		restore
 
 
-		******** Female complainants only ********
+		******** Female complainants only (all) ********
+		preserve
+		cap program drop repostb
+		program repostb,  eclass
+		erepost b = b, rename
+		end
+		
 		cap drop event 		
 		cap drop event_f
 		g event   = years_to_treat_res * sex_cases
 		g event_f = years_to_treat_res * sex_cases * victim_f
-
+		
 		replace event 	= event + 8
 		replace event_f = event_f + 8
-		drop if event   == 0
+		drop if event == 0
 		drop if event_f == 0
 
-		// Run dynamic DiD
 		reghdfe win ib7.event_f ib7.event, ///
 			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 			vce(cluster basis) noconstant
-		estimates store TWFE1
+		estimates store full
+		local j 1
+		forval i = 1/14 {
+			estimates restore full
+			margins, expression(_b[`i'.event]) post
+			mat b = e(b)
+			mat colname b = "coef`i'"
+			repostb
+			est sto coef`j'
+			local ++j
+		}
+		local j `=`j'-1'
+		forval i = 1/14 {
+			estimates restore full
+			margins, expression(_b[`i'.event]+ _b[`i'.event_f]) post
+			mat b = e(b)
+			mat colname b = "coef`i'"
+			local ++j
+			repostb
+			est sto coef`j'
+		}
 		
-		rename (event event_f) (event_f event)
-		reghdfe win ib7.event_f ib7.event, ///
-			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
-			vce(cluster basis) noconstant
-		estimates store TWFE2
-		
-		// Make graph
-		//fvexpand i.event
-		rename (event event_f) (event_f event)
-		#delimit ;
-		coefplot (TWFE1, omitted baselevel keep(*.event) label(Sex by Post))
-		(TWFE2, omitted baselevel keep(*.event) label(Sex by Post by Female)), vertical
+		#delimit ; 
+		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12\coef13\coef14,
+		omitted baselevel label(Male))
+		(coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24\coef25\coef26\coef27\coef28,
+		omitted baselevel label(Female)),
+			vertical
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
-			//addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			yline(0, lp(dash))
 			ylabel(-1(0.25)1)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
@@ -369,37 +418,178 @@ if `event' == 1 {
 		;
 		#delimit cr
 					
-		graph export "$figures/eventstudy_win_female.png", replace 
+		graph export "$figures/eventstudy_win_female_appendix.png", replace 
 		estimates clear
-
-
-		******** Female complainants OVERLAP ********
-		reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
-			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
-			vce(cluster basis) noconstant
-		estimates store TWFE1
 		
-		rename (event event_f) (event_f event)
-		reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
+		
+		******** Female complainants only (new) ********
+		cap drop event 		
+		cap drop event_f
+		g event   = years_to_treat_res * sex_cases
+		g event_f = years_to_treat_res * sex_cases * victim_f
+		
+		replace event 	= event + 8
+		replace event_f = event_f + 8
+		drop if inlist(event, 0, 13, 14)
+		drop if inlist(event_f, 0, 13, 14)
+
+		reghdfe win ib7.event_f ib7.event, ///
 			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 			vce(cluster basis) noconstant
-		estimates store TWFE2
-
-		// Make graph
-		//fvexpand i.event
-		rename (event event_f) (event_f event)
-		#delimit ;
-		coefplot (TWFE1, omitted baselevel keep(*.event) label(Sex by Post))
-		(TWFE2, omitted baselevel keep(*.event) label(Sex by Post by Female)), vertical
+		estimates store full
+		local j 1
+		forval i = 1/12 {
+			estimates restore full
+			margins, expression(_b[`i'.event]) post
+			mat b = e(b)
+			mat colname b = "coef`i'"
+			repostb
+			est sto coef`j'
+			local ++j
+		}
+		local j `=`j'-1'
+		forval i = 1/12 {
+			estimates restore full
+			margins, expression(_b[`i'.event]+ _b[`i'.event_f]) post
+			mat b = e(b)
+			mat colname b = "coef`i'"
+			local ++j
+			repostb
+			est sto coef`j'
+		}
+		
+		#delimit ; 
+		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12,
+		omitted baselevel label(Male))
+		(coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24,
+		omitted baselevel label(Female)),
+			vertical
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
-			//addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			yline(0, lp(dash))
+			ylabel(-.25(0.05).25)
+			xline(7.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+					
+		graph export "$figures/eventstudy_win_female.png", replace 
+		estimates clear
+		restore
+
+
+		******** Female complainants OVERLAP (all) ********
+		preserve
+		cap drop event 		
+		cap drop event_f
+		g event   = years_to_treat_res * sex_cases
+		g event_f = years_to_treat_res * sex_cases * victim_f
+		
+		replace event 	= event + 8
+		replace event_f = event_f + 8
+		drop if event == 0
+		drop if event_f == 0
+
+		reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
+			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
+			vce(cluster basis) noconstant
+		estimates store full
+		local j 1
+		forval i = 1/14 {
+			estimates restore full
+			margins, expression(_b[`i'.event]) post
+			mat b = e(b)
+			mat colname b = "coef`i'"
+			repostb
+			est sto coef`j'
+			local ++j
+		}
+		local j `=`j'-1'
+		forval i = 1/14 {
+			estimates restore full
+			margins, expression(_b[`i'.event]+ _b[`i'.event_f]) post
+			mat b = e(b)
+			mat colname b = "coef`i'"
+			local ++j
+			repostb
+			est sto coef`j'
+		}
+		
+		#delimit ; 
+		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12\coef13\coef14,
+		omitted baselevel label(Male))
+		(coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24\coef25\coef26\coef27\coef28,
+		omitted baselevel label(Female)),
+			vertical
+			ciopts(recast(rcap) msize(medium))
+			recast(connected) offset(0)
+			yline(0, lp(dash))
 			ylabel(-1(0.25)1)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+		
+		graph export "$figures/eventstudy_win_female_overlap_appendix.png", replace 
+		estimates clear
+		
+		
+		******** Female complainants OVERLAP (new) ********
+		cap drop event 		
+		cap drop event_f
+		g event   = years_to_treat_res * sex_cases
+		g event_f = years_to_treat_res * sex_cases * victim_f
+		
+		replace event 	= event + 8
+		replace event_f = event_f + 8
+		drop if inlist(event, 0, 13, 14)
+		drop if inlist(event_f, 0, 13, 14)
+		
+		reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
+			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
+			vce(cluster basis) noconstant
+		estimates store full
+		local j 1
+		forval i = 1/12 {
+			estimates restore full
+			margins, expression(_b[`i'.event]) post
+			mat b = e(b)
+			mat colname b = "coef`i'"
+			repostb
+			est sto coef`j'
+			local ++j
+		}
+		local j `=`j'-1'
+		forval i = 1/12 {
+			estimates restore full
+			margins, expression(_b[`i'.event]+ _b[`i'.event_f]) post
+			mat b = e(b)
+			mat colname b = "coef`i'"
+			local ++j
+			repostb
+			est sto coef`j'
+		}
+		
+		#delimit ; 
+		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12,
+		omitted baselevel label(Male))
+		(coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24,
+		omitted baselevel label(Female)),
+			vertical
+			ciopts(recast(rcap) msize(medium))
+			recast(connected) offset(0)
+			yline(0, lp(dash))
+			ylabel(-.25(0.05).25)
+			xline(7.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
 			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
