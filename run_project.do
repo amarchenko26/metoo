@@ -70,6 +70,7 @@ ssc install addplot, replace
 net install parallel, from(https://raw.github.com/gvegayon/parallel/stable) replace
 ssc install leebounds, replace
 ssc install labutil, replace
+ssc install erepost, replace
 */
 
 /*******************************************************************************
