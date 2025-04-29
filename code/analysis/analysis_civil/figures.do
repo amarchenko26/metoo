@@ -227,7 +227,6 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
@@ -254,7 +253,6 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on compensation ($1000s)", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
@@ -319,7 +317,6 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
@@ -349,7 +346,6 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
@@ -406,6 +402,7 @@ if `event' == 1 {
 		(coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24\coef25\coef26\coef27\coef28,
 		omitted baselevel label(Female)),
 			vertical
+			legend(ring(0) bplacement(nwest) size(medium))
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
 			yline(0, lp(dash))
@@ -414,7 +411,6 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
@@ -464,6 +460,7 @@ if `event' == 1 {
 		(coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24,
 		omitted baselevel label(Female)),
 			vertical
+			legend(ring(0) bplacement(nwest) size(medium))
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
 			yline(0, lp(dash))
@@ -472,7 +469,6 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
@@ -524,6 +520,7 @@ if `event' == 1 {
 		(coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24\coef25\coef26\coef27\coef28,
 		omitted baselevel label(Female)),
 			vertical
+			legend(ring(0) bplacement(nwest) size(medium))
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
 			yline(0, lp(dash))
@@ -532,7 +529,6 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 		
@@ -582,6 +578,7 @@ if `event' == 1 {
 		(coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24,
 		omitted baselevel label(Female)),
 			vertical
+			legend(ring(0) bplacement(nwest) size(medium))
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
 			yline(0, lp(dash))
@@ -590,7 +587,6 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
 			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
-			note("Fixed effects: unit/state and year-month/state", size(small))
 		;
 		#delimit cr
 					
