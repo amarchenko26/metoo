@@ -354,7 +354,7 @@ if `event' == 1 {
 		restore
 
 
-		******** Female complainants only (all) ********
+		******** Female complainants only ********
 		preserve
 		cap program drop repostb
 		program repostb,  eclass
@@ -406,7 +406,7 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
 			yline(0, lp(dash))
-			ylabel(-1(0.25)1)
+			ylabel(-.25(0.05).25)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
@@ -414,68 +414,9 @@ if `event' == 1 {
 		;
 		#delimit cr
 					
-		graph export "$figures/eventstudy_win_female_appendix.png", replace 
-		estimates clear
-		
-		
-		******** Female complainants only (new) ********
-		cap drop event 		
-		cap drop event_f
-		g event   = years_to_treat_res * sex_cases
-		g event_f = years_to_treat_res * sex_cases * victim_f
-		
-		replace event 	= event + 8
-		replace event_f = event_f + 8
-		drop if inlist(event, 0, 13, 14)
-		drop if inlist(event_f, 0, 13, 14)
-
-		reghdfe win ib7.event_f ib7.event, ///
-			absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
-			vce(cluster basis) noconstant
-		estimates store full
-		local j 1
-		forval i = 1/12 {
-			estimates restore full
-			margins, expression(_b[`i'.event]) post
-			mat b = e(b)
-			mat colname b = "coef`i'"
-			repostb
-			est sto coef`j'
-			local ++j
-		}
-		local j `=`j'-1'
-		forval i = 1/12 {
-			estimates restore full
-			margins, expression(_b[`i'.event]+ _b[`i'.event_f]) post
-			mat b = e(b)
-			mat colname b = "coef`i'"
-			local ++j
-			repostb
-			est sto coef`j'
-		}
-		
-		#delimit ; 
-		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12,
-		omitted baselevel label(Male))
-		(coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24,
-		omitted baselevel label(Female)),
-			vertical
-			legend(ring(0) bplacement(nwest) size(medium))
-			ciopts(recast(rcap) msize(medium))
-			recast(connected) offset(0)
-			yline(0, lp(dash))
-			ylabel(-.25(0.05).25)
-			xline(7.5)
-			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo on win", size(medium))
-			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
-		;
-		#delimit cr
-					
 		graph export "$figures/eventstudy_win_female.png", replace 
 		estimates clear
-		restore
-
+		
 
 		******** Female complainants OVERLAP (all) ********
 		preserve
