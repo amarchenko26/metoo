@@ -416,6 +416,7 @@ if `event' == 1 {
 					
 		graph export "$figures/eventstudy_win_female.png", replace 
 		estimates clear
+		restore
 		
 
 		******** Female complainants OVERLAP (all) ********
