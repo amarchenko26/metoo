@@ -1,6 +1,4 @@
-# MeToo
-
-Run the project by navigating to metoo Github folder (using `cd`) and typing `./run_project.sh` into command line. 
+# MeToo Civil Data
 
 ## Variable Definitions Guide  
 
