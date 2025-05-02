@@ -55,13 +55,13 @@
 - **$droot/code/clean/python/webscrape_pdfs.py**: Code to scrape AK, IL, MI websites for case file PDFs.
 - **$droot/code/clean/clean_criminal/clean_`city_name`.do**: Cleans raw data of city `city_name`.
 - **$droot/code/clean/clean_criminal/merge_city_all.do**: Merges all cleaned city criminal data into one .dta file based on variable definitions in $droot/Criminal README.md.
-- **$droot/code/analysis/analysis_criminal/figures_city.do**: Creates figures based on civil data in MeToo project.
+- **$droot/code/analysis/analysis_criminal/figures_city.do**: Creates figures based on criminal data in MeToo project.
   - Includes event studies, time series.
-- **$droot/code/analysis/analysis_criminal/tables_city.do**: Creates tables based on civil data in MeToo project.
+- **$droot/code/analysis/analysis_criminal/tables_city.do**: Creates tables based on criminal data in MeToo project.
   - Includes event studies, time series.
-- **$droot/code/analysis/analysis_criminal/figures_nibrs.do**: Creates figures based on civil data in MeToo project.
+- **$droot/code/analysis/analysis_criminal/figures_nibrs.do**: Creates figures based on criminal data in MeToo project.
   - Includes DIDs, summary table, balance table.
-- **$droot/code/analysis/analysis_criminal/tables_nibrs.do**: Creates tables based on civil data in MeToo project.
+- **$droot/code/analysis/analysis_criminal/tables_nibrs.do**: Creates tables based on criminal data in MeToo project.
   - Includes DIDs, summary table, balance table.
 
 #### On DropBox
