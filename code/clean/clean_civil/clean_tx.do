@@ -169,13 +169,12 @@ replace withdraw = . if outcome == ""
 
 // Dismissal
 g dismissed = 0
+replace dismissed = 1 if outcome == "FHAP judicial dismissal"
 replace dismissed = 1 if admin_close == 1 | withdraw == 1
 replace dismissed = . if outcome == ""
 
 // Court
 g court = 0
-replace court = 1 if outcome == "FHAP judicial consent order"
-replace court = 1 if outcome == "FHAP judicial dismissal"
 replace court = 1 if outcome == "Litigation ended - no discrimination found"
 replace court = . if outcome == ""
 
