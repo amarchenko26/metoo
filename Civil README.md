@@ -82,6 +82,22 @@ The following variables are cleaned altogether, after state and federal data is 
 
 ## Description of datasets
 
+**$raw_data/SC/sc_raw_cases.xlsx**  
+These data contain all housing cases filed in South Carolina from January 2010 to December 2024.
+- N: 1455
+- SH: 44
+- FHAP Case Number: unique identifier for each case (FHAP)
+- HUD Case Number and Name: unique identifier and name for each case (HUD)
+- Filing Date - FHAP: date case was filed (FHAP)
+- Filing Date - HUD: date case was filed (HUD)
+- Bases: basis of discrimination alleged by complainant
+- Sex - Harassment Basis?: whether alleged adverse action contained sexual harassment
+- Cause Date: date case had cause determination
+- Referred to Legal for Adj. Date: date case was referred to legal department for settlement
+- FHAP Closure Date: date case was closed
+- Closure Reason: how case was closed
+- Compensation Amount: relief
+
 **$raw_data/MT/mt_raw_cases.xlsx**  
 These data contain all employment, housing, public accommodations, and education cases filed in Montana from January 2015 to October 2024.
 - N: 5006
