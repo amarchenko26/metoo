@@ -4,6 +4,11 @@ Clean South Carolina cases
 
 *******************************************************************************/
 
+import delimited "$raw_data/SC/sc_data_with_gender.csv", varnames(1) clear
+keep case_name duration gender
+tempfile gender
+save `gender'
+
 import excel "$raw_data/SC/sc_raw_cases.xlsx", firstrow cellrange(A3:L1458) case(lower) clear
 
 
@@ -114,6 +119,14 @@ replace dismissed = 1 if admin_close == 1 | withdraw == 1
 g court = 0
 replace court = 1 if outcome == "Litigation ended - discrimination found"
 
+// Gender
+merge 1:1 case_name duration using `gender'
+drop _merge
+replace gender = "male" if inlist(comp_name, "Ray, Jr., Charles Richard", "Crouch, Dennis Jr.", "John Krom III", "Calloway, Sr., Troy D.", "Andrews, Jr., Paul Hubert", "Vennings Jr., Earl", "Wells, II Melvin", "Pee, John Jr.", "Shira, III, George A.") | inlist(comp_name, "Gary Richard Phillips, Jr.", "Lisenby, Jr., Billy Lee", "Busch, III Horace R", "Wilson, Jr., Walter L.", "Vennings, Jr., Earl")
+replace gender = "female" if inlist(comp_name, "Maria Aide Maza del Valle", "Ada Llilian Medina Cruz", "Melissa Weeks-Richardson")
+g victim_f = 1 if gender == "female"
+replace victim_f = 0 if gender == "male"
+drop gender
 
 /*******************************************************************************
 Export data
