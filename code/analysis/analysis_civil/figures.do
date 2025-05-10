@@ -705,6 +705,7 @@ if `state_did' == 1 {
 		(A, keep(37.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NY
 		(A, keep(41.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // PA
 		(A, keep(43.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // RI
+		(A, keep(44.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // SC
 		(A, keep(47.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // TX
 		(A, keep(52.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
 		(A, keep(53.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))), // WI
@@ -727,6 +728,7 @@ if `state_did' == 1 {
 				37.state_did_sex = 3 "NY"				
 				41.state_did_sex = 3 "PA"
 				43.state_did_sex = 3 "RI"
+				44.state_did_sex = 3 "SC"
 				47.state_did_sex = 3 "TX"
 				52.state_did_sex = 3 "WA"
 				53.state_did_sex = 3 "WI")
