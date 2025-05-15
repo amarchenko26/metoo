@@ -8,14 +8,14 @@ loc run_did		 	= 0
 loc run_did_gender	= 0
 loc run_did_gender_appendix	= 0
 loc run_did_sh	 	= 0
-loc run_did_robust 	= 0
+loc run_did_robust 	= 1
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
-loc run_overlap_balance = 1
-loc run_duration 	= 1
+loc run_overlap_balance = 0
+loc run_duration 	= 0
 loc run_unit   		= 1
-loc overlap_placebo = 1
+loc overlap_placebo = 0
 
 keep if eeoc == 0
 tab juris, gen(juris_dummy)
@@ -475,8 +475,8 @@ if `run_did_robust' == 1 {
 		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-						
+		qui: sum ``y'' if treat_sex ==0  
+		estadd scalar control_mean = `r(mean)'
 		loc ++i
 	}
 
@@ -486,11 +486,11 @@ if `run_did_robust' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Single-tagged cases}} \\ \midrule")
 		fragment
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
-		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 0 1 0 1 0 1 0 1 0) 
+		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
-		stats(feunit feunit_s N r2 control_mean, 
-			label("Unit and Time FE" "Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3))
+		stats(feunit_s N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
 		prefoot("\\" "\midrule");
@@ -511,8 +511,9 @@ if `run_did_robust' == 1 {
 		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-						
+		qui: sum ``y'' if treat_sex ==0  
+		estadd scalar control_mean = `r(mean)'
+	
 		loc ++i
 	}
 
@@ -523,8 +524,8 @@ if `run_did_robust' == 1 {
 		append
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mlabel(none) nomtitles nonumbers nolines
-		stats(feunit feunit_s N r2 control_mean, 
-			label("Unit and Time FE" "Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3))
+		stats(feunit_s N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
 		prefoot("\\" "\midrule");
@@ -544,8 +545,9 @@ if `run_did_robust' == 1 {
 		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo s`i'
 		qui estadd loc feunit_s "\checkmark", replace
-		qui estadd loc fetime_s "\checkmark", replace
-						
+		qui: sum ``y'' if treat_sex ==0  
+		estadd scalar control_mean = `r(mean)'
+					
 		loc ++i
 	}
 
@@ -556,8 +558,8 @@ if `run_did_robust' == 1 {
 		append
 		varlabels(treat_sex "Sex $\times$ Post") keep(treat_sex)
 		mlabel(none) nomtitles nonumbers nolines
-		stats(feunit feunit_s N r2 control_mean, 
-			label("Unit and Time FE" "Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3))
+		stats(feunit_s N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)")
 		prefoot("\\" "\midrule")
@@ -962,7 +964,7 @@ if `run_unit' == 1 {
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		stats(feunit fetime unit_time N r2, label("Case FE" "Time FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
+		stats(feunit fetime unit_time N r2, label("Unit $\times$ State FE" "Time $\times$ State FE" "Case $\times$ Time FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 %9.0fc 3))
 		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
 		cells("b(fmt(3)star)" "se(fmt(3)par)") 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
