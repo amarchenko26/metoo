@@ -202,7 +202,7 @@ if `event' == 1 {
 	drop if event_f == 0
 
 	******** All outcomes ********
-	/* foreach y in `outcomes' {
+	foreach y in `outcomes' {
 		reghdfe `y' ib7.event, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
 		estimates store TWFE
 
@@ -270,7 +270,7 @@ if `event' == 1 {
 	#delimit cr
 				
 	graph export "$figures/eventstudy_relief_scale.png", replace 
-	estimates clear */
+	estimates clear
 
 ******** Overlap ********
 	reghdfe win ib7.event if common_file_date < date("$metoo", "DMY"), ///
@@ -370,14 +370,13 @@ if `event' == 1 {
 
 	#delimit ; 
 	coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12\coef13\coef14,
-	omitted baselevel label(Male))
+	omitted baselevel label(Male) ciopts(recast(rcap) lwidth(.4) color(navy)))
 	(coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24\coef25\coef26\coef27\coef28,
-	omitted baselevel label(Female)),
+	omitted baselevel label(Female) ciopts(recast(rcap) lwidth(.4) color(orange_red))),
 		vertical
 		legend(ring(0) bplacement(nwest) size(medium))
-		ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
 		offset(0)
-		yline(0, lp(dash)) //ylabel(-0.1(0.05)0.2)
+		yline(0, lp(dash)) ylabel(-1(0.2)1)
 		xline(7.5)
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
@@ -387,26 +386,36 @@ if `event' == 1 {
 				
 	graph export "$figures/eventstudy_win_female.png", replace 
 	estimates clear
-	
+	 
 ******** Female complainants OVERLAP ********
-	//  Create dynamic xlabel with offset adjustment
-	sum event, meanonly
-	loc xmin = r(min)
-	loc xmax = r(max)
-			
-	loc xlabel "xlabel("
-	forvalues x = `xmin'/`xmax' {
-		loc rel = `x' - `offset'
-		loc xlabel `xlabel' `x' "`rel'" 
-	}
-	loc xlabel "`xlabel', labsize(medium))"
-
 	reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 		vce(cluster basis) noconstant
 	estimates store full
+
+	// Create dynamic xlabel with offset adjustment
+	local max_event = 0
+	local coef_names : colnames e(b)
+
+	foreach cname of local coef_names {
+		if strpos("`cname'", ".event") > 0 {
+			local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+			
+			capture confirm number `evnum'
+			if _rc == 0 & real("`evnum'") > `max_event' {
+				local max_event = real("`evnum'")
+			}
+		}
+	}
+	local xlabel "xlabel("
+	forvalues x = 1/`max_event' {
+		local rel = `x' - `offset'
+		local xlabel `xlabel' `x' "`rel'"
+	}
+	local xlabel "`xlabel', labsize(medium))"
+
 	local j 1
-	forval i = 1/`xmax' {
+	forval i = 1/`max_event' {
 		estimates restore full
 		margins, expression(_b[`i'.event]) post
 		mat b = e(b)
@@ -416,7 +425,7 @@ if `event' == 1 {
 		local ++j
 	}
 	local j `=`j'-1'
-	forval i = 1/`xmax' {
+	forval i = 1/`max_event' {
 		estimates restore full
 		margins, expression(_b[`i'.event]+ _b[`i'.event_f]) post
 		mat b = e(b)
@@ -427,16 +436,15 @@ if `event' == 1 {
 	}
 
 	#delimit ; 
-	coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10,
-	omitted baselevel label(Male))
-	(coef11\coef12\coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20,
-	omitted baselevel label(Female)),
+	coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9,
+	omitted baselevel label(Male) ciopts(recast(rcap) lwidth(.4) color(navy)))
+	(coef10\coef11\coef12\coef13\coef14\coef15\coef16\coef17\coef18,
+	omitted baselevel label(Female) ciopts(recast(rcap) lwidth(.4) color(orange_red))),
 		vertical
 		legend(ring(0) bplacement(nwest) size(medium))
 		ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
 		offset(0)
-		yline(0, lp(dash)) 
-		ylabel(-0.1(0.1)0.4)
+		yline(0, lp(dash)) ylabel(-1(0.2)1)
 		xline(7.5)
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
