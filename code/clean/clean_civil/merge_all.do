@@ -205,7 +205,9 @@ format common_res_date %td
 
 // Clean duration variable 
 replace duration = 0 if duration < 0 
-winsor duration, p(.01) gen(duration_w)
+sum duration, d 
+loc cutoff = r(mean) + 2 * r(sd) 
+drop if duration > `cutoff' 
 
 // Gen ym var
 g ym_res = ym(year(common_res_date), month(common_res_date)) 
@@ -299,8 +301,8 @@ encode state, g(state_cat)
 encode basis, g(basis_cat)
 
 // Gen state/unit and state/time FE
-g basis_state = basis_cat * state_cat
-g ym_res_state 	  = ym_res * state_cat
+g basis_state 	   = basis_cat * state_cat
+g ym_res_state 	   = ym_res * state_cat
 
 g year_filed_state = years_to_treat_file * state_cat
 g year_res_state   = years_to_treat_res * state_cat
@@ -468,5 +470,9 @@ foreach v of varlist * {
 /*******************************************************************************
 Export all cases
 *******************************************************************************/
+
+keep if eeoc==0
+keep if juris=="Employment"
+keep if sample_sh == 1 
 
 save "$clean_data/clean_cases.dta", replace

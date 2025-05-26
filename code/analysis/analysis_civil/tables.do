@@ -17,11 +17,6 @@ loc run_overlap_balance = 0
 loc run_duration 	= 0
 loc run_unit   		= 1
 
-keep if eeoc == 0
-keep if sample_sh == 1 
-keep if juris == "Employment"
-drop if duration > 773
-
 tab juris, gen(juris_dummy)
 
 /*******************************************************************************
