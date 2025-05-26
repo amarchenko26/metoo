@@ -11,14 +11,16 @@ loc event 	   		= 0
 loc timeseries 		= 0
 loc state_did  		= 0
 loc state_did_all 	= 0
-loc run_placebo 	= 0
-loc run_placebo_single = 0
-loc run_placebo_overlap = 0
-loc run_placebo_f 	= 0
-loc duration   		= 1
-loc yhat			= 1
+loc run_placebo 	= 1
+loc run_placebo_single = 1
+loc run_placebo_overlap = 1
+loc run_placebo_f 	= 1
+loc duration   		= 0
+loc yhat			= 0
 
-keep if eeoc == 0 
+keep if eeoc      == 0 
+keep if sample_sh == 1 
+keep if juris     == "Employment"
 
 /*******************************************************************************
 Tabulations
@@ -54,13 +56,13 @@ if `tabulations' == 1 {
 	tab total_change
 
 	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
-	count if filed_first_year_post == 1 & sex_cases == 1
+	count if filed_first_year_post == 1 & sh == 1
 	gen sex_post_metoo = r(N)
-	count if filed_first_year_post == 1 & sex_cases == 0
+	count if filed_first_year_post == 1 & sh == 0
 	gen no_sex_post_metoo = r(N)
-	count if filed_first_year_pre == 1 & sex_cases == 1
+	count if filed_first_year_pre == 1 & sh == 1
 	gen sex_pre_metoo = r(N)
-	count if filed_first_year_pre == 1 & sex_cases == 0
+	count if filed_first_year_pre == 1 & sh == 0
 	gen no_sex_pre_metoo = r(N)
 
 	gen metoo_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
@@ -84,7 +86,7 @@ if `tabulations' == 1 {
 	drop *metoo
 
 	// Male complainants as share of total sex complaints after MeToo: -.3072776 when run on Feb 26, 2025
-	keep if sex_cases == 1
+	keep if sh == 1
 
 	count if filed_first_year_post == 1 & victim_f == 0 
 	gen sex_post_metoo_men = r(N)
@@ -109,13 +111,13 @@ if `tabulations' == 1 {
 	tab state if ym_filed > 693 & ym_filed < 722
 	tab state if ym_filed < 693 & ym_filed > 664
 	drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
-	count if ym_filed > 693 & ym_filed < 722 & sex_cases == 1
+	count if ym_filed > 693 & ym_filed < 722 & sh == 1
 	gen sex_post_metoo = r(N)
-	count if ym_filed > 693 & ym_filed < 722 & sex_cases == 0
+	count if ym_filed > 693 & ym_filed < 722 & sh == 0
 	gen no_sex_post_metoo = r(N)
-	count if ym_filed < 693 & ym_filed > 664 & sex_cases == 1
+	count if ym_filed < 693 & ym_filed > 664 & sh == 1
 	gen sex_pre_metoo = r(N)
-	count if ym_filed < 693 & ym_filed > 664 & sex_cases == 0
+	count if ym_filed < 693 & ym_filed > 664 & sh == 0
 	gen no_sex_pre_metoo = r(N)
 	gen covid_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
 	tab covid_percent_increase
@@ -200,7 +202,7 @@ if `event' == 1 {
 		preserve
 
 		cap drop event 		
-		g event = years_to_treat_res * sex_cases
+		g event = years_to_treat_res * sh
 		replace event = event + 8
 		drop if event == 0
 
@@ -215,13 +217,12 @@ if `event' == 1 {
 			coefplot xtitle(Mbar) ytitle(95% Robust CI)
 		graph export "$figures/honestdid_`y'.png", replace
 
-		// Make graph
 		#delimit ;
 		coefplot (TWFE, omitted baselevel), vertical
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			ylabel(-0.1(0.025)0.1)
+			yline(0, lp(dash))
+			ylabel(-0.1(0.05)0.2)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
@@ -246,57 +247,24 @@ if `event' == 1 {
 		coefplot (TWFE, omitted baselevel), vertical
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.1 .1)) 
-			ylabel(-15(5)15)
+			yline(0, lp(dash)) //ylabel(-15(5)15)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on compensation ($1000s)", size(medium))
-			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5", labsize(medium))
 		;
 		#delimit cr
 					
 		graph export "$figures/eventstudy_relief_scale.png", replace 
 		estimates clear
-
-
-		/* sum years_to_treat_res
-		loc min = r(min)
-		loc max = r(max)
-
-		loc j = 1
-		forvalues i = `min'(1)`max' {
-			gen treatyr`j' = 0
-			replace treatyr`j' = 1 if sex_cases == 1 & years_to_treat_res == `i'
-			loc j = `j' + 1
-		}
-
-		reghdfe `y' treatyr1-treatyr7 zero treatyr9-treatyr14, ///
-			absorb(basis_state ym_res_state) ///
-			vce(cluster basis) 
-			
-		estimates store TWFE
-				
-		#delimit ;
-		coefplot TWFE, drop(_cons) omitted vertical
-			ciopts(recast(rcap) msize(medium) color(orange_red))
-			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
-			xline(8.5)
-			xtitle("Years relative to treatment", size(medium))
-			ytitle("Effect of MeToo on `y'", size(medium)) xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium)) 
-			note("Fixed effects: unit/state and year-month/state", size(small))
-		;
-		#delimit cr
-		graph export "$figures/eventstudy_`y'_state_new.png", replace  */
-
 		restore
 	}
 
-		******** Overlap event study (all) ********
+		******** Overlap (all coefs) ********
 		preserve 
 
 		cap drop event 		
-		g event = years_to_treat_res * sex_cases
+		g event = years_to_treat_res * sh
 		replace event = event + 8
 		drop if event == 0
 
@@ -310,12 +278,12 @@ if `event' == 1 {
 		coefplot (TWFE, omitted baselevel), vertical
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
-			yline(0, lp(dash))
-			ylabel(-1(0.25)1)
+			yline(0, lp(dash)) 
+			ylabel(-0.1(0.05)0.2)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
-			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3", labsize(medium))
 		;
 		#delimit cr
 					
@@ -323,9 +291,9 @@ if `event' == 1 {
 		estimates clear
 		
 		
-		******** Overlap event study (new) ********
+		******** Overlap (drop last coefs) ********
 		cap drop event 		
-		g event = years_to_treat_res * sex_cases
+		g event = years_to_treat_res * sh
 		replace event = event + 8
 		drop if inlist(event, 0, 13, 14)
 
@@ -340,11 +308,11 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium) color(orange_red))
 			addplot(line @b @at, lcolor(orange_red*0.8))
 			yline(0, lp(dash))
-			ylabel(-.25(0.05).25)
+			ylabel(-0.1(0.05)0.2)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
-			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3", labsize(medium))
 		;
 		#delimit cr
 					
@@ -362,8 +330,8 @@ if `event' == 1 {
 		
 		cap drop event 		
 		cap drop event_f
-		g event   = years_to_treat_res * sex_cases
-		g event_f = years_to_treat_res * sex_cases * victim_f
+		g event   = years_to_treat_res * sh
+		g event_f = years_to_treat_res * sh * victim_f
 		
 		replace event 	= event + 8
 		replace event_f = event_f + 8
@@ -405,7 +373,7 @@ if `event' == 1 {
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
 			yline(0, lp(dash))
-			ylabel(-.25(0.05).25)
+			ylabel(-0.1(0.05)0.2)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
@@ -418,12 +386,12 @@ if `event' == 1 {
 		restore
 		
 
-		******** Female complainants OVERLAP (all) ********
+		******** Female complainants OVERLAP (keep all coefs) ********
 		preserve
 		cap drop event 		
 		cap drop event_f
-		g event   = years_to_treat_res * sex_cases
-		g event_f = years_to_treat_res * sex_cases * victim_f
+		g event   = years_to_treat_res * sh
+		g event_f = years_to_treat_res * sh * victim_f
 		
 		replace event 	= event + 8
 		replace event_f = event_f + 8
@@ -435,7 +403,7 @@ if `event' == 1 {
 			vce(cluster basis) noconstant
 		estimates store full
 		local j 1
-		forval i = 1/14 {
+		forval i = 1/10 {
 			estimates restore full
 			margins, expression(_b[`i'.event]) post
 			mat b = e(b)
@@ -445,7 +413,7 @@ if `event' == 1 {
 			local ++j
 		}
 		local j `=`j'-1'
-		forval i = 1/14 {
+		forval i = 1/10 {
 			estimates restore full
 			margins, expression(_b[`i'.event]+ _b[`i'.event_f]) post
 			mat b = e(b)
@@ -456,20 +424,20 @@ if `event' == 1 {
 		}
 		
 		#delimit ; 
-		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12\coef13\coef14,
+		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10,
 		omitted baselevel label(Male))
-		(coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24\coef25\coef26\coef27\coef28,
+		(coef11\coef12\coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20,
 		omitted baselevel label(Female)),
 			vertical
 			legend(ring(0) bplacement(nwest) size(medium))
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
 			yline(0, lp(dash))
-			ylabel(-1(0.25)1)
+			ylabel(-0.1(0.05)0.2)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
-			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4" 13 "5" 14 "6", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
 		;
 		#delimit cr
 		
@@ -477,11 +445,11 @@ if `event' == 1 {
 		estimates clear
 		
 		
-		******** Female complainants OVERLAP (new) ********
+		******** Female complainants OVERLAP (drop last coefs) ********
 		cap drop event 		
 		cap drop event_f
-		g event   = years_to_treat_res * sex_cases
-		g event_f = years_to_treat_res * sex_cases * victim_f
+		g event   = years_to_treat_res * sh
+		g event_f = years_to_treat_res * sh * victim_f
 		
 		replace event 	= event + 8
 		replace event_f = event_f + 8
@@ -493,7 +461,7 @@ if `event' == 1 {
 			vce(cluster basis) noconstant
 		estimates store full
 		local j 1
-		forval i = 1/12 {
+		forval i = 1/11 {
 			estimates restore full
 			margins, expression(_b[`i'.event]) post
 			mat b = e(b)
@@ -503,7 +471,7 @@ if `event' == 1 {
 			local ++j
 		}
 		local j `=`j'-1'
-		forval i = 1/12 {
+		forval i = 1/11 {
 			estimates restore full
 			margins, expression(_b[`i'.event]+ _b[`i'.event_f]) post
 			mat b = e(b)
@@ -514,20 +482,20 @@ if `event' == 1 {
 		}
 		
 		#delimit ; 
-		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12,
+		coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11,
 		omitted baselevel label(Male))
-		(coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24,
+		(coef12\coef13\coef14\coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22,
 		omitted baselevel label(Female)),
 			vertical
 			legend(ring(0) bplacement(nwest) size(medium))
 			ciopts(recast(rcap) msize(medium))
 			recast(connected) offset(0)
 			yline(0, lp(dash))
-			ylabel(-.25(0.05).25)
+			ylabel(-0.1(0.05)0.2)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on win", size(medium))
-			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3" 12 "4", labsize(medium))
+			xlabel(1 "-7" 2 "-6" 3 "-5" 4 "-4" 5 "-3" 6 "-2" 7 "-1" 8 "0" 9 "1" 10 "2" 11 "3", labsize(medium))
 		;
 		#delimit cr
 					
@@ -536,7 +504,35 @@ if `event' == 1 {
 		restore
 }
 
+		/* sum years_to_treat_res
+		loc min = r(min)
+		loc max = r(max)
 
+		loc j = 1
+		forvalues i = `min'(1)`max' {
+			gen treatyr`j' = 0
+			replace treatyr`j' = 1 if sh == 1 & years_to_treat_res == `i'
+			loc j = `j' + 1
+		}
+
+		reghdfe `y' treatyr1-treatyr7 zero treatyr9-treatyr14, ///
+			absorb(basis_state ym_res_state) ///
+			vce(cluster basis) 
+			
+		estimates store TWFE
+				
+		#delimit ;
+		coefplot TWFE, drop(_cons) omitted vertical
+			ciopts(recast(rcap) msize(medium) color(orange_red))
+			addplot(line @b @at, lcolor(orange_red*0.8))
+			yline(0, lp(dash)) //yscale(range(-.1 .1)) ylabel(-.1(.025).1, labsize(small))
+			xline(8.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on `y'", size(medium)) xlabel(1 "-8" 2 "-7" 3 "-6" 4 "-5" 5 "-4" 6 "-3" 7 "-2" 8 "-1" 9 "0" 10 "1" 11 "2" 12 "3" 13 "4" 14 "5", labsize(medium)) 
+			note("Fixed effects: unit/state and year-month/state", size(small))
+		;
+		#delimit cr
+		graph export "$figures/eventstudy_`y'_state_new.png", replace  */
 
 /*******************************************************************************
 Cases/outcomes over time 
@@ -545,29 +541,33 @@ Cases/outcomes over time
 if `timeseries' == 1 {
 
     preserve
-	keep if sex_cases == 1
-
+	drop if inlist(state, "CA", "WI")
+	/*
 	collapse (sum) mean_y = y, by(ym_filed state_cat)
 	reg mean_y i.state_cat, r 
 	predict resid_num, resid
-	collapse (mean) mean_resid_by_ym = resid_num, by(ym_filed)
-    
-	loc height = 15
 
+	collapse (mean) mean_resid_by_ym = resid_num, by(ym_filed) */
+	collapse (sum) mean_resid_by_ym = y, by(ym_filed sh)
+
+	loc height = 15
 	#delimit ;
 	twoway 
-		scatter mean_resid_by_ym ym_filed, mcolor("orange_red") msize(small) yaxis(1)
-		||	lpolyci mean_resid_by_ym ym_filed, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
+		scatter mean_resid_by_ym ym_filed if sh == 1, mcolor("orange_red") msize(small) yaxis(1)
+		||	lpolyci mean_resid_by_ym ym_filed if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
+		||
+		scatter mean_resid_by_ym ym_filed if sh == 0, mcolor("gs3") msize(small) yaxis(2)
+		||	lpolyci mean_resid_by_ym ym_filed if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(2) 
 		|| pcarrowi `height' 729 `height' 723, mlabsize(small) mcolor(black) lcolor(black)
 		|| pcarrowi `height' 686 `height' 692, mlabsize(small) mcolor(black) lcolor(black)
 		legend(off)
 		xtitle("Date filed", size(medium))
 		xline(693, lpattern(solid))
 		xline(722, lpattern(solid))
-		title("Number of sex complaints filed over time (residualized)")
-		ytitle("Residualized number of complaints", axis(1) size(medium))
+		title("Number of complaints filed over time")
+		ytitle("Number of complaints", axis(1) size(medium))
 		text(`height' 730 "Covid-19", color("gs3") place(r) size(medlarge))
-		text(`height' 685 "MeToo", color("gs3") place(l) size(medlarge)) 
+		text(`height' 685 "#MeToo", color("gs3") place(l) size(medlarge)) 
 	;
 	#delimit cr
     graph export "$figures/timeseries_sex_filed.png", replace
@@ -580,7 +580,7 @@ if `timeseries' == 1 {
 
 	loc Yvar win
 	loc Xvar ym_filed
- 	collapse (mean) mean_y = `Yvar', by(`Xvar' sex_cases)
+ 	collapse (mean) mean_y = `Yvar', by(`Xvar' sh)
     
     summarize `Xvar', detail
     local xmin = r(min)
@@ -590,10 +590,10 @@ if `timeseries' == 1 {
 
     #delimit ;
     twoway 
-        lpolyci mean_y `Xvar' if sex_cases == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black)
-        || lpolyci mean_y `Xvar' if sex_cases == 1, acolor("orange_red %65") lwidth(medium) clpattern(dasex_cases) clcolor(black)
-        || scatter mean_y `Xvar' if sex_cases == 0, mcolor("gs3") msize(small)
-        || scatter mean_y `Xvar' if sex_cases == 1, mcolor("orange_red") msize(small)
+        lpolyci mean_y `Xvar' if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black)
+        || lpolyci mean_y `Xvar' if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black)
+        || scatter mean_y `Xvar' if sh == 0, mcolor("gs3") msize(small)
+        || scatter mean_y `Xvar' if sh == 1, mcolor("orange_red") msize(small)
 		|| pcarrowi .35 729 .35 723, mlabsize(small) mcolor(black) lcolor(black)
 		|| pcarrowi .35 686 .35 692, mlabsize(small) mcolor(black) lcolor(black)
         legend(order(3 1) lab(3 "Sex complaints, 95% CI") lab(1 "Other complaints, 95% CI") size(medium) ring(0) pos(11) rows(2))
@@ -768,8 +768,7 @@ if `state_did_all' == 1{
 
 	// Sum weights by state 
 	preserve
-	keep if treat_sex ==1
-*	bysort state_cat: egen sum_weight_by_state = total(weights)
+	keep if treat_sex ==1	//bysort state_cat: egen sum_weight_by_state = total(weights)
 	collapse (sum) sum_weight_by_state = weights, by(state_cat)
 
 	scatter sum_weight_by_state state_cat, ///

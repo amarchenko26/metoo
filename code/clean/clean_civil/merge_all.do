@@ -385,15 +385,12 @@ replace overlap_2 = . if (common_file_date < date("$metoo", "DMY") - 365) & (ove
 /*******************************************************************************
 Treatment 
 *******************************************************************************/
-// Drop SH cases that are not basis = Sex 
-// drop if sh == 1 & basis != "Sex" // N = 27,811
-
 // Post
 g post = (common_res_date > date("$metoo", "DMY"))
 
 //***** SH cases ******* //
 g sample_sh = 1 if eeoc == 0 
-replace sample_sh = . if basis == "Sex" & sh == 0 //drop all sex cases that are not SH
+replace sample_sh = . if sex_cases == 1 & sh == 0 //drop all sex cases that are not SH
 
 // Treat for SH 
 g treat 	  = post * sh // When regressing on treat, restrict to sample_sh == 1 to avoid including non-SH sex cases
