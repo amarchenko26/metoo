@@ -4,8 +4,8 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did		 	= 0
-loc run_did_gender	= 0
+loc run_did		 	= 1
+loc run_did_gender	= 1
 loc run_did_gender_appendix	= 0
 loc overlap_placebo = 0
 loc run_did_sh	 	= 0
@@ -15,9 +15,7 @@ loc run_summary  	= 0
 loc run_balance  	= 0
 loc run_overlap_balance = 0
 loc run_duration 	= 0
-loc run_unit   		= 1
-
-tab juris, gen(juris_dummy)
+loc run_unit   		= 0
 
 /*******************************************************************************
 DiD with Sex as treated
@@ -47,7 +45,7 @@ if `run_did' == 1 {
 	#delimit ;	
 	esttab s1 s2 s3 s4 s5 using "$tables/did_sex.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Main effects}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: All complaints}} \\ \midrule")
 		fragment
 		varlabels(treat "Sex $\times$ Post") keep(treat)
 		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 1 1 1 1) 
@@ -77,7 +75,7 @@ if `run_did' == 1 {
 
 	#delimit ;
 	esttab s1 s2 s3 s4 s5 using "$tables/did_sex.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Overlaps with MeToo}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Overlap complaints only}} \\ \midrule")
 		fragment
 		append
 		varlabels(treat "Sex $\times$ Post") keep(treat)
@@ -122,7 +120,7 @@ if `run_did_gender' == 1 {
 	#delimit ;	
 	esttab s1 s2 s3 s4 using "$tables/did_gender.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Gender non-missing}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Difference-in-differences}} \\ \midrule")
 		fragment
 		varlabels(treat "Sex $\times$ Post") keep(treat)
 		mgroups("Won" "Dismissed" "Settled" "Court", pattern(1 1 1 1) 
@@ -153,7 +151,7 @@ if `run_did_gender' == 1 {
 
 	#delimit ;	
 	esttab s1 s2 s3 s4 using "$tables/did_gender.tex", style(tex) 
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Complainant is female}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Triple difference}} \\ \midrule")
 		fragment
 		append
 		varlabels(treat "Sex $\times$ Post" treat_f "Sex $\times$ Post $\times$ Female") keep(treat treat_f)
@@ -182,7 +180,7 @@ if `run_did_gender' == 1 {
 
 	#delimit ;
 	esttab s1 s2 s3 s4 using "$tables/did_gender.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel C: Overlaps with MeToo}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel C: Triple difference (overlap complaints only)}} \\ \midrule")
 		fragment
 		append
 		varlabels(treat "Sex $\times$ Post" treat_f "Sex $\times$ Post $\times$ Female") keep(treat treat_f)
@@ -657,16 +655,11 @@ if `run_summary' == 1 {
 		basis_dummy7 
 	// Outcomes 
 		settle
-		win_1
-		win_0
+		win_investigation
+		lose_investigation
+		dismissed
 		court
-		relief_scale 
-	// Jurisdiction 
-		juris_dummy1 
-		juris_dummy2 
-		juris_dummy3 
-		juris_dummy4 
-		juris_dummy5; 
+		relief_scale; 
 	#delimit cr
 	
 	#delimit ;
@@ -686,16 +679,11 @@ if `run_summary' == 1 {
 		basis_dummy7 
 	// Outcomes 
 		settle
-		win_1
-		win_0
+		win_investigation
+		lose_investigation
+		dismissed
 		court
-		relief_scale 
-	// Jurisdiction 
-		juris_dummy1 
-		juris_dummy2 
-		juris_dummy3 
-		juris_dummy4 
-		juris_dummy5; 
+		relief_scale; 
 	#delimit cr
 
 	#delimit ;
@@ -714,22 +702,16 @@ if `run_summary' == 1 {
 		basis_dummy7 
 	// Outcomes 
 		settle
-		win_1
-		win_0
+		win_investigation
+		lose_investigation
+		dismissed
 		court
-		relief_scale 
-	// Jurisdiction 
-		juris_dummy1 
-		juris_dummy2 
-		juris_dummy3 
-		juris_dummy4 
-		juris_dummy5; 
+		relief_scale; 
 	#delimit cr
 
 	#delimit ;
 	loc summary_4 // post MeToo
 	// Case chars
-		sh
 		victim_f
 		duration 
 	// Basis
@@ -742,22 +724,17 @@ if `run_summary' == 1 {
 		basis_dummy7 
 	// Outcomes 
 		settle
-		win_1
-		win_0
+		win_investigation
+		lose_investigation
+		dismissed
 		court
-		relief_scale 
-	// Jurisdiction 
-		juris_dummy1 
-		juris_dummy2 
-		juris_dummy3 
-		juris_dummy4 
-		juris_dummy5; 
+		relief_scale; 
 	#delimit cr
 	
 	eststo mean_all: estpost tabstat `summary_1', c(stat) stat(mean sd)
-	eststo mean_sex_cases: estpost tabstat `summary_2' if sex_cases == 1, c(stat) stat(mean sd)
+	eststo mean_sex_cases: estpost tabstat `summary_2' if sh == 1, c(stat) stat(mean sd)
 	eststo post_all: estpost ttest `summary_3', by(post)
-	eststo post_sex_cases: estpost ttest `summary_4' if sex_cases == 1, by(post)
+	eststo post_sex_cases: estpost ttest `summary_4' if sh == 1, by(post)
 
 	#delimit ;
 	esttab mean_all mean_sex_cases post_all post_sex_cases using "$tables/summary.tex", replace 
@@ -768,7 +745,7 @@ if `run_summary' == 1 {
     	mgroups("\shortstack{Sample\\Statistics}" 
 				"\shortstack{Mean Difference\\(Post-Pre) MeToo}", 
 			pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-    	mtitles("All" "Sex only" "All" "Sex only")
+    	mtitles("All" "SH only" "All" "SH only")
 			varlab( 
 			sh "\textit{Complaint Characteristics} \\ \hspace{5mm} Sexual harassment" 
 			victim_f "\hspace{5mm} Complainant is female" 
@@ -784,15 +761,11 @@ if `run_summary' == 1 {
 			basis_dummy6 "\hspace{5mm} Retaliation" 
 			basis_dummy7 "\hspace{5mm} Sex" 
 			settle "\textit{Outcomes} \\ \hspace{5mm} Settled" 
-			win_1 "\hspace{5mm} Won"
-			win_0 "\hspace{5mm} Lost or dismissed"
+			win_investigation "\hspace{5mm} Won"
+			lose_investigation "\hspace{5mm} Lost"
+			dismissed "\hspace{5mm} Dismissed"
 			court "\hspace{5mm} Went to court" 
 			relief_scale "\hspace{5mm} Compensation, 1000s" 
-			juris_dummy1 "\textit{Jurisdiction} \\ \hspace{5mm} Education" 
-			juris_dummy2 "\hspace{5mm} Employment" 
-			juris_dummy3 "\hspace{5mm} Housing" 
-			juris_dummy4 "\hspace{5mm} Public Accommodation" 
-			juris_dummy5 "\hspace{5mm} Unspecified" 
 		) 
 		substitute("\$" "$")
 		stats(N, layout("@ @" "@ @") labels("Observations") fmt("%15.0fc %15.0fc" "%15.0fc %15.0fc"))

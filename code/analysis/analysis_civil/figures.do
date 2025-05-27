@@ -6,11 +6,10 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
-loc selection 		= 0
-loc event 	   		= 1
+loc selection 		= 1
+loc event 	   		= 0
 loc timeseries 		= 0
-loc state_did  		= 0
-loc state_did_all 	= 0
+loc state_did  		= 1
 loc run_placebo 	= 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
@@ -32,12 +31,33 @@ if `tabulations' == 1 {
 	tab win_investigation //arrow to "Won": 7.30 when run on Feb 25, 2025
 	tab lose_investigation //arrow to "Lost": 41.89 when run on Feb 25, 2025
 	
+	// Percent change in cases filed (Pre-COVID): 0.0513324 when run on Feb 25, 2025
+	preserve
+	di tm(2020m3) // 722
+	di tm(2017m10) // 693
+	tab state if ym_filed > 693 & ym_filed < 722
+	tab state if ym_filed < 693 & ym_filed > 664
+	drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
+	count if ym_filed > 693 & ym_filed < 722 & sh == 1
+	gen sex_post_metoo = r(N)
+	count if ym_filed > 693 & ym_filed < 722 & sh == 0
+	gen no_sex_post_metoo = r(N)
+	count if ym_filed < 693 & ym_filed > 664 & sh == 1
+	gen sex_pre_metoo = r(N)
+	count if ym_filed < 693 & ym_filed > 664 & sh == 0
+	gen no_sex_pre_metoo = r(N)
+	gen covid_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
+	tab covid_percent_increase
+	drop *metoo
+	restore
+
+
 	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
 	preserve
 	di td($metoo) // 21107
 	tab state if charge_file_date > 21107 & charge_file_date < 21472
 	tab state if charge_file_date < 21107 & charge_file_date > 20742
-	drop if inlist(state, "FL", "WI") // based on tabbing and seeing if there were large differences
+	drop if inlist(state, "CA", "WI") // based on tabbing and seeing if there were large differences
 
 	g filed_first_year_post = 1 if charge_file_date > 21107 & charge_file_date < 21472
 	g filed_first_year_pre  = 1 if charge_file_date < 21107 & charge_file_date > 20742
@@ -52,6 +72,7 @@ if `tabulations' == 1 {
 	tab total_change
 
 	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
+	// .0532972 when run on May 27, 2025
 	count if filed_first_year_post == 1 & sh == 1
 	gen sex_post_metoo = r(N)
 	count if filed_first_year_post == 1 & sh == 0
@@ -98,27 +119,6 @@ if `tabulations' == 1 {
 	tab metoo_percent_increase_men
 	drop *metoo
 	restore 
-
-
-	// Percent change in cases filed (Pre-COVID): 0.0513324 when run on Feb 25, 2025
-	preserve
-	di tm(2020m3) // 722
-	di tm(2017m10) // 693
-	tab state if ym_filed > 693 & ym_filed < 722
-	tab state if ym_filed < 693 & ym_filed > 664
-	drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
-	count if ym_filed > 693 & ym_filed < 722 & sh == 1
-	gen sex_post_metoo = r(N)
-	count if ym_filed > 693 & ym_filed < 722 & sh == 0
-	gen no_sex_post_metoo = r(N)
-	count if ym_filed < 693 & ym_filed > 664 & sh == 1
-	gen sex_pre_metoo = r(N)
-	count if ym_filed < 693 & ym_filed > 664 & sh == 0
-	gen no_sex_pre_metoo = r(N)
-	gen covid_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
-	tab covid_percent_increase
-	drop *metoo
-	restore
 	
 }
 
@@ -134,32 +134,32 @@ if `selection' == 1 {
 	g omega = (_n - 1) / 10
 
 	insobs 1  
-	replace omega = 0.51 if _n == _N // Add method 1 omega
+	replace omega = 0.745 if _n == _N // Add method 1 omega
 
 	insobs 1  
-	replace omega = 0.88 if _n == _N // Add method 2 omega
+	replace omega = 0.949 if _n == _N // Add method 2 omega
 
 	insobs 1  
-	replace omega = 0.74 if _n == _N // Add method 3 omega
+	replace omega = 0.793 if _n == _N // Add method 3 omega
 
 	g omega_c = 1-omega
-	g twfe 	  = .034 
-	g overlap = .021
+	g twfe 	  = 0.123 
+	g overlap = 0.086
 
 	// TWFE = omega (A-C) + (1-omega) (B-C)
-	// Selection equation
 	g bc = (twfe - (omega*overlap))/omega_c
 	
 	#delimit ;
-	twoway scatter bc omega, yline(0)
+	twoway scatter bc omega,
 			ytitle("Treatment effect on induced reporters", size(medium))
+			ylabel(0(.2)1)
 			title("Treatment effect on induced reporters for given values of {&omega}")
 			xtitle("{&omega} = Share always reporters", size(medlarge))
 			mlabel(omega) mlabposition(6) 
 			msize(large) mlabsize(medium)
 			mcolor(orange_red) //mcolor("0 102 204")
 			legend(off) //xline(.4, lcolor(orange_red) lp(dash) lwidth(medium))
-			text(.075 .05 "TEs for induced reporters" "positive under all values of {&omega}", color("gs3") place(r) size(medlarge))
+			text(.4 .05 "TEs for induced reporters" "positive under all values of {&omega}", color("gs3") place(r) size(medlarge))
 			xlabel(0 `" "All Induced" "Reporters" "' 
 				  .2 " "
 				  .4 " "
@@ -613,46 +613,46 @@ if `state_did' == 1 {
 	coefplot 
 		(A, keep(1.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
 		(A, keep(6.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CA
-		(A, keep(10.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
+		/* (A, keep(10.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE */
 		(A, keep(11.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // FL
 		(A, keep(14.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
-		(A, keep(17.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
+		/* (A, keep(17.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL */
 		(A, keep(20.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
 		(A, keep(22.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
 		(A, keep(25.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // MI
-		(A, keep(26.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
+		/* (A, keep(26.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
 		(A, keep(29.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // MT
-		(A, keep(30.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // NC
+		(A, keep(30.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // NC */
 		(A, keep(31.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
 		(A, keep(37.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NY
-		(A, keep(41.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // PA
+		/* (A, keep(41.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // PA
 		(A, keep(43.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // RI
 		(A, keep(44.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // SC
 		(A, keep(47.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // TX
-		(A, keep(52.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
+		(A, keep(52.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA */
 		(A, keep(53.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))), // WI
 		drop(_cons)
 		vertical omitted 
 		legend(off)
 		mlabels(1.state_did_sex = 3 "AK"
 				6.state_did_sex = 3 "CA"
-				10.state_did_sex = 3 "DE"
+				/* 10.state_did_sex = 3 "DE" */
 				11.state_did_sex = 3 "FL"
 				14.state_did_sex = 3 "HI" 
-				17.state_did_sex = 3 "IL" 
+				/* 17.state_did_sex = 3 "IL"  */
 				20.state_did_sex = 3 "KY" 
 				22.state_did_sex = 3 "MA" 
 				25.state_did_sex = 3 "MI"
-				26.state_did_sex = 3 "MN"
+				/* 26.state_did_sex = 3 "MN"
 				29.state_did_sex = 3 "MT"
-				30.state_did_sex = 3 "NC"
+				30.state_did_sex = 3 "NC" */
 				31.state_did_sex = 3 "ND"
 				37.state_did_sex = 3 "NY"				
-				41.state_did_sex = 3 "PA"
+				/* 41.state_did_sex = 3 "PA"
 				43.state_did_sex = 3 "RI"
 				44.state_did_sex = 3 "SC"
 				47.state_did_sex = 3 "TX"
-				52.state_did_sex = 3 "WA"
+				52.state_did_sex = 3 "WA" */
 				53.state_did_sex = 3 "WI")
 		ciopts(lwidth(thick) recast(rcap))
 		sort(, by(b))
@@ -662,131 +662,11 @@ if `state_did' == 1 {
 		xtitle("State filed", size(medium))
 		xlabel(, noticks nolabel) //yscale(range(-.1 .5)) ylabel(-.1(.2).5, labsize(small))
 		note("Fixed effects: unit/state and year-month/state", size(small)) 
-		text(0.05 2.5 "Overall ATT: `att'")
+		text(0.125 2.5 "Overall ATT: `att'")
 		;
 	#delimit cr
 
     graph export "$figures/state_fx.png", replace    
-	restore
-}
-
-if `state_did_all' == 1{
-	******* All cases
-	// FWL regression
-	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
-	reghdfe treat_sex, absorb(basis_state ym_res_state) vce(cluster basis) resid 
-	predict treat_tilde, residuals
-
-	// Calculate weights 
-	g num = treat_tilde  
-	egen den = total(treat_tilde * treat_tilde)
-	g weights = num / den
-	
-	// Check if weights created correctly 
-	egen treat_weights = total(weights) if treat_sex ==1 
-	sum treat_weights // should sum to 1 and they do 
-		
-	egen c_weights = total(weights) if treat_sex ==0 
-	sum c_weights // sum is -1
-
-	// Sum weights by state 
-	preserve
-	keep if treat_sex ==1	//bysort state_cat: egen sum_weight_by_state = total(weights)
-	collapse (sum) sum_weight_by_state = weights, by(state_cat)
-
-	scatter sum_weight_by_state state_cat, ///
-		xtitle(" ") /// //yscale(range(-.1 .1)) ylabel(-.1(.05).1, labsize(small))
-		yline(0) mlabel(state) mlabposition(6) ///
-		xlabel(, noticks nolabel nogrid) ///
-		ytitle("DID treated weights")
-
-	graph export "$figures/state_weights_all.png", replace 	
-	restore
-
-	***** Individual state effects
-	preserve 
-	
-	label values state_did state_cat
-	drop if inlist(state_did, 42, 54) //drop US territories and WV bc coefficient is too high 
-
-	reghdfe win i.state_did, absorb(basis_state ym_res_state) vce(cluster basis)
-	eststo A
-
-	reghdfe win treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
-    loc att: display %5.4f _b[treat_sex]
-	
-	local my_blue "0 102 204"  
-	local my_red "220 20 60"
-	local my_purple "128 0 128"
-
-	#delimit ;
-	coefplot 
-		(A, keep(1.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
-		(A, keep(2.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AL
-		(A, keep(3.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // AR
-		(A, keep(5.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // AZ
-		(A, keep(6.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CA
-		(A, keep(7.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CO
-		(A, keep(8.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CT
-		(A, keep(9.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DC
-		(A, keep(10.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE
-		(A, keep(11.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // FL
-		(A, keep(12.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // GA
-		(A, keep(14.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
-		(A, keep(15.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // IA
-		(A, keep(16.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ID
-		(A, keep(17.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL
-		(A, keep(18.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // IN
-		(A, keep(19.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KS
-		(A, keep(20.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
-		(A, keep(21.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // LA
-		(A, keep(22.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
-		(A, keep(23.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MD
-		(A, keep(24.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // ME
-		(A, keep(25.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // MI
-		(A, keep(26.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
-		(A, keep(27.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // MO
-		(A, keep(28.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // MS
-		(A, keep(29.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // MT
-		(A, keep(30.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // NC
-		(A, keep(31.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
-		(A, keep(32.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // NE
-		(A, keep(33.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NH
-		(A, keep(34.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NJ
-		(A, keep(35.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NM
-		(A, keep(36.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // NV
-		(A, keep(37.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NY
-		(A, keep(38.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // OH
-		(A, keep(39.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // OK
-		(A, keep(40.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // OR
-		(A, keep(41.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // PA
-		(A, keep(43.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // RI
-		(A, keep(44.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // SC
-		(A, keep(45.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // SD
-		(A, keep(46.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // TN
-		(A, keep(47.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // TX
-		(A, keep(48.state_did) mcolor("`my_red'") ciopts(color("`my_red'"))) // UT
-		(A, keep(49.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // VA
-		(A, keep(52.state_did) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA
-		(A, keep(53.state_did) mcolor("`my_purple'") ciopts(color("`my_purple'"))), // WI
-		drop(_cons)
-		vertical omitted 
-		legend(off)
-		mlabels(1.state_did = 3 "AK" 2.state_did = 3 "AL" 3.state_did = 3 "AR" 5.state_did = 3 "AZ" 6.state_did = 3 "CA" 7.state_did = 3 "CO" 8.state_did = 3 "CT" 9.state_did = 3 "DC" 10.state_did = 3 "DE" 11.state_did = 3 "FL" 12.state_did = 3 "GA" 14.state_did = 3 "HI" 15.state_did = 3 "IA" 16.state_did = 3 "ID" 17.state_did = 3 "IL" 18.state_did = 3 "IN" 19.state_did = 3 "KS" 20.state_did = 3 "KY" 21.state_did = 3 "LA" 22.state_did = 3 "MA" 23.state_did = 3 "MD" 24.state_did = 3 "ME" 25.state_did = 3 "MI" 26.state_did = 3 "MN" 27.state_did = 3 "MO" 28.state_did = 3 "MS" 29.state_did = 3 "MT" 30.state_did = 3 "NC" 31.state_did = 3 "ND" 32.state_did = 3 "NE" 33.state_did = 3 "NH" 34.state_did = 3 "NJ" 35.state_did = 3 "NM" 36.state_did = 3 "NV" 37.state_did = 3 "NY" 38.state_did = 3 "OH" 39.state_did = 3 "OK" 40.state_did = 3 "OR" 41.state_did = 3 "PA" 43.state_did = 3 "RI" 44.state_did = 3 "SC" 45.state_did = 3 "SD" 46.state_did = 3 "TN" 47.state_did = 3 "TX" 48.state_did = 3 "UT" 49.state_did = 3 "VA" 52.state_did = 3 "WA" 53.state_did = 3 "WI")
-		xsize(10)
-		ciopts(lwidth(thick) recast(rcap))
-		sort(, by(b))
-		yline(0, lcolor(black)) 
-		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
-		ytitle("Treatment effect on win", size(medium))
-		yscale(range(-.2 .6)) ylabel(-.2(.2).6, labsize(small))
-		xtitle("State filed", size(medium))
-		xlabel(, noticks nolabel)
-		note("Controls include State X Unit and State X Time FE", size(small)) 
-		text(.07 5 "ATT: `att'")
-		;
-	#delimit cr
-    graph export "$figures/state_fx_all.png", replace  
 	restore
 }
 
@@ -808,26 +688,25 @@ if `run_placebo' == 1 {
 
 	// Placebo treatment effects
 	preserve
-	drop if basis == "Sex" // drop real treated cases
+		drop if basis == "Sex" // drop real treated cases
 
-	levelsof basis_cat, local(levels)
-	foreach l of local levels {
-		g placebo_treat_`l' = (post==1 & basis_cat == `l') 	// Gen placebos 
-	}
-
-	// placebo treatment effects
-	foreach y of local outcome_vars {
-		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-			eststo s_r_`i'
-			loc ++i
+		levelsof basis_cat, local(levels)
+		foreach l of local levels {
+			g placebo_treat_`l' = (post==1 & basis_cat == `l') 	
 		}
-	}
+
+		foreach y of local outcome_vars {
+			forvalues index = 1(1)6 {
+				reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
+				eststo s_r_`i'
+				loc ++i
+			}
+		}
 	restore
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat, absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
@@ -844,7 +723,7 @@ if `run_placebo' == 1 {
 		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
 		xline(0, lc(gs8) lp(dash))
 		xtitle("Effect of MeToo", size(medium))
-		ytitle("Placebo treatment", size(medium));
+		ytitle("Placebo treatment test", size(medium));
 	#delimit cr
 
     graph export "$figures/placebo.png", replace
@@ -860,56 +739,7 @@ if `run_placebo_single' == 1 {
 	// Single-tagged placebo treatment effects
 	preserve
 	drop if basis == "Sex" // drop real treated cases
-
-	levelsof basis_cat, local(levels)
-	foreach l of local levels {
-		g placebo_treat_`l' = (post==1 & basis_cat == `l' & multi_cat==0)
-	}
-
-	foreach y of local outcome_vars {
-		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-			eststo s_r_`i'
-			loc ++i
-		}
-	}
-	restore
-
-	// True treatment effect 
-	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
-		eststo true`j'
-		loc ++j
-	}
-
-	#delimit ;
-	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
-		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
-		|| , drop(_cons)
-		byopts(xrescale legend(off)) // so x-axis is different for all plots
-		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
-		xline(0, lc(gs8) lp(dash))
-		xtitle("Effect of MeToo", size(medium))
-		ytitle("Placebo treatment for single-tagged cases", size(medium));
-	#delimit cr
-
-    graph export "$figures/placebo_single.png", replace  
-	eststo clear
-	estimates clear
-}
-
-if `run_placebo_overlap' == 1 {
-
-	loc i 1
-	loc j 1
-
-	// Single-tagged placebo treatment effects
-	preserve	
-	drop if basis == "Sex"  // drop real treated cases
+	keep if multi_cat == 0 // only single-tagged cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -927,7 +757,58 @@ if `run_placebo_overlap' == 1 {
 
 	// True treatment effect 
 	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex if overlap_2 != ., absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe ``y'' treat if multi_cat == 0, absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo true`j'
+		loc ++j
+	}
+
+	#delimit ;
+	coefplot 
+		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
+		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
+		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
+		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
+		|| , drop(_cons)
+		byopts(xrescale legend(off)) // so x-axis is different for all plots
+		ciopts(lwidth(thick) recast(rcap))
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
+		xline(0, lc(gs8) lp(dash))
+		xtitle("Effect of MeToo", size(medium))
+		ytitle("Placebo treatment test for single-basis complaints", size(medium));
+	#delimit cr
+
+    graph export "$figures/placebo_single.png", replace  
+	eststo clear
+	estimates clear
+}
+
+if `run_placebo_overlap' == 1 {
+
+	loc i 1
+	loc j 1
+
+	// Single-tagged placebo treatment effects
+	preserve	
+	drop if basis == "Sex"  // drop real treated cases
+	keep if common_file_date < date("$metoo", "DMY")
+
+	levelsof basis_cat, local(levels)
+	foreach l of local levels {
+		g placebo_treat_`l' = (post==1 & basis_cat == `l')
+	}
+
+	foreach y of local outcome_vars {
+		forvalues index = 1(1)6 {
+			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
+			eststo s_r_`i'
+			loc ++i
+		}
+	}
+	restore
+
+	// True treatment effect 
+	foreach y of local outcome_vars {
+		reghdfe ``y'' treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
 		eststo true`j'
 		loc ++j
 	}
