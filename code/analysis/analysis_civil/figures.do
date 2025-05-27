@@ -149,25 +149,36 @@ if `selection' == 1 {
 	// TWFE = omega (A-C) + (1-omega) (B-C)
 	g bc = (twfe - (omega*overlap))/omega_c
 	
+	sort omega
+
+	* Generate variables for shading the area between 0.745 and 0.949
+	gen shade_min = . 
+	gen shade_max = .
+	replace shade_min = 0 if inrange(omega, 0.745, .95)
+	replace shade_max = 1 if inrange(omega, 0.745, 0.95)
+
 	#delimit ;
-	twoway scatter bc omega,
-			ytitle("Treatment effect on induced reporters", size(medium))
-			ylabel(0(.2)1)
-			title("Treatment effect on induced reporters for given values of {&omega}")
-			xtitle("{&omega} = Share always reporters", size(medlarge))
-			mlabel(omega) mlabposition(6) 
-			msize(large) mlabsize(medium)
-			mcolor(orange_red) //mcolor("0 102 204")
-			legend(off) //xline(.4, lcolor(orange_red) lp(dash) lwidth(medium))
-			text(.4 .05 "TEs for induced reporters" "positive under all values of {&omega}", color("gs3") place(r) size(medlarge))
-			xlabel(0 `" "All Induced" "Reporters" "' 
-				  .2 " "
-				  .4 " "
-				  .5 " " // `" "Half Always /" "Half New" "Reporters" "' 
-				  .6 " "
-				  .8 " "
-				  .97 `" "All Always" "Reporters" "' 1 " ", labsize(medlarge) noticks)
+	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
+			(line bc omega, lcolor(orange_red) lwidth(thick)),
+			xline(.745, lcolor(gs3) lwidth(medium) lpattern(dash))
+			xline(.949, lcolor(gs3) lwidth(medium) lpattern(dash))
+			ytitle("Treatment effect (B-C)", size(medlarge)) 
+			title("Treatment effect on induced reporters by share of always reporters ({&omega})")
+			xtitle("{&omega}", size(medlarge))
+			legend(off) 
+			text(.6 .5 "Shaded area" "indicates" "calibrated values of {&omega}", color("gs3") place(r) size(medlarge))
+			xlabel(0 `" "Only" "Induced" "Reporters" "' 
+				  .1 ".1" 
+				  .3 ".3"
+				  .5 ".5"
+				  .7 ".7"
+				  .9 ".9"
+				  1 `" "Only" "Always" "Reporters" "', labsize(medsmall))
 			xsize(8)
+		;
+
+	addplot: pcarrowi .6 0.7 .6 0.73 (3) " ",
+		mcolor(orange) lwidth(medthick) lcolor(orange_red)
 		;
 	/* addplot: pcarrowi -.22 0.63 -.17 0.63 (6) "No change in incidence",
 		mlabsize(small) mcolor(orange) lcolor(orange)
@@ -179,10 +190,10 @@ if `selection' == 1 {
 		mlabsize(small) mcolor(orange) lcolor(orange)
 		; */
 	#delimit cr
-
 	graph export "$figures/omega.png", replace  
 	restore
 }
+
 
 /*******************************************************************************
 Event-study
