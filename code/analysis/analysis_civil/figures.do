@@ -163,17 +163,19 @@ if `selection' == 1 {
 			xline(.745, lcolor(gs3) lwidth(medium) lpattern(dash))
 			xline(.949, lcolor(gs3) lwidth(medium) lpattern(dash))
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
-			title("Treatment effect on induced reporters by share of always reporters ({&omega})")
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.6 .5 "Shaded area" "indicates" "calibrated values of {&omega}", color("gs3") place(r) size(medlarge))
-			xlabel(0 `" "Only" "Induced" "Reporters" "' 
+			text(.6 .47 "Shaded area" "indicates" "calibrated values of {&omega}", color("gs3") place(r) size(medlarge))
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
 				  .1 ".1" 
 				  .3 ".3"
 				  .5 ".5"
 				  .7 ".7"
 				  .9 ".9"
-				  1 `" "Only" "Always" "Reporters" "', labsize(medsmall))
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
 			xsize(8)
 		;
 

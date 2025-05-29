@@ -47,7 +47,7 @@ if `run_did' == 1 {
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: All complaints}} \\ \midrule")
 		fragment
-		varlabels(treat "Sex $\times$ Post") keep(treat)
+		varlabels(treat "SH $\times$ Post") keep(treat)
 		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
@@ -78,7 +78,7 @@ if `run_did' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Overlap complaints only}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "Sex $\times$ Post") keep(treat)
+		varlabels(treat "SH $\times$ Post") keep(treat)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit_s N r2 control_mean, 
 			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
@@ -122,7 +122,7 @@ if `run_did_gender' == 1 {
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Difference-in-differences}} \\ \midrule")
 		fragment
-		varlabels(treat "Sex $\times$ Post") keep(treat)
+		varlabels(treat "SH $\times$ Post") keep(treat)
 		mgroups("Won" "Dismissed" "Settled" "Court", pattern(1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
@@ -154,7 +154,7 @@ if `run_did_gender' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Triple difference}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "Sex $\times$ Post" treat_f "Sex $\times$ Post $\times$ Female") keep(treat treat_f)
+		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit_s N r2 control_mean, 
 			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
@@ -183,7 +183,7 @@ if `run_did_gender' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel C: Triple difference (overlap complaints only)}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "Sex $\times$ Post" treat_f "Sex $\times$ Post $\times$ Female") keep(treat treat_f)
+		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit_s N r2 control_mean, 
 			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
@@ -233,7 +233,7 @@ if `run_did_gender_appendix' == 1 {
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel A: Gender non-missing}} \\ \midrule")
 		fragment
-		varlabels(treat "Sex $\times$ Post") keep(treat)
+		varlabels(treat "SH $\times$ Post") keep(treat)
 		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 0 1 0 1 0 1 0 1 0) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
@@ -271,7 +271,7 @@ if `run_did_gender_appendix' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Complainant is female}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "Sex $\times$ Post" treat_f "Sex $\times$ Post $\times$ Female") keep(treat treat_f)
+		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
 		mlabel(none) nomtitles
 		stats(feunit feunit_s N r2 control_mean, 
 			label("Unit and Time FE" "Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3))
@@ -306,7 +306,7 @@ if `run_did_gender_appendix' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel C: Overlaps with MeToo}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "Sex $\times$ Post" treat_f "Sex $\times$ Post $\times$ Female") keep(treat treat_f)
+		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit feunit_s N r2 control_mean, 
 			label("Unit and Time FE" "Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3))
@@ -481,7 +481,7 @@ if `run_did_robust' == 1 {
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Single-tagged cases}} \\ \midrule")
 		fragment
-		varlabels(treat "Sex $\times$ Post") keep(treat)
+		varlabels(treat "SH $\times$ Post") keep(treat)
 		mgroups("Won" "Dismissed" "Compensation" "Settled" "Court", pattern(1 1 1 1 1) 
 			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 		mlabel(none) nomtitles
@@ -518,7 +518,7 @@ if `run_did_robust' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{No retaliation cases}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "Sex $\times$ Post") keep(treat)
+		varlabels(treat "SH $\times$ Post") keep(treat)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit_s N r2 control_mean, 
 			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
@@ -552,7 +552,7 @@ if `run_did_robust' == 1 {
 		posthead("\midrule \multicolumn{@span}{c}{\textbf{Employment complaints only}} \\ \midrule")
 		fragment
 		append
-		varlabels(treat "Sex $\times$ Post") keep(treat)
+		varlabels(treat "SH $\times$ Post") keep(treat)
 		mlabel(none) nomtitles nonumbers nolines
 		stats(feunit_s N r2 control_mean, 
 			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
