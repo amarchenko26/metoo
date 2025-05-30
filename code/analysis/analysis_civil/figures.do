@@ -7,13 +7,13 @@ use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
 loc selection 		= 1
-loc event 	   		= 0
+loc event 	   		= 1
 loc timeseries 		= 0
-loc state_did  		= 1
-loc run_placebo 	= 0
-loc run_placebo_single = 0
-loc run_placebo_overlap = 0
-loc run_placebo_f 	= 0
+loc state_did  		= 0
+loc run_placebo 	= 1
+loc run_placebo_single = 1
+loc run_placebo_overlap = 1
+loc run_placebo_f 	= 1
 loc duration   		= 0
 loc yhat			= 0
 
@@ -159,13 +159,17 @@ if `selection' == 1 {
 
 	#delimit ;
 	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
-			(line bc omega, lcolor(orange_red) lwidth(thick)),
-			xline(.745, lcolor(gs3) lwidth(medium) lpattern(dash))
-			xline(.949, lcolor(gs3) lwidth(medium) lpattern(dash))
+			(line bc omega, lcolor(orange_red) lwidth(thick))
+			(scatteri 0 0.745 1 0.745, c(L) msymbol(none) lcolor(gs3) lwidth(medium) lpattern(dash)) 
+    		(scatteri 0 0.793 1 0.793, c(L) msymbol(none) lcolor(gs3) lwidth(medium) lpattern(dash))
+    		(scatteri 0 0.949 1 0.949, c(L) msymbol(none) lcolor(gs3) lwidth(medium) lpattern(dash)),
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.6 .47 "Shaded area" "indicates" "calibrated values of {&omega}", color("gs3") place(r) size(medlarge))
+			text(.6 .47 "Shaded area is" "range of calibrated {&omega}", color("gs3") place(r) size(medlarge))
+			text(.9 .71 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
+			text(.9 .8 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
+			text(.9 .96 "{&omega}{sub:3}", color("gs3") place(r) size(medlarge))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
@@ -249,7 +253,7 @@ if `event' == 1 {
 		coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
 			ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
 			yline(0, lp(dash))
-			ylabel(-0.1(0.05)0.2)
+			ylabel(-0.1(0.05)0.25)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
@@ -702,14 +706,14 @@ if `run_placebo' == 1 {
 	// Placebo treatment effects
 	preserve
 		drop if basis == "Sex" // drop real treated cases
-
+		drop if basis == "Retaliation" // drop retaliation cases
 		levelsof basis_cat, local(levels)
 		foreach l of local levels {
 			g placebo_treat_`l' = (post==1 & basis_cat == `l') 	
 		}
 
 		foreach y of local outcome_vars {
-			forvalues index = 1(1)6 {
+			forvalues index = 1(1)5 {
 				reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
 				eststo s_r_`i'
 				loc ++i
@@ -753,6 +757,7 @@ if `run_placebo_single' == 1 {
 	preserve
 	drop if basis == "Sex" // drop real treated cases
 	keep if multi_cat == 0 // only single-tagged cases
+	drop if basis == "Retaliation" // drop retaliation cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -804,6 +809,7 @@ if `run_placebo_overlap' == 1 {
 	preserve	
 	drop if basis == "Sex"  // drop real treated cases
 	keep if common_file_date < date("$metoo", "DMY")
+	drop if basis == "Retaliation" // drop retaliation cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {
@@ -854,6 +860,7 @@ if `run_placebo_f' == 1 {
 	// VICTIM FEMALE Placebo treatment effects
 	preserve
 	drop if basis == "Sex" // drop real treated cases
+		drop if basis == "Retaliation" // drop retaliation cases
 
 	levelsof basis_cat, local(levels)
 	foreach l of local levels {

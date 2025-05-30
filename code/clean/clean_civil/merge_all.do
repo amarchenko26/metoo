@@ -470,9 +470,9 @@ foreach v of varlist * {
 /*******************************************************************************
 Export all cases
 *******************************************************************************/
-
 keep if eeoc==0
+save "$clean_data/clean_cases_all_juris.dta", replace
+
 keep if juris=="Employment"
 keep if sample_sh == 1 
-
 save "$clean_data/clean_cases.dta", replace
