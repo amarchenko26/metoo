@@ -7,13 +7,13 @@ use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
 loc selection 		= 1
-loc event 	   		= 1
+loc event 	   		= 0
 loc timeseries 		= 0
 loc state_did  		= 0
-loc run_placebo 	= 1
-loc run_placebo_single = 1
-loc run_placebo_overlap = 1
-loc run_placebo_f 	= 1
+loc run_placebo 	= 0
+loc run_placebo_single = 0
+loc run_placebo_overlap = 0
+loc run_placebo_f 	= 0
 loc duration   		= 0
 loc yhat			= 0
 
@@ -119,6 +119,58 @@ if `tabulations' == 1 {
 	tab metoo_percent_increase_men
 	drop *metoo
 	restore 
+
+****** Count omega for men 
+	preserve
+	keep if victim_f == 0 
+	di td($metoo) // 21107
+	tab state if charge_file_date > 21107 & charge_file_date < 21472
+	tab state if charge_file_date < 21107 & charge_file_date > 20742
+	drop if inlist(state, "CA", "WI") // based on tabbing and seeing if there were large differences
+
+	g filed_first_year_post = 1 if charge_file_date > 21107 & charge_file_date < 21472
+	g filed_first_year_pre  = 1 if charge_file_date < 21107 & charge_file_date > 20742
+	
+	// Total increase in number of complaints filed 
+	count if filed_first_year_post == 1
+	gen filed_first_year_post_count = r(N)
+	count if filed_first_year_pre == 1
+	gen filed_first_year_pre_count = r(N)
+	// Percent change in number of complaints filed
+	g total_change = (filed_first_year_post_count - filed_first_year_pre_count) / filed_first_year_pre_count
+	tab total_change
+
+	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
+	// .0532972 when run on May 27, 2025
+	count if filed_first_year_post == 1 & sh == 1
+	gen sex_post_metoo = r(N)
+	count if filed_first_year_post == 1 & sh == 0
+	gen no_sex_post_metoo = r(N)
+	count if filed_first_year_pre == 1 & sh == 1
+	gen sex_pre_metoo = r(N)
+	count if filed_first_year_pre == 1 & sh == 0
+	gen no_sex_pre_metoo = r(N)
+
+	gen metoo_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
+	tab metoo_percent_increase
+	
+	// Omegas
+	tab sex_post_metoo
+	tab no_sex_post_metoo
+	tab sex_pre_metoo 
+	tab no_sex_pre_metoo
+	gen control_frac = (no_sex_post_metoo-no_sex_pre_metoo)/no_sex_pre_metoo
+	gen sex_frac = (sex_post_metoo-sex_pre_metoo)/sex_pre_metoo
+	gen omega_1 = control_frac/sex_frac
+	tab omega_1
+	
+	gen omega_2 = sex_pre_metoo/(sex_post_metoo/(1+control_frac))
+	tab omega_2
+	
+	gen omega_3 = sex_pre_metoo/(sex_post_metoo/0.989)
+	tab omega_3
+	drop *metoo
+	restore 	
 	
 }
 
@@ -143,8 +195,8 @@ if `selection' == 1 {
 	replace omega = 0.793 if _n == _N // Add method 3 omega
 
 	g omega_c = 1-omega
-	g twfe 	  = 0.123 
-	g overlap = 0.086
+	g twfe 	  = 0.101
+	g overlap = 0.087
 
 	// TWFE = omega (A-C) + (1-omega) (B-C)
 	g bc = (twfe - (omega*overlap))/omega_c
@@ -155,21 +207,24 @@ if `selection' == 1 {
 	gen shade_min = . 
 	gen shade_max = .
 	replace shade_min = 0 if inrange(omega, 0.745, .95)
-	replace shade_max = 1 if inrange(omega, 0.745, 0.95)
+	replace shade_max = .4 if inrange(omega, 0.745, 0.95)
 
 	#delimit ;
 	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
 			(line bc omega, lcolor(orange_red) lwidth(thick))
-			(scatteri 0 0.745 1 0.745, c(L) msymbol(none) lcolor(gs3) lwidth(medium) lpattern(dash)) 
-    		(scatteri 0 0.793 1 0.793, c(L) msymbol(none) lcolor(gs3) lwidth(medium) lpattern(dash))
-    		(scatteri 0 0.949 1 0.949, c(L) msymbol(none) lcolor(gs3) lwidth(medium) lpattern(dash)),
+			(line overlap omega, lp(solid) lwidth(thick) lcolor(ebblue))
+			(scatteri 0 0.745 .4 0.745, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)) 
+    		(scatteri 0 0.793 .4 0.793, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash))
+    		(scatteri 0 0.949 .4 0.949, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)),
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.6 .47 "Shaded area is" "range of calibrated {&omega}", color("gs3") place(r) size(medlarge))
-			text(.9 .71 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
-			text(.9 .8 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
-			text(.9 .96 "{&omega}{sub:3}", color("gs3") place(r) size(medlarge))
+			text(.025 .4 "Treatment effect" "on always reporters", color("ebblue") place(r) size(medium))
+			text(.175 .15 "Treatment effect" "on induced reporters", color("orange_red") place(r) size(medium))
+			text(.25 .6 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
+			text(.35 .71 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
+			text(.35 .8 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
+			text(.35 .96 "{&omega}{sub:3}", color("gs3") place(r) size(medlarge))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
@@ -183,20 +238,142 @@ if `selection' == 1 {
 			xsize(8)
 		;
 
-	addplot: pcarrowi .6 0.7 .6 0.73 (3) " ",
-		mcolor(orange) lwidth(medthick) lcolor(orange_red)
+	addplot: pcarrowi .25 0.7 .25 0.73 (3) " ",
+		lwidth(thin) lcolor(gs5) mcolor(gs5) 
 		;
-	/* addplot: pcarrowi -.22 0.63 -.17 0.63 (6) "No change in incidence",
-		mlabsize(small) mcolor(orange) lcolor(orange)
+	addplot: pcarrowi .05 0.5 .083 0.5 (12) " ",
+		lwidth(medthick) lcolor(ebblue) mcolor(ebblue) 
 		;
-	addplot: pcarrowi -.50 0.87 -.55 0.87 (12) "Sex incidence increases by control file rate",
-		mlabsize(small) mcolor(orange) lcolor(orange)
+	addplot: pcarrowi .15 0.25 .12 0.25 (6) " ",
+		lwidth(medthick) lcolor(orange_red) mcolor(orange_red) 
 		;
-	addplot: pcarrowi -.05 0.65 -.11 0.65 (12) "Sex incidence decreases by 1.1pp",
-		mlabsize(small) mcolor(orange) lcolor(orange)
-		; */
 	#delimit cr
 	graph export "$figures/omega.png", replace  
+	restore
+
+
+
+***************** WOMEN *****************
+	preserve 
+	clear
+	
+	set obs 11
+	g omega = (_n - 1) / 10
+
+	/* insobs 1  
+	replace omega = 0.745 if _n == _N // Add method 1 omega
+
+	insobs 1  
+	replace omega = 0.949 if _n == _N // Add method 2 omega
+
+	insobs 1  
+	replace omega = 0.793 if _n == _N // Add method 3 omega */
+
+	g omega_c = 1-omega
+	g twfe 	  = 0.123
+	g overlap = 0.086
+
+	// TWFE = omega (A-C) + (1-omega) (B-C)
+	g bc = (twfe - (omega*overlap))/omega_c
+	
+	sort omega
+
+	* Generate variables for shading the area 
+	gen shade_min = . 
+	gen shade_max = .
+	replace shade_min = 0 if inrange(omega, 0.745, .95)
+	replace shade_max = .4 if inrange(omega, 0.745, 0.95)
+
+	#delimit ;
+	twoway 	(line bc omega, lcolor(orange_red) lwidth(thick)),
+			ytitle("Treatment effect (B-C)", size(medlarge)) 
+			xtitle("{&omega}", size(medlarge))
+			yline(0.086, lp(solid) lwidth(thick) lcolor(ebblue))
+			yline(0, lp(solid) lwidth(medium) lcolor(gs3))
+			ylabel(0(0.1)1)
+			legend(off) 
+			text(.23 .9 "Treatment effect" "for women" "always reporters", color("ebblue") place(r) size(medium))
+			text(.6 .7 "Treatment effect" "for women" "induced reporters", color("orange_red") place(r) size(medium))
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
+				  .1 ".1" 
+				  .3 ".3"
+				  .5 ".5"
+				  .7 ".7"
+				  .9 ".9"
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
+			xsize(8)
+		;
+
+	#delimit cr
+	graph export "$figures/omega_women.png", replace  
+	restore
+
+***************** MEN *****************
+	preserve 
+	clear
+	
+	set obs 11
+	g omega = (_n - 1) / 10
+
+	insobs 1  
+	replace omega = 0.234 if _n == _N // Add method 1 omega
+
+	insobs 1  
+	replace omega = 0.872 if _n == _N // Add method 2 omega
+
+	insobs 1  
+	replace omega = 0.910 if _n == _N // Add method 3 omega
+
+	g omega_c = 1-omega
+	g twfe 	  = 0.119
+	g overlap = 0.153
+
+	// TWFE = omega (A-C) + (1-omega) (B-C)
+	g bc = (twfe - (omega*overlap))/omega_c
+	
+	sort omega
+
+	* Generate variables for shading the area 
+	gen shade_min = . 
+	gen shade_max = .
+	replace shade_min = -.5 if inrange(omega, 0.22, .92)
+	replace shade_max = .5 if inrange(omega, 0.22, .92)
+	gen zero = 0 
+
+	#delimit ;
+	twoway  (rarea shade_min shade_max omega, color(gs14) fintensity(60))
+			(line bc omega, lcolor(orange_red) lwidth(thick))
+			(line overlap omega, lp(solid) lwidth(thick) lcolor(ebblue))
+			(line zero omega, lp(solid) lwidth(medium) lcolor(gs3))
+			(scatteri -.5 0.234 .5 0.234, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)) 
+    		(scatteri -.5 0.872 .5 0.872, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash))
+    		(scatteri -.5 0.910 .5 0.910, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)),
+			ytitle("Treatment effect (B-C)", size(medlarge)) 
+			xtitle("{&omega}{sup:M}", size(medlarge))
+			legend(off) 
+			ylabel(-.5(.1).5)
+			text(.25 .3 "Treatment effect for" "men always reporters", color("ebblue") place(r) size(medium))
+			text(-.2 .65 "Treatment effect" "for men" "induced reporters", color("orange_red") place(r) size(medium))
+			text(.4 .18 "{&omega}{sub:1}{sup:M}", color("gs3") place(r) size(medlarge))
+			text(.4 .815 "{&omega}{sub:2}{sup:M}", color("gs3") place(r) size(medlarge))
+			text(.4 .92 "{&omega}{sub:3}{sup:M}", color("gs3") place(r) size(medlarge))
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
+				  .1 ".1" 
+				  .3 ".3"
+				  .5 ".5"
+				  .7 ".7"
+				  .9 ".9"
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
+			xsize(8)
+		;
+	#delimit cr
+	graph export "$figures/omega_men.png", replace  
 	restore
 }
 

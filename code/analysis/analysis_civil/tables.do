@@ -5,11 +5,11 @@ Tables for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc run_did		 	= 0
-loc run_overlap		= 0
+loc run_overlap		= 1
 loc overlap_placebo = 0
 loc run_did_sex	 	= 0
 loc run_did_robust 	= 0
-loc run_did_alljuris = 1
+loc run_did_alljuris = 0
 loc run_selection 	= 0
 loc run_summary  	= 0
 loc run_balance  	= 0
@@ -180,7 +180,7 @@ if `run_overlap' == 1 {
 
 	#delimit ;
 	esttab s1 s2 s3 s4 using "$tables/did_overlap.tex", style(tex)
-		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel C: Triple difference}} \\ \midrule")
+		posthead("\midrule \multicolumn{@span}{c}{\textbf{Panel B: Triple difference}} \\ \midrule")
 		fragment
 		append
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
