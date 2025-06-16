@@ -6,7 +6,7 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
-loc selection 		= 1
+loc selection 		= 0
 loc event 	   		= 0
 loc timeseries 		= 0
 loc state_did  		= 0
@@ -14,7 +14,7 @@ loc run_placebo 	= 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f 	= 0
-loc duration   		= 0
+loc duration   		= 1
 loc yhat			= 0
 
 /*******************************************************************************
@@ -1085,14 +1085,14 @@ Duration
 
 if `duration' == 1{
 	
-	binscatter win duration_w , n(50) ///
-		xtitle("Duration (winsorized at 1%)") ytitle("Probability of win")
+	binscatter win duration , n(50) ///
+		xtitle("Duration)") ytitle("Probability of win")
 	graph export "$figures/duration_cause.png", replace 	
 
 
 	preserve 
 	keep if common_year == 2017
-
+	keep if overlap_all == 1
 	#delimit ;
 	twoway (kdensity duration if ym_filed == 684, lcolor(gray) fcolor(gray%0) recast(area))
 		   (kdensity duration if ym_filed == 685, lcolor(yellow) fcolor(yellow%0) recast(area))
@@ -1116,6 +1116,62 @@ if `duration' == 1{
 	#delimit cr
 
 	graph export "$figures/duration_by_file.png", replace
+	restore
+
+	preserve 
+	keep if common_year == 2017
+	keep if overlap_all == 1
+	#delimit ;
+	twoway (kdensity win if ym_filed == 684, lcolor(gray) fcolor(gray%0) recast(area))
+		   (kdensity win if ym_filed == 685, lcolor(yellow) fcolor(yellow%0) recast(area))
+		   (kdensity win if ym_filed == 686, lcolor(green) fcolor(green%0) recast(area))
+		   (kdensity win if ym_filed == 687, lcolor(orange) fcolor(orange%0) recast(area))
+		   (kdensity win if ym_filed == 688, lcolor(red) fcolor(red%0) recast(area))
+		   (kdensity win if ym_filed == 689, lcolor(navy) fcolor(navy%0) recast(area))
+		   (kdensity win if ym_filed == 690, lcolor(yellow) fcolor(yellow%0) recast(area))
+		   (kdensity win if ym_filed == 691, lcolor(lime) fcolor(lime%0) recast(area))
+		   (kdensity win if ym_filed == 692, lcolor(teal) fcolor(teal%40) recast(area))
+		   (kdensity win if ym_filed == 693, lcolor(maroon) fcolor(maroon%0) recast(area))
+		   (kdensity win if ym_filed == 694, lcolor(red) fcolor(red%0) recast(area))
+		   (kdensity win if ym_filed == 695, lcolor(pink) fcolor(pink%0) recast(area))
+		   , legend(ring(0) pos(2) order(12 11 10 9 8 7 6 5 4 3 2 1)
+					label(1 "Jan") label(2 "Feb") label(3 "March")
+					label(4 "April") label(5 "May") label(6 "June")
+					label(7 "July") label(8 "Aug") label(9 "Sept")
+					label(10 "Oct") label(11 "Nov") label(12 "Dec"))
+			 xtitle("Duration", size(medium)) ytitle("Density by month filed", size(medium))
+			 note("Kruskal–Wallis test where Null is equality of distributions: p < 0.336");
+	#delimit cr
+
+	graph export "$figures/win_by_file.png", replace
+	restore
+
+	preserve 
+	keep if overlap_all == 1
+	keep if common_year == 2016
+	#delimit ;
+	twoway (kdensity win if ym_filed == 684, lcolor(gray) fcolor(gray%0) recast(area))
+		   (kdensity win if ym_filed == 685, lcolor(yellow) fcolor(yellow%0) recast(area))
+		   (kdensity win if ym_filed == 686, lcolor(green) fcolor(green%0) recast(area))
+		   (kdensity win if ym_filed == 687, lcolor(orange) fcolor(orange%0) recast(area))
+		   (kdensity win if ym_filed == 688, lcolor(red) fcolor(red%0) recast(area))
+		   (kdensity win if ym_filed == 689, lcolor(navy) fcolor(navy%0) recast(area))
+		   (kdensity win if ym_filed == 690, lcolor(yellow) fcolor(yellow%0) recast(area))
+		   (kdensity win if ym_filed == 691, lcolor(lime) fcolor(lime%0) recast(area))
+		   (kdensity win if ym_filed == 692, lcolor(teal) fcolor(teal%40) recast(area))
+		   (kdensity win if ym_filed == 693, lcolor(maroon) fcolor(maroon%0) recast(area))
+		   (kdensity win if ym_filed == 694, lcolor(red) fcolor(red%0) recast(area))
+		   (kdensity win if ym_filed == 695, lcolor(pink) fcolor(pink%0) recast(area))
+		   , legend(ring(0) pos(2) order(12 11 10 9 8 7 6 5 4 3 2 1)
+					label(1 "Jan") label(2 "Feb") label(3 "March")
+					label(4 "April") label(5 "May") label(6 "June")
+					label(7 "July") label(8 "Aug") label(9 "Sept")
+					label(10 "Oct") label(11 "Nov") label(12 "Dec"))
+			 xtitle("Duration", size(medium)) ytitle("Density by month filed", size(medium))
+			 note("Kruskal–Wallis test where Null is equality of distributions: p < 0.336");
+	#delimit cr
+
+	graph export "$figures/win_by_file_2016.png", replace
 	restore
 
 }
