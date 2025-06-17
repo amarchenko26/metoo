@@ -234,6 +234,20 @@ replace eeoc_took_to_court = 0 if eeoc == 0 // Make sure to make eeoc_took_to_co
 
 replace civil_action_number = "" if civil_action_number == "null"
 
+* Month of year (1–12).  Use whichever date is complete.
+gen byte file_month = month(common_file_date)
+label define mo 1 "Jan" 2 "Feb" 3 "Mar" 4 "Apr" 5 "May" 6 "Jun" ///
+                7 "Jul" 8 "Aug" 9 "Sep" 10 "Oct" 11 "Nov" 12 "Dec"
+label values file_month mo
+
+gen file_season = .
+replace file_season = 1 if inlist(file_month, 3, 4, 5)     // Spring
+replace file_season = 2 if inlist(file_month, 6, 7, 8)     // Summer
+replace file_season = 3 if inlist(file_month, 9,10,11)     // Fall
+replace file_season = 4 if inlist(file_month,12, 1, 2)     // Winter
+
+label define seasonlbl 1 "Spring" 2 "Summer" 3 "Fall" 4 "Winter"
+label values file_season seasonlbl
 
 /*******************************************************************************
 Consistent sample 
@@ -285,12 +299,6 @@ create_time_to_treat, period(12) period_label("Years relative to MeToo")
 create_years_to_treat, varname(years_to_treat_res) datevar(common_res_date) label("Years to treat, resolution date")
 
 create_years_to_treat, varname(years_to_treat_file) datevar(common_file_date) label("Years to treat, filing date")
-
-// Gen earliest available dates
-bysort state eeoc: egen earliest_date = min(common_file_date)
-bysort state eeoc: egen last_date = max(common_file_date)
-
-format earliest_date last_date %td
 
 
 /*******************************************************************************
@@ -473,6 +481,14 @@ Export all cases
 keep if eeoc==0
 save "$clean_data/clean_cases_all_juris.dta", replace
 
+
 keep if juris=="Employment"
 keep if sample_sh == 1 
+
+// Gen earliest available dates
+bysort state eeoc: egen earliest_date = min(common_file_date)
+bysort state eeoc: egen last_date = max(common_file_date)
+
+format earliest_date last_date %td
+
 save "$clean_data/clean_cases.dta", replace
