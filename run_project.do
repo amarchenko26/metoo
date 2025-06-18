@@ -35,14 +35,20 @@ if "`c(username)'" == "maggie"{
 	gl droot = "/Users/maggie/Desktop/metoo"
 }
 
+if "`c(username)'" == "abbyflamer"{
+	gl droot = "/Users/abbyflamer/Desktop/GitHub/metoo"
+	gl doutput = "/Users/abbyflamer/Library/CloudStorage/Dropbox-Brown/Abigail Flamer/Apps/Overleaf/MeToo"
+}
+
+
 /* Make sure you have Dropbox folder with data stored within /metoo, like /metoo/data
 Dropbox access granted separately, email Anya */
 
 // DON'T TOUCH
 gl raw_data 	"$droot/data/raw"
 gl clean_data 	"$droot/data/clean"
-gl figures 		"$droot/output/figures"
-gl tables 		"$droot/output/tables"
+gl figures 		"$doutput/figures"
+gl tables 		"$doutput/tables"
 
 
 /*******************************************************************************
@@ -71,39 +77,43 @@ net install parallel, from(https://raw.github.com/gvegayon/parallel/stable) repl
 ssc install leebounds, replace
 ssc install labutil, replace
 ssc install erepost, replace
+ssc install reghdfe, replace
+ssc install ftools, replace
 */
+
+
 
 /*******************************************************************************
 Run files
 *******************************************************************************/
 
 // cleaning files
-do "$droot/code/clean/clean_civil/clean_eeoc.do"
-do "$droot/code/clean/clean_civil/clean_eeoc_filed.do"
-do "$droot/code/clean/clean_civil/clean_ak.do"
-do "$droot/code/clean/clean_civil/clean_ca.do"
-do "$droot/code/clean/clean_civil/clean_de.do"
-do "$droot/code/clean/clean_civil/clean_fl.do"
-do "$droot/code/clean/clean_civil/clean_ga.do"
-do "$droot/code/clean/clean_civil/clean_hi.do"
-do "$droot/code/clean/clean_civil/clean_il.do"
-do "$droot/code/clean/clean_civil/clean_ky.do"
-do "$droot/code/clean/clean_civil/clean_ma.do"
-do "$droot/code/clean/clean_civil/clean_md.do"
-do "$droot/code/clean/clean_civil/clean_mi.do"
-do "$droot/code/clean/clean_civil/clean_mn.do"
-do "$droot/code/clean/clean_civil/clean_mt.do"
-do "$droot/code/clean/clean_civil/clean_nc.do"
-do "$droot/code/clean/clean_civil/clean_nd.do"
-do "$droot/code/clean/clean_civil/clean_ny.do"
-do "$droot/code/clean/clean_civil/clean_pa.do"
-do "$droot/code/clean/clean_civil/clean_ri.do"
-do "$droot/code/clean/clean_civil/clean_sc.do"
-do "$droot/code/clean/clean_civil/clean_tx.do"
-do "$droot/code/clean/clean_civil/clean_wa.do"
-do "$droot/code/clean/clean_civil/clean_wi.do"
-do "$droot/code/clean/clean_civil/merge_all.do"
+// do "$droot/code/clean/clean_civil/clean_eeoc.do"
+// do "$droot/code/clean/clean_civil/clean_eeoc_filed.do"
+// do "$droot/code/clean/clean_civil/clean_ak.do"
+// do "$droot/code/clean/clean_civil/clean_ca.do"
+// do "$droot/code/clean/clean_civil/clean_de.do"
+// do "$droot/code/clean/clean_civil/clean_fl.do"
+// do "$droot/code/clean/clean_civil/clean_ga.do"
+// do "$droot/code/clean/clean_civil/clean_hi.do"
+// do "$droot/code/clean/clean_civil/clean_il.do"
+// do "$droot/code/clean/clean_civil/clean_ky.do"
+// do "$droot/code/clean/clean_civil/clean_ma.do"
+// do "$droot/code/clean/clean_civil/clean_md.do"
+// do "$droot/code/clean/clean_civil/clean_mi.do"
+// do "$droot/code/clean/clean_civil/clean_mn.do"
+// do "$droot/code/clean/clean_civil/clean_mt.do"
+// do "$droot/code/clean/clean_civil/clean_nc.do"
+// do "$droot/code/clean/clean_civil/clean_nd.do"
+// do "$droot/code/clean/clean_civil/clean_ny.do"
+// do "$droot/code/clean/clean_civil/clean_pa.do"
+// do "$droot/code/clean/clean_civil/clean_ri.do"
+// do "$droot/code/clean/clean_civil/clean_sc.do"
+// do "$droot/code/clean/clean_civil/clean_tx.do"
+// do "$droot/code/clean/clean_civil/clean_wa.do"
+// do "$droot/code/clean/clean_civil/clean_wi.do"
+// do "$droot/code/clean/clean_civil/merge_all.do"
 
 // analysis files
-do "$droot/code/analysis/analysis_civil/tables.do"
-do "$droot/code/analysis/analysis_civil/figures.do"
+// do "$droot/code/analysis/analysis_civil/tables.do"
+// do "$droot/code/analysis/analysis_civil/figures.do"
