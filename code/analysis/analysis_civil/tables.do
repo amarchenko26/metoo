@@ -1,5 +1,5 @@
 /*******************************************************************************
-Tables for MeToo project - practice
+Tables for MeToo project - change2
 *******************************************************************************/
 
 use "$clean_data/clean_cases.dta", replace
