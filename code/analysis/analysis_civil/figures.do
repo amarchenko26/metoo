@@ -5,7 +5,7 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc tabulations		= 0
+loc tabulations		= 1
 loc selection 		= 0
 loc event 	   		= 0
 loc timeseries 		= 0
@@ -31,7 +31,26 @@ if `tabulations' == 1 {
 	tab win_investigation //arrow to "Won": 7.30 when run on Feb 25, 2025
 	tab lose_investigation //arrow to "Lost": 41.89 when run on Feb 25, 2025
 	
-	// Percent change in cases filed (Pre-COVID): 0.0513324 when run on Feb 25, 2025
+	// First 8 months percent change in cases filed (No WI): 2.85 when run on Jun 17, 2025
+	preserve
+	di td("15feb2017") // 20865, when CA and FL have both begun reporting
+	di td("15oct2017") // 21107, MeToo
+	di td("15jun2018") // 21350, same time post MeToo
+	drop if inlist(state, "WI") 
+	count if charge_file_date > 21107 & charge_file_date < 21350 & sh == 1
+	gen sex_post_metoo = r(N)
+	count if charge_file_date > 21107 & charge_file_date < 21350 & sh == 0
+	gen no_sex_post_metoo = r(N)
+	count if charge_file_date < 21107 & charge_file_date > 20865 & sh == 1
+	gen sex_pre_metoo = r(N)
+	count if charge_file_date < 21107 & charge_file_date > 20865 & sh == 0
+	gen no_sex_pre_metoo = r(N)
+	gen eight_month_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
+	tab eight_month_percent_increase
+	drop *metoo
+	restore
+
+	// Pre-Covid percent change in cases filed (No CA, WI, FL): 0.2772736 when run on Jun 17, 2025
 	preserve
 	di tm(2020m3) // 722
 	di tm(2017m10) // 693
@@ -51,13 +70,12 @@ if `tabulations' == 1 {
 	drop *metoo
 	restore
 
-
-	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
+	// First year percent change in cases filed (No CA, FL, WI): 0.16 when run on Jun 17, 2025
 	preserve
 	di td($metoo) // 21107
 	tab state if charge_file_date > 21107 & charge_file_date < 21472
 	tab state if charge_file_date < 21107 & charge_file_date > 20742
-	drop if inlist(state, "CA", "WI") // based on tabbing and seeing if there were large differences
+	drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
 
 	g filed_first_year_post = 1 if charge_file_date > 21107 & charge_file_date < 21472
 	g filed_first_year_pre  = 1 if charge_file_date < 21107 & charge_file_date > 20742
@@ -1089,7 +1107,6 @@ if `duration' == 1{
 		xtitle("Duration)") ytitle("Probability of win")
 	graph export "$figures/duration_cause.png", replace 	
 
-
 	preserve 
 	keep if common_year == 2017
 	keep if overlap_all == 1
@@ -1118,61 +1135,22 @@ if `duration' == 1{
 	graph export "$figures/duration_by_file.png", replace
 	restore
 
-	preserve 
-	keep if common_year == 2017
-	keep if overlap_all == 1
-	#delimit ;
-	twoway (kdensity win if ym_filed == 684, lcolor(gray) fcolor(gray%0) recast(area))
-		   (kdensity win if ym_filed == 685, lcolor(yellow) fcolor(yellow%0) recast(area))
-		   (kdensity win if ym_filed == 686, lcolor(green) fcolor(green%0) recast(area))
-		   (kdensity win if ym_filed == 687, lcolor(orange) fcolor(orange%0) recast(area))
-		   (kdensity win if ym_filed == 688, lcolor(red) fcolor(red%0) recast(area))
-		   (kdensity win if ym_filed == 689, lcolor(navy) fcolor(navy%0) recast(area))
-		   (kdensity win if ym_filed == 690, lcolor(yellow) fcolor(yellow%0) recast(area))
-		   (kdensity win if ym_filed == 691, lcolor(lime) fcolor(lime%0) recast(area))
-		   (kdensity win if ym_filed == 692, lcolor(teal) fcolor(teal%40) recast(area))
-		   (kdensity win if ym_filed == 693, lcolor(maroon) fcolor(maroon%0) recast(area))
-		   (kdensity win if ym_filed == 694, lcolor(red) fcolor(red%0) recast(area))
-		   (kdensity win if ym_filed == 695, lcolor(pink) fcolor(pink%0) recast(area))
-		   , legend(ring(0) pos(2) order(12 11 10 9 8 7 6 5 4 3 2 1)
-					label(1 "Jan") label(2 "Feb") label(3 "March")
-					label(4 "April") label(5 "May") label(6 "June")
-					label(7 "July") label(8 "Aug") label(9 "Sept")
-					label(10 "Oct") label(11 "Nov") label(12 "Dec"))
-			 xtitle("Duration", size(medium)) ytitle("Density by month filed", size(medium))
-			 note("Kruskal–Wallis test where Null is equality of distributions: p < 0.336");
-	#delimit cr
+	* Keep only overlap complaints
+	graph bar (percent), over(file_month, label(angle(45))) ///
+		bar(1, color(navy%70))                ///
+		title("All cases filed by calendar month") ///
+		ytitle("Percent of cases") legend(off)
+	graph export "$figures/month.png", replace
 
-	graph export "$figures/win_by_file.png", replace
-	restore
+	graph bar (percent) if overlap_all == 1, over(file_month, label(angle(45))) ///
+		bar(1, color(navy%70))                ///
+		title("Overlap cases filed by calendar month") ///
+		ytitle("Percent of cases") legend(off)
+	graph export "$figures/month_overlap.png", replace
 
-	preserve 
-	keep if overlap_all == 1
-	keep if common_year == 2016
-	#delimit ;
-	twoway (kdensity win if ym_filed == 684, lcolor(gray) fcolor(gray%0) recast(area))
-		   (kdensity win if ym_filed == 685, lcolor(yellow) fcolor(yellow%0) recast(area))
-		   (kdensity win if ym_filed == 686, lcolor(green) fcolor(green%0) recast(area))
-		   (kdensity win if ym_filed == 687, lcolor(orange) fcolor(orange%0) recast(area))
-		   (kdensity win if ym_filed == 688, lcolor(red) fcolor(red%0) recast(area))
-		   (kdensity win if ym_filed == 689, lcolor(navy) fcolor(navy%0) recast(area))
-		   (kdensity win if ym_filed == 690, lcolor(yellow) fcolor(yellow%0) recast(area))
-		   (kdensity win if ym_filed == 691, lcolor(lime) fcolor(lime%0) recast(area))
-		   (kdensity win if ym_filed == 692, lcolor(teal) fcolor(teal%40) recast(area))
-		   (kdensity win if ym_filed == 693, lcolor(maroon) fcolor(maroon%0) recast(area))
-		   (kdensity win if ym_filed == 694, lcolor(red) fcolor(red%0) recast(area))
-		   (kdensity win if ym_filed == 695, lcolor(pink) fcolor(pink%0) recast(area))
-		   , legend(ring(0) pos(2) order(12 11 10 9 8 7 6 5 4 3 2 1)
-					label(1 "Jan") label(2 "Feb") label(3 "March")
-					label(4 "April") label(5 "May") label(6 "June")
-					label(7 "July") label(8 "Aug") label(9 "Sept")
-					label(10 "Oct") label(11 "Nov") label(12 "Dec"))
-			 xtitle("Duration", size(medium)) ytitle("Density by month filed", size(medium))
-			 note("Kruskal–Wallis test where Null is equality of distributions: p < 0.336");
-	#delimit cr
-
-	graph export "$figures/win_by_file_2016.png", replace
-	restore
+	// we see 
+	tab file_season if overlap_all == 1, sum(win)
+	tab file_season if overlap_all == 1, sum(duration)
 
 }
 
