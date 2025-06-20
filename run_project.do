@@ -30,9 +30,7 @@ Define folders
 
 if "`c(username)'" == "anyamarchenko"{
 	gl droot "/Users/anyamarchenko/Documents/GitHub/metoo" 
-}
-if "`c(username)'" == "maggie"{
-	gl droot = "/Users/maggie/Desktop/metoo"
+	gl doutput "/Users/anyamarchenko/Documents/GitHub/metoo/output" 
 }
 
 if "`c(username)'" == "abbyflamer"{
