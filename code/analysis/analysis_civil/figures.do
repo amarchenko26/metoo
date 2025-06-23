@@ -7,14 +7,14 @@ use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 1
 loc selection 		= 0
-loc event 	   		= 0
+loc event 	   		= 1
 loc timeseries 		= 0
 loc state_did  		= 0
 loc run_placebo 	= 0
 loc run_placebo_single = 0
 loc run_placebo_overlap = 0
 loc run_placebo_f 	= 0
-loc duration   		= 1
+loc duration   		= 0
 loc yhat			= 0
 
 /*******************************************************************************
@@ -415,8 +415,13 @@ if `event' == 1 {
 
 	******** All outcomes ********
 	foreach y in `outcomes' {
+		
+		reghdfe `y' treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		loc att: display %5.4f _b[treat]
+		
 		reghdfe `y' ib7.event, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
 		estimates store TWFE
+		
 
 		// Create dynamic xlabel with offset adjustment
 		local max_event = 0
@@ -438,6 +443,7 @@ if `event' == 1 {
 			local xlabel `xlabel' `x' "`rel'"
 		}
 		local xlabel "`xlabel', labsize(medium))"
+		
 
 		// Run Rambachan & Roth (2021)
 		honestdid, numpre(7) omit ///
@@ -447,20 +453,25 @@ if `event' == 1 {
 		#delimit ;
 		coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
 			ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
-			yline(0, lp(dash))
+			yline(0, lp(dash)) // yline(`att', lcolor(grey) lwidth(medium) lp(dash))
 			ylabel(-0.1(0.05)0.25)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
-			`xlabel'
+			`xlabel' 
+			text(0.19 2 "ATT: `att'", size(medsmall))
 		;
 		#delimit cr
-					
-		graph export "$figures/eventstudy_`y'.png", replace 
+				
+		
+// 		graph export "$figures/eventstudy_`y'.png", replace 
 		estimates clear
 	}	
 
 ******** Relief ********
+	reghdfe relief_scale treat, absorb(basis_state ym_res_state) vce(cluster basis)
+	loc att: display %5.3f _b[treat]
+	
 	reghdfe relief_scale ib7.event, ///
 		absorb(basis_state ym_res_state) ///
 		vce(cluster basis) noconstant
@@ -468,23 +479,29 @@ if `event' == 1 {
 
 	honestdid, numpre(6) omit ///
 		coefplot xtitle(Mbar) ytitle(95% Robust CI)
-	graph export "$figures/honestdid_relief_scale.png", replace
+// 	graph export "$figures/honestdid_relief_scale.png", replace
 
 	#delimit ;
 	coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
 		ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
-		yline(0, lp(dash)) 
+		yline(0, lp(dash)) 	// yline(`att', lcolor(gray) lwidth(medium) lp(dash))
 		xline(6.5)
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on compensation ($1000s)", size(medium))
-		xlabel(1 "-6" 2 "-5" 3 "-4" 4 "-3" 5 "-2" 6 "-1" 7 "0" 8 "1" 9 "2" 10 "3" 11 "4", labsize(medium))
+		xlabel(1 "-6" 2 "-5" 3 "-4" 4 "-3" 5 "-2" 6 "-1" 7 "0" 8 "1" 9 "2" 10 "3" 11 "4", labsize(medium)) 
+		text(45 2 "ATT: `att'", size(medsmall) color(black))
 	;
 	#delimit cr
 				
-	graph export "$figures/eventstudy_relief_scale.png", replace 
+// 	graph export "$figures/eventstudy_relief_scale.png", replace 
 	estimates clear
 
 ******** Overlap ********
+	reghdfe win treat if common_file_date < date("$metoo", "DMY"), ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis)
+	loc att: display %5.3f _b[treat]
+	
 	reghdfe win ib7.event if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_state ym_res_state) ///
 		vce(cluster basis) noconstant
@@ -520,10 +537,13 @@ if `event' == 1 {
 		xline(7.5)
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
-		`xlabel';
+		`xlabel'
+		text(.33 1.6 "ATT: `att'", size(medsmall) color(black))
+		;
+		
 	#delimit cr
 				
-	graph export "$figures/eventstudy_win_overlap.png", replace 
+// 	graph export "$figures/eventstudy_win_overlap.png", replace 
 	estimates clear
 		
 		
@@ -532,6 +552,17 @@ if `event' == 1 {
 	program repostb,  eclass
 	erepost b = b, rename
 	end
+	
+// 	reghdfe win treat_f, absorb(basis_state ym_res_state) vce(cluster basis)
+// 	loc att: display %5.3f _b[treat_f]
+	
+	reghdfe win treat_f treat, ///
+		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
+		vce(cluster basis)
+	loc att_did: display %5.3f _b[treat_f]
+	loc att: display %5.3f _b[treat]
+ 	loc att_f: display %5.3f (`att_did' + `att')
+	
 	
 	reghdfe win ib7.event_f ib7.event, ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
@@ -593,13 +624,22 @@ if `event' == 1 {
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
+		text(.44 3 "ATT (Female - Male): `att_did'", size(medsmall) color(black))
+		text(.55 2.2 "ATT (Male): `att'", size(medsmall) color(black))
 	;
 	#delimit cr
 				
-	graph export "$figures/eventstudy_win_female.png", replace 
+// 	graph export "$figures/eventstudy_win_female.png", replace 
 	estimates clear
 	 
 ******** Female complainants OVERLAP ********
+	reghdfe win treat_f treat if common_file_date < date("$metoo", "DMY"), ///
+		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
+		vce(cluster basis)
+	loc att_did: display %5.3f _b[treat_f]
+	loc att: display %5.3f _b[treat]
+
+
 	reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 		vce(cluster basis) noconstant
@@ -646,6 +686,7 @@ if `event' == 1 {
 		repostb
 		est sto coef`j'
 	}
+	
 
 	#delimit ; 
 	coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9,
@@ -661,10 +702,12 @@ if `event' == 1 {
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
+		text(.45 2.1 "ATT (Female - Male): `att_did'", size(medsmall) color(black))
+		text(.55 1.6 "ATT (Male): `att'", size(medsmall) color(black))
 	;
 	#delimit cr
 	
-	graph export "$figures/eventstudy_win_female_overlap.png", replace 
+// 	graph export "$figures/eventstudy_win_female_overlap.png", replace 
 	estimates clear
 		
 }
