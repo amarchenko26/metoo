@@ -5,7 +5,7 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc tabulations		= 1
+loc tabulations		= 0
 loc selection 		= 0
 loc event 	   		= 1
 loc timeseries 		= 0
@@ -16,7 +16,7 @@ loc run_placebo_overlap = 0
 loc run_placebo_f 	= 0
 loc duration   		= 0
 loc yhat			= 0
-loc run_overlap_comparison == 1
+loc run_overlap_comparison = 0
 
 /*******************************************************************************
 Tabulations
@@ -418,7 +418,7 @@ if `event' == 1 {
 	foreach y in `outcomes' {
 		
 		reghdfe `y' treat, absorb(basis_state ym_res_state) vce(cluster basis)
-		loc att: display %5.4f _b[treat]
+		loc att: display %5.3f _b[treat]
 		
 		reghdfe `y' ib7.event, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
 		estimates store TWFE
@@ -460,12 +460,12 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
 			`xlabel' 
-			text(0.19 2 "ATT: `att'", size(medsmall))
+			text(0.19 2 "ATT: `att'", size(medsmall) color(black))
 		;
 		#delimit cr
 				
 		
-// 		graph export "$figures/eventstudy_`y'.png", replace 
+ 		graph export "$figures/eventstudy_`y'.png", replace 
 		estimates clear
 	}	
 
@@ -480,7 +480,7 @@ if `event' == 1 {
 
 	honestdid, numpre(6) omit ///
 		coefplot xtitle(Mbar) ytitle(95% Robust CI)
-// 	graph export "$figures/honestdid_relief_scale.png", replace
+ 	graph export "$figures/honestdid_relief_scale.png", replace
 
 	#delimit ;
 	coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
@@ -494,7 +494,7 @@ if `event' == 1 {
 	;
 	#delimit cr
 				
-// 	graph export "$figures/eventstudy_relief_scale.png", replace 
+ 	graph export "$figures/eventstudy_relief_scale.png", replace 
 	estimates clear
 
 ******** Overlap ********
@@ -544,7 +544,7 @@ if `event' == 1 {
 		
 	#delimit cr
 				
-// 	graph export "$figures/eventstudy_win_overlap.png", replace 
+ 	graph export "$figures/eventstudy_win_overlap.png", replace 
 	estimates clear
 		
 		
@@ -554,15 +554,19 @@ if `event' == 1 {
 	erepost b = b, rename
 	end
 	
-// 	reghdfe win treat_f, absorb(basis_state ym_res_state) vce(cluster basis)
-// 	loc att: display %5.3f _b[treat_f]
-	
+
 	reghdfe win treat_f treat, ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 		vce(cluster basis)
-	loc att_did: display %5.3f _b[treat_f]
-	loc att: display %5.3f _b[treat]
- 	loc att_f: display %5.3f (`att_did' + `att')
+	loc att_diff = _b[treat_f]
+	loc att_m = _b[treat]
+
+
+	loc att_f: display `att_diff' + `att_m'
+
+
+	loc att_m_display: display %5.3f `att_m'
+	loc att_f_display: display %5.3f `att_f'
 	
 	
 	reghdfe win ib7.event_f ib7.event, ///
@@ -625,20 +629,28 @@ if `event' == 1 {
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
-		text(.44 3 "ATT (Female - Male): `att_did'", size(medsmall) color(black))
-		text(.55 2.2 "ATT (Male): `att'", size(medsmall) color(black))
+		text(.44 2.5 "ATT (Women): `att_f_display'", size(medsmall) color(black))
+		text(.55 2.2 "ATT (Men): `att_m_display'", size(medsmall) color(black))
 	;
 	#delimit cr
 				
-// 	graph export "$figures/eventstudy_win_female.png", replace 
+ 	graph export "$figures/eventstudy_win_female.png", replace 
 	estimates clear
 	 
 ******** Female complainants OVERLAP ********
 	reghdfe win treat_f treat if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 		vce(cluster basis)
-	loc att_did: display %5.3f _b[treat_f]
-	loc att: display %5.3f _b[treat]
+	loc att_diff = _b[treat_f]
+	loc att_m = _b[treat]
+
+
+	loc att_f: display `att_diff' + `att_m'
+
+
+	loc att_m_display: display %5.3f `att_m'
+	loc att_f_display: display %5.3f `att_f'
+	
 
 
 	reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
@@ -703,12 +715,12 @@ if `event' == 1 {
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
-		text(.45 2.1 "ATT (Female - Male): `att_did'", size(medsmall) color(black))
-		text(.55 1.6 "ATT (Male): `att'", size(medsmall) color(black))
+		text(.45 1.75 "ATT (Women): `att_f_display'", size(medsmall) color(black))
+		text(.55 1.6 "ATT (Men): `att_m_display'", size(medsmall) color(black))
 	;
 	#delimit cr
 	
-// 	graph export "$figures/eventstudy_win_female_overlap.png", replace 
+ 	graph export "$figures/eventstudy_win_female_overlap.png", replace 
 	estimates clear
 		
 }
