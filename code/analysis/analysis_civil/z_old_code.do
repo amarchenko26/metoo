@@ -1,4 +1,106 @@
 
+/*******************************************************************************
+Correlation b/w duration and outcomes
+*******************************************************************************/
+if `run_duration' == 1 {
+
+	eststo: reg settle duration, r
+
+	eststo: reg settle duration if sex_cases == 1, r
+
+	eststo: reg win duration, r
+
+	eststo: reg win duration if sex_cases == 1, r
+
+	eststo:	reg relief_scale duration, r
+
+	eststo:	reg relief_scale duration if sex_cases == 1, r
+
+	#delimit ;
+	
+	estout _all using "$tables/duration_corr.tex", style(tex) replace
+		drop(_cons)
+		varlabels(duration "Duration")
+		mgroups("Settle" "Win" "Compensation", pattern(1 0 1 0 1 0) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none)
+		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 5))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(5)star)" "se(fmt(5)par)") 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") ;
+
+	#delimit cr
+	estimates clear
+	eststo clear
+}
+
+/*******************************************************************************
+Selection table
+*******************************************************************************/
+
+if `run_selection' == 1 {
+	
+	preserve 
+	eststo A: reg total_cases_per_year post, r
+
+	eststo B: reg sex_cases_per_year post if sex_cases == 1, r
+
+	bys months_to_treat_12: egen months_to_treat_12_count = total(y) if sex_cases == 0
+	eststo C: reg months_to_treat_12_count post if sex_cases == 0 & inlist(months_to_treat_12, -1, 0), r
+
+	bys months_to_treat_12 sex_cases: egen months_to_treat_12_count_sex = total(y)
+	eststo D: reg months_to_treat_12_count_sex post if sex_cases == 1 & inlist(months_to_treat_12, -1, 0), r
+	
+	#delimit ;
+	
+	esttab A B C D using "$tables/selection_table.tex", style(tex) replace
+		drop(_cons)
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule" "\multicolumn{@span}{c}{\textbf{Counts (per year)}} \\ \midrule")
+		fragment
+		varlabels(post "Post MeToo")
+		mlabel("\# filed" "\# Sex filed" "\shortstack{\# Control filed in 12 months\\before vs after MeToo}" "\shortstack{\# Sex filed in 12 months\\before vs after MeToo}" )
+		nomtitles nonumbers
+		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(a3)star)" "se(fmt(a3)par)") 
+		prefoot("\\" "\midrule");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+
+	eststo B: reg filed_per_year post if sex_cases == 1, r 
+	
+	eststo C: reg filed_f_per_year post if sex_cases == 1 & victim_f == 1, r
+
+	eststo D: reg filed_f_per_year post if sex_cases == 1 & victim_f == 0, r
+
+	#delimit ;
+	
+	esttab B B C D using "$tables/selection_table.tex", style(tex)
+		prehead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")		
+		fragment 
+		append
+		drop(_cons)
+		varlabels(post "Post MeToo")
+		mlabel("DELETE ME" "\shortstack{Share Sex filed\\of total cases}" "\shortstack{Share Sex filed\\by women}" "\shortstack{Share Sex filed\\by men}")
+		nomtitles nonumbers
+		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(a3)star)" "se(fmt(a3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}") 
+		;
+	#delimit cr
+	estimates clear
+	eststo clear	
+
+	restore
+}
+
+
 if `state_did_all' == 1{
 	******* All cases
 	// FWL regression

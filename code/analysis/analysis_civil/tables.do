@@ -5,18 +5,67 @@ Tables for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc run_did		 	= 0
+loc run_did_win	 	= 1
 loc run_overlap		= 0
+loc run_overlap_win	= 0
 loc overlap_placebo = 0
-loc run_overlap_winter = 1
+loc run_overlap_winter = 0
 loc run_did_sex	 	= 0
 loc run_did_robust 	= 0
 loc run_did_alljuris = 0
-loc run_selection 	= 0
 loc run_summary  	= 0
-loc run_balance  	= 0
 loc run_overlap_balance = 0
 loc run_duration 	= 0
 loc run_unit   		= 0
+
+
+/*******************************************************************************
+Win-only Main DID 
+*******************************************************************************/
+
+if `run_did_win' == 1 {
+	preserve 
+	reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+	eststo s1
+	qui estadd loc feunit_s "\checkmark", replace
+	qui: sum win if treat == 0
+	estadd scalar control_mean = `r(mean)'
+
+	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	eststo s2
+	qui estadd loc feunit_s "\checkmark", replace
+	qui: sum win if treat == 0 & victim_f != .
+	estadd scalar control_mean = `r(mean)'
+
+	reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	eststo s3
+	qui estadd loc feunit_s "\checkmark", replace
+	qui: sum win if treat_f == 0
+	estadd scalar control_mean = `r(mean)'
+
+	#delimit ;	
+	esttab s1 s2 s3 using "$tables/did_win.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
+		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
+				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
+				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
+				"\midrule") 
+		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
+		mlabel(none) nomtitles nonumbers
+		stats(feunit_s N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3)) 
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01) 
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule") 
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+
+	restore
+}
+
 
 /*******************************************************************************
 Main DID 
@@ -124,6 +173,52 @@ if `run_did' == 1 {
 	restore
 }
 
+
+/*******************************************************************************
+Win-only Overlap DID 
+*******************************************************************************/
+
+if `run_overlap_win' == 1 {
+
+	reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	eststo s1
+	qui estadd loc feunit_s "\checkmark", replace
+	qui: sum win if treat == 0
+	estadd scalar control_mean = `r(mean)'
+
+	reghdfe win treat if victim_f != . &  common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	eststo s2
+	qui estadd loc feunit_s "\checkmark", replace
+	qui: sum win if treat == 0 & victim_f != .
+	estadd scalar control_mean = `r(mean)'
+
+	reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	eststo s3
+	qui estadd loc feunit_s "\checkmark", replace
+	qui: sum win if treat_f == 0
+	estadd scalar control_mean = `r(mean)'
+
+	#delimit ;	
+	esttab s1 s2 s3 using "$tables/did_overlap_win.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
+		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
+				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
+				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
+				"\midrule") 
+		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
+		mlabel(none) nomtitles nonumbers
+		stats(feunit_s N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3)) 
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01) 
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule") 
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+}
+
 /*******************************************************************************
 DiD overlap
 *******************************************************************************/
@@ -196,61 +291,6 @@ if `run_overlap' == 1 {
 	estimates clear
 	eststo clear
 	restore
-}
-
-
-
-/*******************************************************************************
-Overlap placebo regression 
-*******************************************************************************/
-// Take cases filed before MeToo, some overlap and some don't
-// for every month in 2015, 2016, and 2017
-// we take the complaints that did and didn't overlap in each month 
-// we sum the % that are sex_cases 
-
-if `overlap_placebo' == 1 {
-
-	// From 2016m1 to 2017m10
-	forvalues i = 672(1)693 {
-		sum sex_cases if overlap_all == 1 & ym_filed == `i'
-		sum sex_cases if overlap_all == 0 & ym_filed == `i'
-	}
-
-	preserve
-	keep if ym_filed < 693 
-	collapse (mean) avg_sex_cases = sex_cases, by(ym_filed overlap_all)
-
-	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
-		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
-		legend(label(1 "Resolved before") label(2 "Overlap")) ///
-		xtitle("Year-month filed") ytitle("% sex cases") ///
-		title("Trends in overlap and non-overlap cases filed in the same year-month") 
-	restore
-
-
-	preserve
-	keep if ym_filed < 693 
-	collapse (mean) avg_sex_cases = win, by(ym_filed overlap_all)
-
-	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
-		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
-		legend(label(1 "Resolved before") label(2 "Overlap")) ///
-		xtitle("Year-month filed") ytitle("Win rate") ///
-		title("% sex cases in overlap and non-overlap cases filed in the same year-month") 
-	restore
-
-
-	preserve
-	keep if ym_filed < 693 
-	collapse (mean) avg_sex_cases = duration, by(ym_filed overlap_all)
-
-	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
-		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
-		legend(label(1 "Resolved before") label(2 "Overlap")) ///
-		xtitle("Year-month filed") ytitle("Win rate") ///
-		title("% sex cases in overlap and non-overlap cases filed in the same year-month") 
-	restore
-
 }
 
 
@@ -486,6 +526,61 @@ if `run_did_sex' == 1 {
 /*******************************************************************************
 DiD regression - Robustness Check
 *******************************************************************************/
+
+if `run_did_robust' == 1 {
+
+	// Single-tagged 
+	preserve 
+		keep if multi_cat == 0
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s1
+		qui estadd loc feunit_s "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	// Drop retaliation 
+	preserve 
+		drop if basis == "Retaliation"
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s2
+		qui estadd loc feunit_s "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	// Filed before covid 
+	preserve 
+		keep if ym_filed < 722
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s3
+		qui estadd loc feunit_s "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	#delimit ;	
+	esttab s1 s2 s3 using "$tables/did_robust_win.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule")
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mgroups("Single-tagged" "No retaliation" "Pre-Covid", pattern(1 1 1) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles nonumbers
+		stats(feunit_s N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	restore
+}
+
+
 loc y1 win 
 loc y2 dismissed
 loc y3 relief_scale
@@ -710,71 +805,6 @@ if `run_did_alljuris' == 1 {
 }
 
 
-
-/*******************************************************************************
-Selection table
-*******************************************************************************/
-
-if `run_selection' == 1 {
-	
-	preserve 
-	eststo A: reg total_cases_per_year post, r
-
-	eststo B: reg sex_cases_per_year post if sex_cases == 1, r
-
-	bys months_to_treat_12: egen months_to_treat_12_count = total(y) if sex_cases == 0
-	eststo C: reg months_to_treat_12_count post if sex_cases == 0 & inlist(months_to_treat_12, -1, 0), r
-
-	bys months_to_treat_12 sex_cases: egen months_to_treat_12_count_sex = total(y)
-	eststo D: reg months_to_treat_12_count_sex post if sex_cases == 1 & inlist(months_to_treat_12, -1, 0), r
-	
-	#delimit ;
-	
-	esttab A B C D using "$tables/selection_table.tex", style(tex) replace
-		drop(_cons)
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule" "\multicolumn{@span}{c}{\textbf{Counts (per year)}} \\ \midrule")
-		fragment
-		varlabels(post "Post MeToo")
-		mlabel("\# filed" "\# Sex filed" "\shortstack{\# Control filed in 12 months\\before vs after MeToo}" "\shortstack{\# Sex filed in 12 months\\before vs after MeToo}" )
-		nomtitles nonumbers
-		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(a3)star)" "se(fmt(a3)par)") 
-		prefoot("\\" "\midrule");
-
-	#delimit cr
-	estimates clear
-	eststo clear
-
-	eststo B: reg filed_per_year post if sex_cases == 1, r 
-	
-	eststo C: reg filed_f_per_year post if sex_cases == 1 & victim_f == 1, r
-
-	eststo D: reg filed_f_per_year post if sex_cases == 1 & victim_f == 0, r
-
-	#delimit ;
-	
-	esttab B B C D using "$tables/selection_table.tex", style(tex)
-		prehead("\midrule \multicolumn{@span}{c}{\textbf{Shares}} \\ \midrule")		
-		fragment 
-		append
-		drop(_cons)
-		varlabels(post "Post MeToo")
-		mlabel("DELETE ME" "\shortstack{Share Sex filed\\of total cases}" "\shortstack{Share Sex filed\\by women}" "\shortstack{Share Sex filed\\by men}")
-		nomtitles nonumbers
-		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(a3)star)" "se(fmt(a3)par)") 
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") 
-		;
-	#delimit cr
-	estimates clear
-	eststo clear	
-
-	restore
-}
-
 /*******************************************************************************
 Summary table
 *******************************************************************************/
@@ -920,43 +950,6 @@ if `run_summary' == 1 {
 }
 
 *stats(N1 N2 p_joint, layout("@ @" ". @") labels("Observations" "Joint \textit{p}-value" ) fmt("%15.0fc %15.0fc" 2 2))	///
-
-/*******************************************************************************
-Correlation b/w duration and outcomes
-*******************************************************************************/
-if `run_duration' == 1 {
-
-	eststo: reg settle duration, r
-
-	eststo: reg settle duration if sex_cases == 1, r
-
-	eststo: reg win duration, r
-
-	eststo: reg win duration if sex_cases == 1, r
-
-	eststo:	reg relief_scale duration, r
-
-	eststo:	reg relief_scale duration if sex_cases == 1, r
-
-	#delimit ;
-	
-	estout _all using "$tables/duration_corr.tex", style(tex) replace
-		drop(_cons)
-		varlabels(duration "Duration")
-		mgroups("Settle" "Win" "Compensation", pattern(1 0 1 0 1 0) 
-			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
-		mlabel(none)
-		stats(N r2, label(`"N"' `" \(R^{2}\)"') fmt(%9.0fc 5))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
-		cells("b(fmt(5)star)" "se(fmt(5)par)") 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
-		prefoot("\\" "\midrule")
-		postfoot("\bottomrule" "\end{tabular}") ;
-
-	#delimit cr
-	estimates clear
-	eststo clear
-}
 
 /****************************************************************************
 Overlap balance table

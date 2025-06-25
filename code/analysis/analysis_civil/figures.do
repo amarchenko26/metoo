@@ -16,6 +16,7 @@ loc run_placebo_overlap = 0
 loc run_placebo_f 	= 0
 loc duration   		= 0
 loc yhat			= 0
+loc run_overlap_comparison == 1
 
 /*******************************************************************************
 Tabulations
@@ -1197,3 +1198,58 @@ if `duration' == 1{
 
 }
 
+
+/*******************************************************************************
+Overlap comparison figures  
+*******************************************************************************/
+// Take cases filed before MeToo, some overlap and some don't
+// for every month in 2015, 2016, and 2017
+// we take the complaints that did and didn't overlap in each month 
+// we sum the % that are sex_cases 
+
+if `run_overlap_comparison' == 1 {
+
+	// From 2016m1 to 2017m10
+	forvalues i = 672(1)693 {
+		sum sex_cases if overlap_all == 1 & ym_filed == `i'
+		sum sex_cases if overlap_all == 0 & ym_filed == `i'
+	}
+
+	preserve
+	keep if ym_filed < 693 
+	collapse (mean) avg_sex_cases = sex_cases, by(ym_filed overlap_all)
+
+	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
+		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
+		legend(label(1 "Resolved before") label(2 "Overlap")) ///
+		xtitle("Year-month filed") ytitle("% sex cases") ///
+		title("Trends in overlap and non-overlap cases filed in the same year-month") 
+	graph export "$figures/overlap_balance_sex.png", replace
+	restore
+
+	preserve
+	keep if ym_filed < 693 
+	collapse (mean) avg_sex_cases = win, by(ym_filed overlap_all)
+
+	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
+		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
+		legend(label(1 "Resolved before") label(2 "Overlap")) ///
+		xtitle("Year-month filed") ytitle("Win rate") ///
+		title("% sex cases in overlap and non-overlap cases filed in the same year-month") 
+	graph export "$figures/overlap_balance_win.png", replace
+	restore
+
+
+	preserve
+	keep if ym_filed < 693 
+	collapse (mean) avg_sex_cases = duration, by(ym_filed overlap_all)
+
+	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
+		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
+		legend(label(1 "Resolved before") label(2 "Overlap")) ///
+		xtitle("Year-month filed") ytitle("Duration") ///
+		title("% sex cases in overlap and non-overlap cases filed in the same year-month") 
+	graph export "$figures/overlap_balance_duration.png", replace
+	restore
+
+}
