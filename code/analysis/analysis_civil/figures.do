@@ -7,10 +7,10 @@ use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
 loc selection 		= 0
-loc event 	   		= 0
+loc event 	   		= 1
 loc timeseries 		= 0
 loc state_did  		= 0
-loc run_placebo 	= 1
+loc run_placebo 	= 0
 loc duration   		= 0
 loc yhat			= 0
 loc run_overlap_comparison = 0
@@ -540,6 +540,14 @@ if `event' == 1 {
 	local att_m    = _b[treat]
 	local att_f    = `att_diff' + `att_m'
 
+		* Calculate and round values
+	scalar att_m_rounded = round(_b[treat], 0.001)
+	scalar att_f_rounded = round(_b[treat_f] + _b[treat], 0.001)
+
+	* Convert to locals (as text) for graph labels or titles
+	local att_m = att_m_rounded
+	local att_f = att_f_rounded
+
 	* Format for display
 	local att_m_display : display %5.3f `att_m'
 	local att_f_display : display %5.3f `att_f'
@@ -1004,7 +1012,7 @@ if `run_placebo' == 1 {
 		ciopts(lwidth(thick) recast(rcap))
 		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "SH (actual treatment)", labsize(medium))
 		xline(0, lc(gs8) lp(dash)) 
-		xlabel(-.2(.1).2, labsize(medium))
+		xlabel(-.15(.05).15, labsize(medium))
 		xtitle("Placebo Effect of MeToo on Complainant Win Probability", size(medium))
 		ytitle("Placebo treatment type", size(medium))
 	;
