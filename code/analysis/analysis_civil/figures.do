@@ -400,7 +400,6 @@ if `selection' == 1 {
 /*******************************************************************************
 Event-study
 *******************************************************************************/
-
 loc outcomes "settle dismissed win court"
 
 if `event' == 1 {
@@ -423,7 +422,6 @@ if `event' == 1 {
 		reghdfe `y' ib7.event, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
 		estimates store TWFE
 		
-
 		// Create dynamic xlabel with offset adjustment
 		local max_event = 0
 		local coef_names : colnames e(b)
@@ -444,12 +442,6 @@ if `event' == 1 {
 			local xlabel `xlabel' `x' "`rel'"
 		}
 		local xlabel "`xlabel', labsize(medium))"
-		
-
-		// Run Rambachan & Roth (2021)
-		honestdid, numpre(7) omit ///
-			coefplot xtitle(Mbar) ytitle(95% Robust CI)
-		graph export "$figures/honestdid_`y'.png", replace
 
 		#delimit ;
 		coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
@@ -463,13 +455,10 @@ if `event' == 1 {
 			text(0.19 2 "ATT: `att'", size(medsmall) color(black))
 		;
 		#delimit cr
-				
-		
  		graph export "$figures/eventstudy_`y'.png", replace 
 		estimates clear
 	}	
 
-******** Relief ********
 	reghdfe relief_scale treat, absorb(basis_state ym_res_state) vce(cluster basis)
 	loc att: display %5.3f _b[treat]
 	
@@ -477,10 +466,6 @@ if `event' == 1 {
 		absorb(basis_state ym_res_state) ///
 		vce(cluster basis) noconstant
 	estimates store TWFE
-
-	honestdid, numpre(6) omit ///
-		coefplot xtitle(Mbar) ytitle(95% Robust CI)
- 	graph export "$figures/honestdid_relief_scale.png", replace
 
 	#delimit ;
 	coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
@@ -497,7 +482,7 @@ if `event' == 1 {
  	graph export "$figures/eventstudy_relief_scale.png", replace 
 	estimates clear
 
-******** Overlap ********
+	******** Overlap ********
 	reghdfe win treat if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_state ym_res_state) ///
 		vce(cluster basis)
@@ -529,7 +514,6 @@ if `event' == 1 {
 	}
 	local xlabel "`xlabel', labsize(medium))"
 
-	// Make graph
 	#delimit ;
 	coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
 		ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
@@ -541,32 +525,27 @@ if `event' == 1 {
 		`xlabel'
 		text(.33 1.6 "ATT: `att'", size(medsmall) color(black))
 		;
-		
 	#delimit cr
 				
  	graph export "$figures/eventstudy_win_overlap.png", replace 
 	estimates clear
-		
-		
-******** Female complainants only ********
+
+	******** Female complainants only ********
 	cap program drop repostb
 	program repostb,  eclass
 	erepost b = b, rename
 	end
-	
 
 	reghdfe win treat_f treat, ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 		vce(cluster basis)
-	loc att_diff = _b[treat_f]
-	loc att_m = _b[treat]
+	local att_diff = _b[treat_f]
+	local att_m    = _b[treat]
+	local att_f    = `att_diff' + `att_m'
 
-
-	loc att_f: display `att_diff' + `att_m'
-
-
-	loc att_m_display: display %5.3f `att_m'
-	loc att_f_display: display %5.3f `att_f'
+	* Format for display
+	local att_m_display : display %5.3f `att_m'
+	local att_f_display : display %5.3f `att_f'
 	
 	
 	reghdfe win ib7.event_f ib7.event, ///
@@ -637,21 +616,20 @@ if `event' == 1 {
  	graph export "$figures/eventstudy_win_female.png", replace 
 	estimates clear
 	 
-******** Female complainants OVERLAP ********
+	******** Female OVERLAP ********
 	reghdfe win treat_f treat if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
 		vce(cluster basis)
-	loc att_diff = _b[treat_f]
-	loc att_m = _b[treat]
+	local att_diff = _b[treat_f]
+	local att_m    = _b[treat]
+	local att_f    = `att_diff' + `att_m'
 
+	* Format for display
+	local att_m_display : display %5.3f `att_m'
+	local att_f_display : display %5.3f `att_f'
 
-	loc att_f: display `att_diff' + `att_m'
-
-
-	loc att_m_display: display %5.3f `att_m'
-	loc att_f_display: display %5.3f `att_f'
-	
-
+	display "`att_m_display'"
+	display "`att_f_display'"
 
 	reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
@@ -700,7 +678,6 @@ if `event' == 1 {
 		est sto coef`j'
 	}
 	
-
 	#delimit ; 
 	coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9,
 	omitted baselevel label(Male) ciopts(recast(rcap) lwidth(.4) color(navy)))
@@ -723,7 +700,14 @@ if `event' == 1 {
  	graph export "$figures/eventstudy_win_female_overlap.png", replace 
 	estimates clear
 		
+	******** Rambachan & Roth (2021) for win ********
+	reghdfe win ib7.event, absorb(basis_state ym_res_state) vce(cluster basis)
+	honestdid, numpre(7) omit ///
+		coefplot xtitle(Mbar) ytitle(95% Robust CI)
+	graph export "$figures/honestdid_win.png", replace
+
 }
+
 
 /*******************************************************************************
 Cases/outcomes over time 
