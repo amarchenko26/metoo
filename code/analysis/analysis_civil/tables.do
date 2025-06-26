@@ -7,14 +7,14 @@ use "$clean_data/clean_cases.dta", replace
 loc run_did		 	= 0
 loc run_did_win	 	= 1
 loc run_overlap		= 0
-loc run_overlap_win	= 0
+loc run_overlap_win	= 1
 loc overlap_placebo = 0
 loc run_overlap_winter = 0
 loc run_did_sex	 	= 0
 loc run_did_robust 	= 0
 loc run_did_alljuris = 0
 loc run_summary  	= 0
-loc run_overlap_balance = 0
+loc run_overlap_balance = 1
 loc run_duration 	= 0
 loc run_unit   		= 0
 

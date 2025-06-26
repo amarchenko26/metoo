@@ -7,13 +7,10 @@ use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
 loc selection 		= 0
-loc event 	   		= 1
+loc event 	   		= 0
 loc timeseries 		= 0
 loc state_did  		= 0
-loc run_placebo 	= 0
-loc run_placebo_single = 0
-loc run_placebo_overlap = 0
-loc run_placebo_f 	= 0
+loc run_placebo 	= 1
 loc duration   		= 0
 loc yhat			= 0
 loc run_overlap_comparison = 0
@@ -926,217 +923,99 @@ if `state_did' == 1 {
 Placebo coef plots 
 *******************************************************************************/
 
-loc y1 dismissed
-loc y2 settle
-loc y3 win
-loc y4 relief_scale
-
-loc outcome_vars y1 y2 y3 y4
+/*******************************************************************************
+Placebo coef plots for outcome = win only
+*******************************************************************************/
 
 if `run_placebo' == 1 {
 
+	// General placebo tests
 	loc i 1
-	loc j 1
-
-	// Placebo treatment effects
 	preserve
-		drop if basis == "Sex" // drop real treated cases
-		drop if basis == "Retaliation" // drop retaliation cases
+		drop if basis == "Sex"
 		levelsof basis_cat, local(levels)
+
 		foreach l of local levels {
-			g placebo_treat_`l' = (post==1 & basis_cat == `l') 	
+			gen placebo_treat_`l' = (post == 1 & basis_cat == `l')
 		}
 
-		foreach y of local outcome_vars {
-			forvalues index = 1(1)5 {
-				reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-				eststo s_r_`i'
-				loc ++i
-			}
+		forvalues index = 1/6 {
+			reghdfe win placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
+			eststo placebo_all_`i'
+			loc ++i
 		}
 	restore
 
-	// True treatment effect 
-	foreach y of local outcome_vars {
-		reghdfe ``y'' treat, absorb(basis_state ym_res_state) vce(cluster basis)
-		eststo true`j'
-		loc ++j
-	}
-
-	#delimit ;
-	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
-		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
-		|| , drop(_cons)
-		byopts(xrescale legend(off)) // so x-axis is different for all plots
-		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
-		xline(0, lc(gs8) lp(dash))
-		xtitle("Effect of MeToo", size(medium))
-		ytitle("Placebo treatment test", size(medium));
-	#delimit cr
-
-    graph export "$figures/placebo.png", replace
-	eststo clear
-	estimates clear
-}
-
-if `run_placebo_single' == 1 {
-
+	// Single-basis placebo tests
 	loc i 1
-	loc j 1
-
-	// Single-tagged placebo treatment effects
 	preserve
-	drop if basis == "Sex" // drop real treated cases
-	keep if multi_cat == 0 // only single-tagged cases
-	drop if basis == "Retaliation" // drop retaliation cases
+		drop if basis == "Sex" 
+		keep if multi_cat == 0
+		levelsof basis_cat, local(levels)
 
-	levelsof basis_cat, local(levels)
-	foreach l of local levels {
-		g placebo_treat_`l' = (post==1 & basis_cat == `l')
-	}
+		foreach l of local levels {
+			gen placebo_treat_`l' = (post == 1 & basis_cat == `l')
+		}
 
-	foreach y of local outcome_vars {
-		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-			eststo s_r_`i'
+		forvalues index = 1/6 {
+			reghdfe win placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
+			eststo placebo_single_`i'
 			loc ++i
 		}
-	}
 	restore
 
-	// True treatment effect 
-	foreach y of local outcome_vars {
-		reghdfe ``y'' treat if multi_cat == 0, absorb(basis_state ym_res_state) vce(cluster basis)
-		eststo true`j'
-		loc ++j
-	}
-
-	#delimit ;
-	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
-		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
-		|| , drop(_cons)
-		byopts(xrescale legend(off)) // so x-axis is different for all plots
-		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
-		xline(0, lc(gs8) lp(dash))
-		xtitle("Effect of MeToo", size(medium))
-		ytitle("Placebo treatment test for single-basis complaints", size(medium));
-	#delimit cr
-
-    graph export "$figures/placebo_single.png", replace  
-	eststo clear
-	estimates clear
-}
-
-if `run_placebo_overlap' == 1 {
-
+	// Overlap-only placebo tests
 	loc i 1
-	loc j 1
-
-	// Single-tagged placebo treatment effects
-	preserve	
-	drop if basis == "Sex"  // drop real treated cases
-	keep if common_file_date < date("$metoo", "DMY")
-	drop if basis == "Retaliation" // drop retaliation cases
-
-	levelsof basis_cat, local(levels)
-	foreach l of local levels {
-		g placebo_treat_`l' = (post==1 & basis_cat == `l')
-	}
-
-	foreach y of local outcome_vars {
-		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-			eststo s_r_`i'
-			loc ++i
-		}
-	}
-	restore
-
-	// True treatment effect 
-	foreach y of local outcome_vars {
-		reghdfe ``y'' treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
-		eststo true`j'
-		loc ++j
-	}
-
-	#delimit ;
-	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
-		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
-		|| , drop(_cons)
-		byopts(xrescale legend(off)) // so x-axis is different for all plots
-		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
-		xline(0, lc(gs8) lp(dash))
-		xtitle("Effect of MeToo", size(medium))
-		ytitle("Placebo treatment for overlap cases", size(medium));
-	#delimit cr
-
-    graph export "$figures/placebo_overlap.png", replace  
-	eststo clear
-	estimates clear
-}
-
-if `run_placebo_f' == 1 {
-
-	loc i 1
-	loc j 1
-
-	// VICTIM FEMALE Placebo treatment effects
 	preserve
-	drop if basis == "Sex" // drop real treated cases
-		drop if basis == "Retaliation" // drop retaliation cases
+		drop if basis == "Sex"
+		keep if common_file_date < date("$metoo", "DMY")
+		levelsof basis_cat, local(levels)
 
-	levelsof basis_cat, local(levels)
-	foreach l of local levels {
-		g placebo_treat_`l' = (post==1 & basis_cat == `l' & victim_f==1)
-	}
-
-	foreach y of local outcome_vars {
-		forvalues index = 1(1)6 {
-			reghdfe ``y'' placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-			eststo s_r_`i'
+		foreach l of local levels {
+			gen placebo_treat_`l' = (post == 1 & basis_cat == `l')
+		}
+		
+		forvalues index = 1/6 {
+			reghdfe win placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
+			eststo placebo_overlap_`i'
 			loc ++i
 		}
-	}
 	restore
 
-	// True treatment effect 
-	foreach y of local outcome_vars {
-		reghdfe ``y'' treat_sex_f treat_sex, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
-		eststo true`j'
-		loc ++j
-	}
+	// True effects
+	reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+	eststo true_effect
 
+	reghdfe win treat if multi_cat == 0, absorb(basis_state ym_res_state) vce(cluster basis)
+	eststo true_effect_single
+
+	reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	eststo true_effect_overlap
+
+
+	* Plot all together by panel
 	#delimit ;
 	coefplot 
-		s_r_1 s_r_2 s_r_3 s_r_4 s_r_5 s_r_6 true1, bylabel(Dismissed)
-		|| s_r_7 s_r_8 s_r_9 s_r_10 s_r_11 s_r_12 true2, bylabel(Settled)
-		|| s_r_13 s_r_14 s_r_15 s_r_16 s_r_17 s_r_18 true3, bylabel(Won)
-		|| s_r_19 s_r_20 s_r_21 s_r_22 s_r_23 s_r_24 true4, bylabel(Compensation)
-		|| , drop(_cons)
-		byopts(xrescale legend(off)) // so x-axis is different for all plots
+		placebo_all_1 placebo_all_2 placebo_all_3 placebo_all_4 placebo_all_5 placebo_all_6 true_effect, bylabel(All complaints) 
+		||placebo_single_1 placebo_single_2 placebo_single_3 placebo_single_4 placebo_single_5 placebo_single_6 true_effect_single, bylabel(Single-basis) 
+		||placebo_overlap_1 placebo_overlap_2 placebo_overlap_3 placebo_overlap_4 placebo_overlap_5 placebo_overlap_6 true_effect_overlap, bylabel(Overlap only) 
+		|| , drop(_cons) 
+		byopts(xrescale legend(off))
 		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "Sex", labsize(medium)) // angle(45)
-		xline(0, lc(gs8) lp(dash))
-		xtitle("Effect of MeToo", size(medium))
-		ytitle("Placebo treatment for female complainants", size(medium));
+		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "SH (actual treatment)", labsize(medium))
+		xline(0, lc(gs8) lp(dash)) 
+		xlabel(-.2(.1).2, labsize(medium))
+		xtitle("Placebo Effect of MeToo on Complainant Win Probability", size(medium))
+		ytitle("Placebo treatment type", size(medium))
+	;
 	#delimit cr
 
-    graph export "$figures/placebo_f.png", replace  
+	graph export "$figures/placebo_win.png", replace
 	eststo clear
 	estimates clear
 }
+
+
 /*******************************************************************************
 Duration
 *******************************************************************************/
