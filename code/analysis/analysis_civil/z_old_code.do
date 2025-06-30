@@ -1271,4 +1271,110 @@ if `run_overlap' == 1 {
 }
 
 
+/*******************************************************************************
+DiD regression - Robustness Check
+*******************************************************************************/
+
+if `run_did_robust' == 1 {
+
+	// Single-tagged 
+	preserve 
+		keep if multi_cat == 0
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s1
+		qui estadd loc ut "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	// Drop retaliation 
+	preserve 
+		drop if basis == "Retaliation"
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s2
+		qui estadd loc ut "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	// Filed before covid 
+	preserve 
+		keep if ym_filed < 722
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s3
+		qui estadd loc ut "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	#delimit ;	
+	esttab s1 s2 s3 using "$tables/did_robust_win.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule")
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mgroups("Single-tagged" "No retaliation" "Pre-Covid", pattern(1 1 1) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles nonumbers
+		stats(ut N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+	
+	
+	// Single-tagged 
+	preserve 
+		keep if multi_cat == 0
+		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s1
+		qui estadd loc ut "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	// Drop retaliation 
+	preserve 
+		drop if basis == "Retaliation"
+		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s2
+		qui estadd loc ut "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	// Filed before covid 
+	preserve 
+		keep if ym_filed < 722
+		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		eststo s3
+		qui estadd loc ut "\checkmark", replace
+		qui: sum win if treat ==0  
+		estadd scalar control_mean = `r(mean)'
+	restore
+
+	#delimit ;	
+	esttab s1 s2 s3 using "$tables/did_robust_win_overlap.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
+		posthead("\midrule")
+		varlabels(treat "SH $\times$ Post") keep(treat)
+		mgroups("Single-tagged" "No retaliation" "Pre-Covid", pattern(1 1 1) 
+			prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
+		mlabel(none) nomtitles nonumbers
+		stats(ut N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 %9.0fc 3))
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01)
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule")
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+}
+
 
