@@ -1,3 +1,52 @@
+	**** TIMESERIES WIN ALT WITH BALANCED PANEL 
+	preserve 
+	drop if inlist(state, "CA", "WI")
+
+	loc Yvar win
+	loc Xvar ym_filed
+ 	collapse (mean) mean_y = `Yvar', by(`Xvar' sh)
+    
+    sum `Xvar', d
+    loc xmin = r(min)
+    loc xmax = r(max)
+    
+    loc xlabel_cmd `"xlabel(`xmin'(12)`xmax', angle(45) format(%tm))"'
+
+    #delimit ;
+    twoway 
+        lpolyci mean_y `Xvar' if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black)
+        || lpolyci mean_y `Xvar' if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black)
+        || scatter mean_y `Xvar' if sh == 0, mcolor("gs3") msize(small)
+        || scatter mean_y `Xvar' if sh == 1, mcolor("orange_red") msize(small)
+		|| pcarrowi .35 729 .35 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi .35 686 .35 692, mlabsize(small) mcolor(black) lcolor(black)
+        legend(order(3 1) lab(3 "SH complaints, 95% CI") lab(1 "Other complaints, 95% CI") size(medium) ring(0) pos(11) rows(2))
+        xtitle("Date filed", size(medium))
+        xline(693, lpattern(solid))
+        xline(722, lpattern(solid))
+		text(.35 685 "MeToo", color("gs3") place(l) size(medium)) 
+        text(.35 730 "Covid-19", color("gs3") place(r) size(medium))
+        `xlabel_cmd'
+        ytitle("Probability of win", size(medium))
+    ;
+    #delimit cr
+	graph export "$figures/timeseries_win.png", replace
+    restore
+
+	
+	preserve 
+	drop if inlist(state, "CA", "WI")
+
+	* Women winning vs men winning vs. other complaints 
+	plot_lpolyci_gender win ym_filed, title("Probability of Winning by Complainant Gender (balanced panel)") ylabel("Probability of win")
+
+	plot_lpolyci settle ym_filed, title("Probability Complainant Settles Over Time (balanced panel)") ylabel("Probability settled")
+
+	plot_lpolyci dismissed ym_filed, title("Probability Complaint Dismissed Over Time (balanced panel)") ylabel("Probability dismissed")
+
+	plot_lpolyci relief_scale ym_filed, title("Compensation Paid to Complainant (conditional on winning, balanced panel)") ylabel("Compensation in $1000s")
+	restore
+
 
 /*******************************************************************************
 Placebo coef plots 

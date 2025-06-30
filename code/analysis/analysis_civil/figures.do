@@ -7,8 +7,8 @@ use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
 loc selection 		= 0
-loc event 	   		= 1
-loc timeseries 		= 0
+loc event 	   		= 0
+loc timeseries 		= 1
 loc state_did  		= 0
 loc run_placebo 	= 0
 loc duration   		= 0
@@ -136,7 +136,7 @@ if `tabulations' == 1 {
 	drop *metoo
 	restore 
 
-****** Count omega for men 
+	****** Count omega for men 
 	preserve
 	keep if victim_f == 0 
 	di td($metoo) // 21107
@@ -269,7 +269,7 @@ if `selection' == 1 {
 
 
 
-***************** WOMEN *****************
+	***************** WOMEN *****************
 	preserve 
 	clear
 	
@@ -327,7 +327,7 @@ if `selection' == 1 {
 	graph export "$figures/omega_women.png", replace  
 	restore
 
-***************** MEN *****************
+	***************** MEN *****************
 	preserve 
 	clear
 	
@@ -720,89 +720,52 @@ Cases/outcomes over time
 
 if `timeseries' == 1 {
 
-    preserve
-	drop if inlist(state, "CA", "WI")
-	/*
-	collapse (sum) mean_y = y, by(ym_filed state_cat)
-	reg mean_y i.state_cat, r 
-	predict resid_num, resid
+	// One version dropping late entry states 
+	preserve
+	drop if inlist(state, "CA", "WI", "FL")
+	collapse (sum) sum_by_ym = y, by(ym_filed sh)
 
-	collapse (mean) mean_resid_by_ym = resid_num, by(ym_filed) */
-	collapse (sum) mean_resid_by_ym = y, by(ym_filed sh)
-
-	loc height = 15
+	* First figure: SH == 1
+	local covid_height = 80
+	local m2_height = 20
 	#delimit ;
 	twoway 
-		scatter mean_resid_by_ym ym_filed if sh == 1, mcolor("orange_red") msize(small) yaxis(1)
-		||	lpolyci mean_resid_by_ym ym_filed if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(1)
-		||
-		scatter mean_resid_by_ym ym_filed if sh == 0, mcolor("gs3") msize(small) yaxis(2)
-		||	lpolyci mean_resid_by_ym ym_filed if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(dash) clcolor(black) yaxis(2) 
-		|| pcarrowi `height' 729 `height' 723, mlabsize(small) mcolor(black) lcolor(black)
-		|| pcarrowi `height' 686 `height' 692, mlabsize(small) mcolor(black) lcolor(black)
-		legend(off)
-		xtitle("Date filed", size(medium))
+		scatter sum_by_ym ym_filed if sh == 1, mcolor("orange_red") msize(small)
+		|| lpolyci sum_by_ym ym_filed if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black)
+		|| pcarrowi `covid_height' 729 `covid_height' 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi `m2_height' 686 `m2_height' 692, mlabsize(small) mcolor(black) lcolor(black)
 		xline(693, lpattern(solid))
 		xline(722, lpattern(solid))
-		title("Number of complaints filed over time")
-		ytitle("Number of complaints", axis(1) size(medium))
-		text(`height' 730 "Covid-19", color("gs3") place(r) size(medlarge))
-		text(`height' 685 "#MeToo", color("gs3") place(l) size(medlarge)) 
+		legend(off)
+		xtitle("Date filed", size(medium))
+		ytitle("Number of complaints", size(medium))
+		title("Sexual harassment complaints")
+		text(`covid_height' 730 "Covid-19", color("gs3") place(r) size(medlarge))
+		text(`m2_height' 685 "#MeToo", color("gs3") place(l) size(medlarge))
 	;
 	#delimit cr
-    graph export "$figures/timeseries_sex_filed.png", replace
-    restore
+	graph export "$figures/timeseries_filed_sh.png", replace
 
-
-	**** TIMESERIES WIN ALT WITH BALANCED PANEL 
-	preserve 
-	drop if inlist(state, "CA", "WI")
-
-	loc Yvar win
-	loc Xvar ym_filed
- 	collapse (mean) mean_y = `Yvar', by(`Xvar' sh)
-    
-    sum `Xvar', d
-    loc xmin = r(min)
-    loc xmax = r(max)
-    
-    loc xlabel_cmd `"xlabel(`xmin'(12)`xmax', angle(45) format(%tm))"'
-
-    #delimit ;
-    twoway 
-        lpolyci mean_y `Xvar' if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(solid) clcolor(black)
-        || lpolyci mean_y `Xvar' if sh == 1, acolor("orange_red %65") lwidth(medium) clpattern(dash) clcolor(black)
-        || scatter mean_y `Xvar' if sh == 0, mcolor("gs3") msize(small)
-        || scatter mean_y `Xvar' if sh == 1, mcolor("orange_red") msize(small)
-		|| pcarrowi .35 729 .35 723, mlabsize(small) mcolor(black) lcolor(black)
-		|| pcarrowi .35 686 .35 692, mlabsize(small) mcolor(black) lcolor(black)
-        legend(order(3 1) lab(3 "Sex complaints, 95% CI") lab(1 "Other complaints, 95% CI") size(medium) ring(0) pos(11) rows(2))
-        xtitle("Date filed", size(medium))
-        xline(693, lpattern(solid))
-        xline(722, lpattern(solid))
-		text(.35 685 "MeToo", color("gs3") place(l) size(medium)) 
-        text(.35 730 "Covid-19", color("gs3") place(r) size(medium))
-        `xlabel_cmd'
-        ytitle("Probability of win", size(medium))
-    ;
-    #delimit cr
-	graph export "$figures/timeseries_win.png", replace
-    restore
-
-
-	preserve 
-	drop if inlist(state, "CA", "WI")
-
-	* Women winning vs men winning vs. other complaints 
-	plot_lpolyci_gender win ym_filed, title("Probability of Winning by Complainant Gender (balanced panel)") ylabel("Probability of win")
-
-	plot_lpolyci settle ym_filed, title("Probability Complainant Settles Over Time (balanced panel)") ylabel("Probability settled")
-
-	plot_lpolyci dismissed ym_filed, title("Probability Complaint Dismissed Over Time (balanced panel)") ylabel("Probability dismissed")
-
-	plot_lpolyci relief_scale ym_filed, title("Compensation Paid to Complainant (conditional on winning, balanced panel)") ylabel("Compensation in $1000s")
+	* Second figure: SH == 0
+	local height = 700
+	#delimit ;
+	twoway 
+		scatter sum_by_ym ym_filed if sh == 0, mcolor("gs3") msize(small)
+		|| lpolyci sum_by_ym ym_filed if sh == 0, acolor("gs3 %65") lwidth(medium) clpattern(dash) clcolor(black)
+		|| pcarrowi `height' 729 `height' 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi `height' 686 `height' 692, mlabsize(small) mcolor(black) lcolor(black)
+		xline(693, lpattern(solid))
+		xline(722, lpattern(solid))
+		legend(off)
+		xtitle("Date filed", size(medium))
+		ytitle("Number of complaints", size(medium))
+		title("Other complaints")
+		text(`height' 730 "Covid-19", color("gs3") place(r) size(medlarge))
+		text(`height' 685 "#MeToo", color("gs3") place(l) size(medlarge))
+	;
+	#delimit cr
+	graph export "$figures/timeseries_filed_nsh.png", replace
 	restore
-
 }
 
 /*******************************************************************************
