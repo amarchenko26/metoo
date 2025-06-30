@@ -13,9 +13,9 @@ loc run_overlap_season  = 0
 loc run_did_sex	 		= 0
 loc run_did_robust 		= 0
 loc run_did_alljuris 	= 0
-loc run_summary  		= 0
+loc run_summary  		= 1
 loc run_overlap_balance = 0
-loc run_unit   			= 1
+loc run_unit   			= 0
 
 
 /*******************************************************************************
@@ -729,8 +729,7 @@ if `run_summary' == 1 {
 		win_investigation
 		lose_investigation
 		dismissed
-		court
-		relief_scale; 
+		court; 
 	#delimit cr
 	
 	#delimit ;
@@ -753,8 +752,7 @@ if `run_summary' == 1 {
 		win_investigation
 		lose_investigation
 		dismissed
-		court
-		relief_scale; 
+		court; 
 	#delimit cr
 
 	#delimit ;
@@ -776,8 +774,7 @@ if `run_summary' == 1 {
 		win_investigation
 		lose_investigation
 		dismissed
-		court
-		relief_scale; 
+		court;
 	#delimit cr
 
 	#delimit ;
@@ -798,8 +795,7 @@ if `run_summary' == 1 {
 		win_investigation
 		lose_investigation
 		dismissed
-		court
-		relief_scale; 
+		court; 
 	#delimit cr
 	
 	eststo mean_all: estpost tabstat `summary_1', c(stat) stat(mean sd)
@@ -836,7 +832,6 @@ if `run_summary' == 1 {
 			lose_investigation "\hspace{5mm} Lost"
 			dismissed "\hspace{5mm} Dismissed"
 			court "\hspace{5mm} Went to court" 
-			relief_scale "\hspace{5mm} Compensation, 1000s" 
 		) 
 		substitute("\$" "$")
 		stats(N, layout("@ @" "@ @") labels("Observations") fmt("%15.0fc %15.0fc" "%15.0fc %15.0fc"))
