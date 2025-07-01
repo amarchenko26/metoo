@@ -4,16 +4,16 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did_win	 		= 0
+loc run_did_win	 		= 1
 loc run_overlap_win		= 0
 loc run_did_outcomes 	 = 0
 loc run_overlap_outcomes = 0
 loc overlap_placebo 	= 0
 loc run_overlap_season  = 0
 loc run_did_sex	 		= 0
-loc run_did_robust 		= 1
+loc run_did_robust 		= 0
 loc run_did_alljuris 	= 0
-loc run_summary  		= 1
+loc run_summary  		= 0
 loc run_overlap_balance = 0
 loc run_unit   			= 0
 
@@ -397,6 +397,92 @@ if `run_overlap_season' == 1 {
 	estimates clear
 	eststo clear
 }
+
+
+/*******************************************************************************
+Comparison by filing season  
+*******************************************************************************/
+
+// Winter 
+	reghdfe win treat if file_season == 4 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	loc twfe_winter: display %5.3f _b[treat]
+
+	reghdfe win treat treat_f if file_season == 4 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	local winter_diff = round(_b[treat_f], 0.001)
+	local winter_m = round(_b[treat], 0.001)
+	local winter_f = `winter_m' + `winter_diff'
+
+// Spring
+	reghdfe win treat if file_season == 1 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	loc twfe_spring: display %5.3f _b[treat]
+	
+	reghdfe win treat treat_f if file_season == 1 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	local spring_diff = round(_b[treat_f], 0.001)
+	local spring_m = round(_b[treat], 0.001)
+	local spring_f = `spring_diff' + `spring_m'
+
+
+// Summer 
+	reghdfe win treat if file_season == 2 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	loc twfe_summer: display %5.3f _b[treat]
+	
+	reghdfe win treat treat_f if file_season == 2 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	local summer_diff = round(_b[treat_f], 0.001)
+	local summer_m = round(_b[treat], 0.001)
+	local summer_f = `summer_diff' + `summer_m'
+
+// Fall
+	reghdfe win treat if file_season == 3 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	loc twfe_fall: display %5.3f _b[treat]
+	
+	reghdfe win treat treat_f if file_season == 3 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	local fall_diff = round(_b[treat_f], 0.001)
+	local fall_m = round(_b[treat], 0.001)
+	local fall_f = `fall_diff' + `fall_m'
+	
+// All 
+	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	loc twfe_all: display %5.3f _b[treat]
+
+	reghdfe win treat treat_f if victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	local all_diff = round(_b[treat_f], 0.001)
+	local all_m = round(_b[treat], 0.001)
+	local all_f = `all_m' + `all_diff'
+	
+// All Overlap 
+	reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	loc twfe_all_overlap: display %5.3f _b[treat]
+
+	reghdfe win treat treat_f if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	local all_overlap_diff = round(_b[treat_f], 0.001)
+	local all_overlap_m = round(_b[treat], 0.001)
+	local all_overlap_f = `all_overlap_m' + `all_overlap_diff'
+
+	
+// Display 
+	di "Winter TWFE: " %5.3f `twfe_winter'
+	di "Winter Male ATT: " %5.3f `winter_m'
+	di "Winter Female ATT: " %5.3f `winter_f'
+	
+	di "Spring TWFE: " %5.3f `twfe_spring'
+	di "Spring Male ATT: " %5.3f `spring_m'
+	di "Spring Female ATT: " %5.3f `spring_f'
+	
+	di "Summer TWFE: " %5.3f `twfe_summer'
+	di "Summer Male ATT: " %5.3f `summer_m'
+	di "Summer Female ATT: " %5.3f `summer_f'
+	
+	di "Fall TWFE: " %5.3f `twfe_fall'
+	di "Fall Male ATT: " %5.3f `fall_m'
+	di "Fall Female ATT: " %5.3f `fall_f'
+	
+	di "All TWFE: " %5.3f `twfe_all'
+	di "All Male ATT: " %5.3f `all_m'
+	di "All Female ATT: " %5.3f `all_f'
+	
+	di "All Overlap TWFE: " %5.3f `twfe_all_overlap'
+	di "All Overlap Male ATT: " %5.3f `all_overlap_m'
+	di "All Overlap Female ATT: " %5.3f `all_overlap_f'
 
 
 
