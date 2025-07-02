@@ -407,8 +407,10 @@ if `event' == 1 {
 	g event_f 		= years_to_treat_res * sh * victim_f		
 	replace event   = event + `offset'
 	replace event_f = event_f + `offset'
-	drop if event   == 0
-	drop if event_f == 0
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+// 	drop if event   == 0
+// 	drop if event_f == 0
 
 	******** All outcomes ********
 	foreach y in `outcomes' {
