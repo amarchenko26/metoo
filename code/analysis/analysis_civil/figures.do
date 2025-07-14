@@ -6,8 +6,8 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
-loc selection 		= 0
-loc event 	   		= 1
+loc selection 		= 1
+loc event 	   		= 0
 loc timeseries 		= 0
 loc state_did  		= 0
 loc run_placebo 	= 0
@@ -227,7 +227,7 @@ if `selection' == 1 {
 
 	#delimit ;
 	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
-			(line bc omega, lcolor("dkgreen") lwidth(thick))
+			(line bc omega, lp(dash) lcolor("dkgreen") lwidth(thick))
 			(line overlap omega, lp(solid) lwidth(thick) lcolor("dkgreen"))
 			(scatteri 0 0.745 .4 0.745, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)) 
     		(scatteri 0 0.793 .4 0.793, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash))
@@ -235,8 +235,8 @@ if `selection' == 1 {
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.025 .4 "Treatment effect" "on always reporters", color("dkgreen") place(r) size(medium))
-			text(.175 .15 "Treatment effect" "on induced reporters", color("dkgreen") place(r) size(medium))
+			text(.025 .43 "Treatment effect" "on AR", color("dkgreen") place(r) size(small))
+			text(.175 .18 "Treatment effect" "on IR", color("dkgreen") place(r) size(small))
 			text(.25 .6 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
 			text(.35 .71 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
 			text(.35 .8 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
@@ -424,10 +424,10 @@ if `selection' == 1 {
 			xtitle("{&omega}", size(medlarge)) 
 			legend(off) 
 			ylabel(-0.3(0.1)0.6) 
-			text(.23 .83 "Treatment effect for" "men always reporters", color("ebblue") place(r) size(medium)) 
-			text(-.15 .65 "Treatment effect" "for men" "induced reporters", color("ebblue") place(r) size(medium)) 
-			text(-.018 .9 "Treatment effect" "for women" "always reporters", color("orange_red") place(r) size(medium)) 
-			text(.52 .68 "Treatment effect" "for women" "induced reporters", color("orange_red") place(r) size(medium)) 
+			text(.20 .835 "Treatment effect" "for men AR", color("ebblue") place(r) size(small)) 
+			text(-.09 .67 "Treatment effect" "for men IR", color("ebblue") place(r) size(small)) 
+			text(.043 .84 "Treatment effect" "for women AR", color("orange_red") place(r) size(small)) 
+			text(.36 .67 "Treatment effect" "for women IR", color("orange_red") place(r) size(small)) 
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
