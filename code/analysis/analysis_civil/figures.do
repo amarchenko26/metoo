@@ -6,8 +6,8 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
-loc selection 		= 1
-loc event 	   		= 0
+loc selection 		= 0
+loc event 	   		= 1
 loc timeseries 		= 0
 loc state_did  		= 0
 loc run_placebo 	= 0
@@ -198,8 +198,8 @@ if `selection' == 1 {
 	preserve 
 	clear
 	
-	set obs 11
-	g omega = (_n - 1) / 10
+	set obs 10
+	g omega = (_n - 1) / 10 
 
 	insobs 1  
 	replace omega = 0.745 if _n == _N // Add method 1 omega
@@ -209,6 +209,12 @@ if `selection' == 1 {
 
 	insobs 1  
 	replace omega = 0.793 if _n == _N // Add method 3 omega
+	
+	// Add point at 0.95
+	insobs 1
+	replace omega = 0.95 if _n == _N
+	
+	sort omega 
 
 	g omega_c = 1-omega
 	g twfe 	  = 0.101
@@ -264,7 +270,7 @@ if `selection' == 1 {
 		lwidth(medthick) lcolor(dkgreen) mcolor(dkgreen) 
 		;
 	#delimit cr
-	graph export "$figures/omega.png", replace  
+ 	graph export "$figures/omega.png", replace  
 	restore
 
 
@@ -392,12 +398,12 @@ if `selection' == 1 {
 	clear 
 	
 	// Make omega grid
-	set obs 11
+	set obs 10
 	gen omega = (_n - 1)/10
 	
-//  	insobs 1 
-//  	replace omega = 0.000001 if _n == 1 // of _N (last obs)
-// 	sort by omega 
+  	insobs 1 
+  	replace omega = .95 if _n == _N 
+//  	sort omega 
 
 	// WOMEN
 	gen omega_c_women = 1 - omega
@@ -423,26 +429,31 @@ if `selection' == 1 {
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge)) 
 			legend(off) 
-			ylabel(-0.3(0.1)0.6) 
-			text(.20 .835 "Treatment effect" "for men AR", color("ebblue") place(r) size(small)) 
-			text(-.09 .67 "Treatment effect" "for men IR", color("ebblue") place(r) size(small)) 
-			text(.043 .84 "Treatment effect" "for women AR", color("orange_red") place(r) size(small)) 
-			text(.36 .67 "Treatment effect" "for women IR", color("orange_red") place(r) size(small)) 
+			ylabel(-.6(0.2)1) 
+			text(.19 .945 "Treatment effect" "for men AR", color("ebblue") place(r) size(small)) 
+			text(-.23 .72 "Treatment effect" "for men IR", color("ebblue") place(r) size(small)) 
+			text(.008 .95 "Treatment effect" "for women AR", color("orange_red") place(r) size(small)) 
+			text(.5 .72 "Treatment effect" "for women IR", color("orange_red") place(r) size(small)) 
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
-				  .1 ".1" 
-				  .3 ".3"
-				  .5 ".5"
-				  .7 ".7"
-				  .9 ".9"
+				  .1 ".1"
+				   .2 ".2"
+				   .3 ".3"
+				   .4 ".4"
+				   .5 ".5"
+				   .6 ".6"
+				   .7 ".7"
+				   .8 ".8"
+				   .9 ".9"
 				  1 "1"
 				  1.03 `" " " "Only" "Always" "Reporters""'
 				  1.06 " ", labsize(medsmall) noticks)
 			xsize(8)
 		;
 	#delimit cr
- 	graph export "$figures/omega_combined.png", replace  
+  	graph export "$figures/omega_combined.png", replace  
 	restore
+
 }
 
 /*******************************************************************************
@@ -591,19 +602,13 @@ if `event' == 1 {
 		vce(cluster basis)
 	local att_diff = _b[treat_f]
 	local att_m    = _b[treat]
-	local att_f    = `att_diff' + `att_m'
+	
+	local att_diff_rounded = round(`att_diff', 0.001)
+	local att_m_rounded    = round(`att_m', 0.001)
+	local att_f_rounded = `att_diff_rounded' + `att_m_rounded'
 
-		* Calculate and round values
-	scalar att_m_rounded = round(_b[treat], 0.001)
-	scalar att_f_rounded = round(_b[treat_f] + _b[treat], 0.001)
-
-	* Convert to locals (as text) for graph labels or titles
-	local att_m = att_m_rounded
-	local att_f = att_f_rounded
-
-	* Format for display
-	local att_m_display : display %5.3f `att_m'
-	local att_f_display : display %5.3f `att_f'
+	local att_m_display: display %5.3f `att_m_rounded'
+	local att_f_display: display %5.3f `att_f_rounded'
 	
 	
 	reghdfe win ib7.event_f ib7.event, ///
