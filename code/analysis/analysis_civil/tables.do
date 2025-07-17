@@ -4,7 +4,7 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did_win	 		= 1
+loc run_did_win	 		= 0
 loc run_overlap_win		= 0
 loc run_did_outcomes 	 = 0
 loc run_overlap_outcomes = 0
@@ -44,11 +44,9 @@ if `run_did_win' == 1 {
 	estadd scalar control_mean = `r(mean)'
 
 	#delimit ;	
-	esttab s1 s2 s3 using "$tables/did_win.tex", style(tex) replace 
+ 	esttab s1 s2 s3 using "$tables/did_win.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
-		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
+		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\"  
 				"\midrule") 
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
 		mlabel(none) nomtitles nonumbers
@@ -96,8 +94,6 @@ if `run_overlap_win' == 1 {
 	esttab s1 s2 s3 using "$tables/did_overlap_win.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
 		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
 				"\midrule") 
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
 		mlabel(none) nomtitles nonumbers
@@ -157,10 +153,6 @@ if `run_did_outcomes' == 1 {
         posthead("\multicolumn{1}{c}{} " ///
         "& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} " ///
         "& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" ///
-        "\cmidrule(lr){2-2} \cmidrule(lr){3-4}" ///
-        "\cmidrule(lr){5-5} \cmidrule(lr){6-7}" ///
-        "& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff}" ///
-        "& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" ///
         "\midrule")
         varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
         mgroups("Settled" "Court", pattern(1 0 0 1 0 0) 
@@ -223,10 +215,6 @@ if `run_overlap_outcomes' == 1 {
         posthead("\multicolumn{1}{c}{} " ///
         "& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} " ///
         "& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" ///
-        "\cmidrule(lr){2-2} \cmidrule(lr){3-4}" ///
-        "\cmidrule(lr){5-5} \cmidrule(lr){6-7}" ///
-        "& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff}" ///
-        "& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" ///
         "\midrule")
         varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
         mgroups("Settled" "Court", pattern(1 0 0 1 0 0) 
@@ -276,8 +264,6 @@ if `run_overlap_season' == 1 {
 	esttab s1 s2 s3 using "$tables/did_overlap_season.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule")
 		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
 				"\midrule \multicolumn{@span}{c}{\textbf{Panel A: Winter}} \\ \midrule")
 		fragment
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
@@ -518,8 +504,6 @@ if `run_did_sex' == 1 {
 	esttab s1 s2 s3 using "$tables/did_sex.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
 		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
 				"\midrule") 
 		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f) 
 		mlabel(none) nomtitles nonumbers
@@ -562,8 +546,6 @@ if `run_did_sex' == 1 {
 	esttab s1 s2 s3 using "$tables/did_sex_overlap.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
 		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
 				"\midrule") 
 		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f) 
 		mlabel(none) nomtitles nonumbers
@@ -696,12 +678,6 @@ if `run_did_robust' == 1 {
 		"& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} " ///
 		"& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}}" ///
 		"& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" ///
-	"\cmidrule(lr){2-2} \cmidrule(lr){3-4}" ///
-    "\cmidrule(lr){5-5} \cmidrule(lr){6-7}" ///
-    "\cmidrule(lr){8-8} \cmidrule(lr){9-10}" ///
-	"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff}" ///
-	"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff}" ///
-	"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" ///
 	"\midrule") 
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
 		mgroups("Single-tagged" "No retaliation" "Pre-Covid", pattern(1 0 0 1 0 0 1 0 0) 
@@ -829,12 +805,6 @@ if `run_did_robust' == 1 {
 		"& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} " ///
 		"& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}}" ///
 		"& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" ///
-	"\cmidrule(lr){2-2} \cmidrule(lr){3-4}" ///
-    "\cmidrule(lr){5-5} \cmidrule(lr){6-7}" ///
-    "\cmidrule(lr){8-8} \cmidrule(lr){9-10}" ///
-	"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff}" ///
-	"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff}" ///
-	"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" ///
 	"\midrule") 
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f)
 		mgroups("Single-tagged" "No retaliation" "Pre-Covid", pattern(1 0 0 1 0 0 1 0 0) 
@@ -884,8 +854,6 @@ if `run_did_alljuris' == 1 {
 	esttab s1 s2 s3 using "$tables/did_alljuris.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
 		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
 				"\midrule") 
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
 		mlabel(none) nomtitles nonumbers
@@ -927,8 +895,6 @@ if `run_did_alljuris' == 1 {
 	esttab s1 s2 s3 using "$tables/did_alljuris_overlap.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
 		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
 				"\midrule") 
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
 		mlabel(none) nomtitles nonumbers
@@ -1144,8 +1110,6 @@ if `run_unit' == 1 {
 	esttab s1 s2 s3 using "$tables/sdid.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
 		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
 				"\midrule") 
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
 		mlabel(none) nomtitles nonumbers
@@ -1185,8 +1149,6 @@ if `run_unit' == 1 {
 	esttab s1 s2 s3 using "$tables/sdid_overlap.tex", style(tex) replace 
 		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
 		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\cmidrule(lr){2-2} \cmidrule(lr){3-4}"
-				"& \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{TWFE} & \multicolumn{1}{c}{Triple Diff} \\" 
 				"\midrule") 
 		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
 		mlabel(none) nomtitles nonumbers
