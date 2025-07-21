@@ -424,8 +424,7 @@ if `selection' == 1 {
 	twoway  (line bc_men omega, lp(dash) lcolor(ebblue) lwidth(thick)) 
 			(line overlap_men omega, lp(solid) lp(solid) lwidth(thick) lcolor(ebblue)) 
 			(line bc_women omega, lp(dash) lcolor(orange_red) lwidth(thick)) 
-			(line overlap_women omega, lp(solid) lwidth(thick) lcolor(orange_red)) 
-			(line zero omega, lp(solid) lwidth(medium) lcolor(gs3)),
+			(line overlap_women omega, lp(solid) lwidth(thick) lcolor(orange_red)),
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge)) 
 			legend(off) 
@@ -1157,3 +1156,4 @@ if `run_overlap_comparison' == 1 {
 	restore
 
 }
+
