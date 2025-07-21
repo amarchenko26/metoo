@@ -492,12 +492,6 @@ keep if eeoc==0
 save "$clean_data/clean_cases_all_juris.dta", replace
 // (2,806,779 observations deleted)
 
-sum relief_scale
-local all_juris_relief = r(sum)
-
-di `all_juris_relief'
-
-
 keep if juris=="Employment"
 keep if sample_sh == 1 
 
