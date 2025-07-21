@@ -502,8 +502,5 @@ bysort state eeoc: egen last_date = max(common_file_date)
 
 format earliest_date last_date %td
 
-list state eeoc earliest_date last_date if _n <= 10
-sum earliest_date last_date
-
 save "$clean_data/clean_cases.dta", replace
 
