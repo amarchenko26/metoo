@@ -1163,5 +1163,36 @@ if `run_unit' == 1 {
 	eststo clear
 }
 
+/*******************************************************************************
+EEOC foia
+*******************************************************************************/
+use "$clean_data/eeoc_foia.dta", clear
+
+keep if eeoc_foia == 1
 
 
+ estpost summarize relief_scale if sh == 1 & post == 0
+ eststo sh_pre
+
+ estpost summarize relief_scale if sh == 1 & post == 1
+ eststo sh_post
+
+ estpost summarize relief_scale if sh == 0 & post == 0
+ eststo non_pre
+
+ estpost summarize relief_scale if sh == 0 & post == 1
+ eststo non_post
+
+ // Output LaTeX table with grouped columns and clean headers
+ esttab sh_pre sh_post non_pre non_post using "$tables/eeoc_relief.tex", style(tex) replace ///
+     prehead("\begin{tabular}{lcccc}" "\toprule") ///
+     posthead("\multicolumn{1}{c}{} " ///
+         "& \multicolumn{1}{c}{\textbf{Pre}} & \multicolumn{1}{c}{\textbf{Post}} " ///
+         "& \multicolumn{1}{c}{\textbf{Pre}} & \multicolumn{1}{c}{\textbf{Post}} \\" ///
+         "\midrule") ///
+     varlabels(relief_scale "Relief (mean)") ///
+ 	mgroups("SH complaints" "Non-SH complaints", pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) ///
+     nomtitles nonumbers noobs ///
+	 collabels(none) ///
+     cells(mean(fmt(3) label(""))) ///
+     postfoot("\bottomrule" "\end{tabular}")

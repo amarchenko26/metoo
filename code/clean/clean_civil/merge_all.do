@@ -478,12 +478,25 @@ foreach v of varlist * {
 /*******************************************************************************
 Increase in relief scale
 *******************************************************************************/
-tab post if eeoc == 1, sum(relief_scale)
+tab post if (eeoc == 1 | eeoc_filed == 1) & sh == 1, sum(relief_scale)
 
-// post = 0, mean 20.028352 
-// post = 1, mean 23.606253
+// post = 0, mean 21.244653 
+// post = 1, mean 33.277983
 
-// relief increased for eeoc cases after #MeToo
+tab post if (eeoc == 1 | eeoc_filed == 1) & sh == 0, sum(relief_scale)
+
+// post = 0, mean 19.984863
+// post = 1, mean 23.153402
+
+preserve 
+reghdfe relief_scale treat, absorb(basis_state ym_res_state) vce(cluster basis)
+restore
+
+preserve 
+reghdfe relief_scale treat if (eeoc == 1 | eeoc_filed == 1), absorb(basis_state ym_res_state) vce(cluster basis)
+restore
+
+save "$clean_data/eeoc_foia.dta", replace
 
 /*******************************************************************************
 Export all cases
