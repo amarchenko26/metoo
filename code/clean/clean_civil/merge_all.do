@@ -476,11 +476,21 @@ foreach v of varlist * {
 	}
 	
 /*******************************************************************************
+Increase in relief scale
+*******************************************************************************/
+tab post if eeoc == 1, sum(relief_scale)
+
+// post = 0, mean 20.028352 
+// post = 1, mean 23.606253
+
+// relief increased for eeoc cases after #MeToo
+
+/*******************************************************************************
 Export all cases
 *******************************************************************************/
 keep if eeoc==0
 save "$clean_data/clean_cases_all_juris.dta", replace
-
+// (2,806,779 observations deleted)
 
 keep if juris=="Employment"
 keep if sample_sh == 1 
@@ -489,6 +499,8 @@ keep if sample_sh == 1
 bysort state eeoc: egen earliest_date = min(common_file_date)
 bysort state eeoc: egen last_date = max(common_file_date)
 
+
 format earliest_date last_date %td
 
 save "$clean_data/clean_cases.dta", replace
+

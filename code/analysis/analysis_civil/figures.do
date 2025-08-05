@@ -7,8 +7,8 @@ use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
 loc selection 		= 0
-loc event 	   		= 0
-loc timeseries 		= 1
+loc event 	   		= 1
+loc timeseries 		= 0
 loc state_did  		= 0
 loc run_placebo 	= 0
 loc duration   		= 0
@@ -198,8 +198,8 @@ if `selection' == 1 {
 	preserve 
 	clear
 	
-	set obs 11
-	g omega = (_n - 1) / 10
+	set obs 10
+	g omega = (_n - 1) / 10 
 
 	insobs 1  
 	replace omega = 0.745 if _n == _N // Add method 1 omega
@@ -209,6 +209,12 @@ if `selection' == 1 {
 
 	insobs 1  
 	replace omega = 0.793 if _n == _N // Add method 3 omega
+	
+	// Add point at 0.95
+	insobs 1
+	replace omega = 0.95 if _n == _N
+	
+	sort omega 
 
 	g omega_c = 1-omega
 	g twfe 	  = 0.101
@@ -227,16 +233,16 @@ if `selection' == 1 {
 
 	#delimit ;
 	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
-			(line bc omega, lcolor(orange_red) lwidth(thick))
-			(line overlap omega, lp(solid) lwidth(thick) lcolor(ebblue))
+			(line bc omega, lp(dash) lcolor("dkgreen") lwidth(thick))
+			(line overlap omega, lp(solid) lwidth(thick) lcolor("dkgreen"))
 			(scatteri 0 0.745 .4 0.745, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)) 
     		(scatteri 0 0.793 .4 0.793, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash))
     		(scatteri 0 0.949 .4 0.949, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)),
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.025 .4 "Treatment effect" "on always reporters", color("ebblue") place(r) size(medium))
-			text(.175 .15 "Treatment effect" "on induced reporters", color("orange_red") place(r) size(medium))
+			text(.025 .43 "Treatment effect" "on AR", color("dkgreen") place(r) size(small))
+			text(.175 .18 "Treatment effect" "on IR", color("dkgreen") place(r) size(small))
 			text(.25 .6 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
 			text(.35 .71 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
 			text(.35 .8 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
@@ -258,13 +264,13 @@ if `selection' == 1 {
 		lwidth(thin) lcolor(gs5) mcolor(gs5) 
 		;
 	addplot: pcarrowi .05 0.5 .083 0.5 (12) " ",
-		lwidth(medthick) lcolor(ebblue) mcolor(ebblue) 
+		lwidth(medthick) lcolor(dkgreen) mcolor(dkgreen) 
 		;
 	addplot: pcarrowi .15 0.25 .12 0.25 (6) " ",
-		lwidth(medthick) lcolor(orange_red) mcolor(orange_red) 
+		lwidth(medthick) lcolor(dkgreen) mcolor(dkgreen) 
 		;
 	#delimit cr
-	graph export "$figures/omega.png", replace  
+ 	graph export "$figures/omega.png", replace  
 	restore
 
 
@@ -295,20 +301,20 @@ if `selection' == 1 {
 	sort omega
 
 	* Generate variables for shading the area 
-	gen shade_min = . 
-	gen shade_max = .
-	replace shade_min = 0 if inrange(omega, 0.745, .95)
-	replace shade_max = .4 if inrange(omega, 0.745, 0.95)
+// 	gen shade_min = . 
+// 	gen shade_max = .
+// 	replace shade_min = 0 if inrange(omega, 0.745, .95)
+// 	replace shade_max = .4 if inrange(omega, 0.745, 0.95)
 
 	#delimit ;
-	twoway 	(line bc omega, lcolor(orange_red) lwidth(thick)),
+	twoway 	(line bc omega, lp(dash) lcolor(orange_red) lwidth(thick)),
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
-			yline(0.086, lp(solid) lwidth(thick) lcolor(ebblue))
+			yline(0.086, lp(solid) lwidth(thick) lcolor(orange_red))
 			yline(0, lp(solid) lwidth(medium) lcolor(gs3))
 			ylabel(0(0.1)1)
 			legend(off) 
-			text(.23 .9 "Treatment effect" "for women" "always reporters", color("ebblue") place(r) size(medium))
+			text(.23 .9 "Treatment effect" "for women" "always reporters", color("orange_red") place(r) size(medium))
 			text(.6 .7 "Treatment effect" "for women" "induced reporters", color("orange_red") place(r) size(medium))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
@@ -334,14 +340,14 @@ if `selection' == 1 {
 	set obs 11
 	g omega = (_n - 1) / 10
 
-	insobs 1  
+	/* insobs 1  
 	replace omega = 0.234 if _n == _N // Add method 1 omega
 
 	insobs 1  
 	replace omega = 0.872 if _n == _N // Add method 2 omega
 
 	insobs 1  
-	replace omega = 0.910 if _n == _N // Add method 3 omega
+	replace omega = 0.910 if _n == _N // Add method 3 omega */
 
 	g omega_c = 1-omega
 	g twfe 	  = 0.119
@@ -353,29 +359,22 @@ if `selection' == 1 {
 	sort omega
 
 	* Generate variables for shading the area 
-	gen shade_min = . 
-	gen shade_max = .
-	replace shade_min = -.5 if inrange(omega, 0.22, .92)
-	replace shade_max = .5 if inrange(omega, 0.22, .92)
+// 	gen shade_min = . 
+// 	gen shade_max = .
+// 	replace shade_min = -.5 if inrange(omega, 0.22, .92)
+// 	replace shade_max = .5 if inrange(omega, 0.22, .92)
 	gen zero = 0 
 
 	#delimit ;
-	twoway  (rarea shade_min shade_max omega, color(gs14) fintensity(60))
-			(line bc omega, lcolor(orange_red) lwidth(thick))
+	twoway  (line bc omega, lp(dash) lcolor(ebblue) lwidth(thick))
 			(line overlap omega, lp(solid) lwidth(thick) lcolor(ebblue))
-			(line zero omega, lp(solid) lwidth(medium) lcolor(gs3))
-			(scatteri -.5 0.234 .5 0.234, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)) 
-    		(scatteri -.5 0.872 .5 0.872, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash))
-    		(scatteri -.5 0.910 .5 0.910, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)),
+			(line zero omega, lp(solid) lwidth(medium) lcolor(gs3)),
 			ytitle("Treatment effect (B-C)", size(medlarge)) 
 			xtitle("{&omega}{sup:M}", size(medlarge))
 			legend(off) 
 			ylabel(-.5(.1).5)
 			text(.25 .3 "Treatment effect for" "men always reporters", color("ebblue") place(r) size(medium))
-			text(-.2 .65 "Treatment effect" "for men" "induced reporters", color("orange_red") place(r) size(medium))
-			text(.4 .18 "{&omega}{sub:1}{sup:M}", color("gs3") place(r) size(medlarge))
-			text(.4 .815 "{&omega}{sub:2}{sup:M}", color("gs3") place(r) size(medlarge))
-			text(.4 .92 "{&omega}{sub:3}{sup:M}", color("gs3") place(r) size(medlarge))
+			text(-.2 .65 "Treatment effect" "for men" "induced reporters", color("ebblue") place(r) size(medium))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
@@ -389,10 +388,72 @@ if `selection' == 1 {
 			xsize(8)
 		;
 	#delimit cr
-	graph export "$figures/omega_men.png", replace  
+ 	graph export "$figures/omega_men.png", replace  
 	restore
-}
 
+
+
+	***************** COMBINED *****************
+	preserve 
+	clear 
+	
+	// Make omega grid
+	set obs 10
+	gen omega = (_n - 1)/10
+	
+  	insobs 1 
+  	replace omega = .95 if _n == _N 
+//  	sort omega 
+
+	// WOMEN
+	gen omega_c_women = 1 - omega
+	gen twfe_women = 0.123
+	gen overlap_women = 0.086
+	gen bc_women = (twfe_women - (omega * overlap_women)) / omega_c_women
+
+	// MEN
+	gen omega_c_men = 1 - omega
+	gen twfe_men = 0.119
+	gen overlap_men = 0.153
+	gen bc_men = (twfe_men - (omega * overlap_men)) / omega_c_men
+
+	// Add zero line
+	gen zero = 0
+	
+	#delimit ;
+	twoway  (line bc_men omega, lp(dash) lcolor(ebblue) lwidth(thick)) 
+			(line overlap_men omega, lp(solid) lp(solid) lwidth(thick) lcolor(ebblue)) 
+			(line bc_women omega, lp(dash) lcolor(orange_red) lwidth(thick)) 
+			(line overlap_women omega, lp(solid) lwidth(thick) lcolor(orange_red)),
+			ytitle("Treatment effect (B-C)", size(medlarge)) 
+			xtitle("{&omega}", size(medlarge)) 
+			legend(off) 
+			ylabel(-.6(0.2)1) 
+			text(.19 .945 "Treatment effect" "for men AR", color("ebblue") place(r) size(small)) 
+			text(-.23 .72 "Treatment effect" "for men IR", color("ebblue") place(r) size(small)) 
+			text(.008 .95 "Treatment effect" "for women AR", color("orange_red") place(r) size(small)) 
+			text(.5 .72 "Treatment effect" "for women IR", color("orange_red") place(r) size(small)) 
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
+				  .1 ".1"
+				   .2 ".2"
+				   .3 ".3"
+				   .4 ".4"
+				   .5 ".5"
+				   .6 ".6"
+				   .7 ".7"
+				   .8 ".8"
+				   .9 ".9"
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
+			xsize(8)
+		;
+	#delimit cr
+  	graph export "$figures/omega_combined.png", replace  
+	restore
+
+}
 
 /*******************************************************************************
 Event-study
@@ -443,8 +504,8 @@ if `event' == 1 {
 		local xlabel "`xlabel', labsize(medium))"
 
 		#delimit ;
-		coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
-			ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
 			yline(0, lp(dash)) // yline(`att', lcolor(grey) lwidth(medium) lp(dash))
 			ylabel(-0.1(0.05)0.25)
 			xline(7.5)
@@ -467,8 +528,8 @@ if `event' == 1 {
 	estimates store TWFE
 
 	#delimit ;
-	coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
-		ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
+	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+		ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
 		yline(0, lp(dash)) 	// yline(`att', lcolor(gray) lwidth(medium) lp(dash))
 		xline(6.5)
 		xtitle("Years relative to treatment", size(medium))
@@ -514,8 +575,8 @@ if `event' == 1 {
 	local xlabel "`xlabel', labsize(medium))"
 
 	#delimit ;
-	coefplot (TWFE, omitted baselevel msize(medlarge)), vertical
-		ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
+	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+		ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
 		yline(0, lp(dash)) 
 		ylabel(-0.1(0.1)0.4)
 		xline(7.5)
@@ -540,19 +601,13 @@ if `event' == 1 {
 		vce(cluster basis)
 	local att_diff = _b[treat_f]
 	local att_m    = _b[treat]
-	local att_f    = `att_diff' + `att_m'
+	
+	local att_diff_rounded = round(`att_diff', 0.001)
+	local att_m_rounded    = round(`att_m', 0.001)
+	local att_f_rounded = `att_diff_rounded' + `att_m_rounded'
 
-		* Calculate and round values
-	scalar att_m_rounded = round(_b[treat], 0.001)
-	scalar att_f_rounded = round(_b[treat_f] + _b[treat], 0.001)
-
-	* Convert to locals (as text) for graph labels or titles
-	local att_m = att_m_rounded
-	local att_f = att_f_rounded
-
-	* Format for display
-	local att_m_display : display %5.3f `att_m'
-	local att_f_display : display %5.3f `att_f'
+	local att_m_display: display %5.3f `att_m_rounded'
+	local att_f_display: display %5.3f `att_f_rounded'
 	
 	
 	reghdfe win ib7.event_f ib7.event, ///
@@ -604,9 +659,9 @@ if `event' == 1 {
 
 	#delimit ; 
 	coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9\coef10\coef11\coef12\coef13\coef14,
-	omitted baselevel label(Male) ciopts(recast(rcap) lwidth(.4) color(navy)))
+	omitted baselevel label(Male) mcolor(ebblue) ciopts(recast(rcap) lwidth(.5) color(ebblue)))
 	(coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24\coef25\coef26\coef27\coef28,
-	omitted baselevel label(Female) ciopts(recast(rcap) lwidth(.4) color(orange_red))),
+	omitted baselevel label(Female) mcolor(orange_red) ciopts(recast(rcap) lwidth(.5) color(orange_red))),
 		vertical
 		legend(ring(0) bplacement(nwest) size(medium))
 		offset(0)
@@ -687,12 +742,12 @@ if `event' == 1 {
 	
 	#delimit ; 
 	coefplot (coef1\coef2\coef3\coef4\coef5\coef6\coef7\coef8\coef9,
-	omitted baselevel label(Male) ciopts(recast(rcap) lwidth(.4) color(navy)))
+	omitted baselevel label(Male) mcolor(ebblue) ciopts(recast(rcap) lwidth(.5) color(ebblue)))
 	(coef10\coef11\coef12\coef13\coef14\coef15\coef16\coef17\coef18,
-	omitted baselevel label(Female) ciopts(recast(rcap) lwidth(.4) color(orange_red))),
+	omitted baselevel label(Female) mcolor(orange_red) ciopts(recast(rcap) lwidth(.5) color(orange_red))),
 		vertical
 		legend(ring(0) bplacement(nwest) size(medium))
-		ciopts(recast(rcap) lwidth(.4) color(orange_red)) 
+		ciopts(recast(rcap) lwidth(.5) color(orange_red)) 
 		offset(0)
 		yline(0, lp(dash)) ylabel(-1(0.2)1)
 		xline(7.5)
@@ -711,7 +766,7 @@ if `event' == 1 {
 	reghdfe win ib7.event, absorb(basis_state ym_res_state) vce(cluster basis)
 	honestdid, numpre(7) omit ///
 		coefplot xtitle(Mbar) ytitle(95% Robust CI)
-	graph export "$figures/honestdid_win.png", replace
+ 	graph export "$figures/honestdid_win.png", replace
 
 }
 
@@ -1101,3 +1156,4 @@ if `run_overlap_comparison' == 1 {
 	restore
 
 }
+
