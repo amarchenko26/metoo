@@ -6,8 +6,8 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
-loc selection 		= 0
-loc event 	   		= 1
+loc selection 		= 1
+loc event 	   		= 0
 loc timeseries 		= 0
 loc state_did  		= 0
 loc run_placebo 	= 0
@@ -238,11 +238,11 @@ if `selection' == 1 {
 			(scatteri 0 0.745 .4 0.745, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)) 
     		(scatteri 0 0.793 .4 0.793, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash))
     		(scatteri 0 0.949 .4 0.949, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)),
-			ytitle("Treatment effect (B-C)", size(medlarge)) 
+			ytitle("Treatment effect", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.025 .43 "Treatment effect" "on AR", color("dkgreen") place(r) size(small))
-			text(.175 .18 "Treatment effect" "on IR", color("dkgreen") place(r) size(small))
+			text(.025 .46 "ATT for AR", color("dkgreen") place(r) size(medsmall))
+			text(.175 .2 "ATT for IR", color("dkgreen") place(r) size(medsmall))
 			text(.25 .6 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
 			text(.35 .71 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
 			text(.35 .8 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
@@ -308,14 +308,14 @@ if `selection' == 1 {
 
 	#delimit ;
 	twoway 	(line bc omega, lp(dash) lcolor(orange_red) lwidth(thick)),
-			ytitle("Treatment effect (B-C)", size(medlarge)) 
+			ytitle("Treatment effect", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			yline(0.086, lp(solid) lwidth(thick) lcolor(orange_red))
 			yline(0, lp(solid) lwidth(medium) lcolor(gs3))
 			ylabel(0(0.1)1)
 			legend(off) 
-			text(.23 .9 "Treatment effect" "for women" "always reporters", color("orange_red") place(r) size(medium))
-			text(.6 .7 "Treatment effect" "for women" "induced reporters", color("orange_red") place(r) size(medium))
+			text(.23 .9 "ATT for women ARs", color("orange_red") place(r) size(medium))
+			text(.6 .7 "ATT for women IRs", color("orange_red") place(r) size(medium))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
@@ -369,12 +369,12 @@ if `selection' == 1 {
 	twoway  (line bc omega, lp(dash) lcolor(ebblue) lwidth(thick))
 			(line overlap omega, lp(solid) lwidth(thick) lcolor(ebblue))
 			(line zero omega, lp(solid) lwidth(medium) lcolor(gs3)),
-			ytitle("Treatment effect (B-C)", size(medlarge)) 
+			ytitle("Treatment effect", size(medlarge)) 
 			xtitle("{&omega}{sup:M}", size(medlarge))
 			legend(off) 
 			ylabel(-.5(.1).5)
-			text(.25 .3 "Treatment effect for" "men always reporters", color("ebblue") place(r) size(medium))
-			text(-.2 .65 "Treatment effect" "for men" "induced reporters", color("ebblue") place(r) size(medium))
+			text(.25 .3 "ATT for men ARs", color("ebblue") place(r) size(medium))
+			text(-.2 .65 "ATT for men IRs", color("ebblue") place(r) size(medium))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
@@ -425,14 +425,14 @@ if `selection' == 1 {
 			(line overlap_men omega, lp(solid) lp(solid) lwidth(thick) lcolor(ebblue)) 
 			(line bc_women omega, lp(dash) lcolor(orange_red) lwidth(thick)) 
 			(line overlap_women omega, lp(solid) lwidth(thick) lcolor(orange_red)),
-			ytitle("Treatment effect (B-C)", size(medlarge)) 
+			ytitle("Treatment effect", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge)) 
 			legend(off) 
 			ylabel(-.6(0.2)1) 
-			text(.19 .945 "Treatment effect" "for men AR", color("ebblue") place(r) size(small)) 
-			text(-.23 .72 "Treatment effect" "for men IR", color("ebblue") place(r) size(small)) 
-			text(.008 .95 "Treatment effect" "for women AR", color("orange_red") place(r) size(small)) 
-			text(.5 .72 "Treatment effect" "for women IR", color("orange_red") place(r) size(small)) 
+			text(.22 .91 "ATT for men AR", color("ebblue") place(r) size(medsmall)) 
+			text(.008 .91 "ATT for women AR", color("orange_red") place(r) size(medsmall)) 
+			text(-.23 .7 "ATT for men IR", color("ebblue") place(r) size(medsmall)) 
+			text(.5 .7 "ATT for women IR", color("orange_red") place(r) size(medsmall)) 
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1"
@@ -512,7 +512,7 @@ if `event' == 1 {
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
 			`xlabel' 
-			text(0.19 2 "ATT: `att'", size(medsmall) color(black))
+			text(0.19 2 "{&beta}{sup:CE}: `att'", size(medium) color(black))
 		;
 		#delimit cr
  		graph export "$figures/eventstudy_`y'.png", replace 
@@ -535,7 +535,7 @@ if `event' == 1 {
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on compensation ($1000s)", size(medium))
 		xlabel(1 "-6" 2 "-5" 3 "-4" 4 "-3" 5 "-2" 6 "-1" 7 "0" 8 "1" 9 "2" 10 "3" 11 "4", labsize(medium)) 
-		text(45 2 "ATT: `att'", size(medsmall) color(black))
+		text(45 2 "{&beta}{sup:CE}: `att'", size(medium) color(black))
 	;
 	#delimit cr
 				
@@ -583,7 +583,7 @@ if `event' == 1 {
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
-		text(.33 1.6 "ATT: `att'", size(medsmall) color(black))
+		text(.33 1.6 "{&beta}{sup:O}: `att'", size(medium) color(black))
 		;
 	#delimit cr
 				
@@ -670,8 +670,8 @@ if `event' == 1 {
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
-		text(.44 2.5 "ATT (Women): `att_f_display'", size(medsmall) color(black))
-		text(.55 2.2 "ATT (Men): `att_m_display'", size(medsmall) color(black))
+		text(.55 2.2 "{&beta}{sup:CE}{sub:M}: `att_m_display'", size(medium) color(black))
+		text(.42 2.2 "{&beta}{sup:CE}{sub:W}: `att_f_display'", size(medium) color(black))
 	;
 	#delimit cr
 				
@@ -754,8 +754,8 @@ if `event' == 1 {
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
-		text(.45 1.75 "ATT (Women): `att_f_display'", size(medsmall) color(black))
-		text(.55 1.6 "ATT (Men): `att_m_display'", size(medsmall) color(black))
+		text(.55 1.6 "{&beta}{sup:O}{sub:M}: `att_m_display'", size(medium) color(black))
+		text(.42 1.6 "{&beta}{sup:O}{sub:W}: `att_f_display'", size(medium) color(black))
 	;
 	#delimit cr
 	
