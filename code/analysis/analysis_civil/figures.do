@@ -5,15 +5,16 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc tabulations		= 0
-loc selection 		= 0
+loc tabulations		= 1
+loc selection 		= 1
 loc event 	   		= 1
-loc timeseries 		= 0
-loc state_did  		= 0
-loc run_placebo 	= 0
-loc duration   		= 0
-loc yhat			= 0
-loc run_overlap_comparison = 0
+loc timeseries 		= 1
+// loc state_did  		= 1
+// loc run_placebo 	= 1
+loc duration   		= 1
+// loc yhat			= 1
+// loc run_overlap_comparison = 1
+loc file_invariance = 1
 
 /*******************************************************************************
 Tabulations
@@ -274,125 +275,6 @@ if `selection' == 1 {
 	restore
 
 
-
-	***************** WOMEN *****************
-	preserve 
-	clear
-	
-	set obs 11
-	g omega = (_n - 1) / 10
-
-	/* insobs 1  
-	replace omega = 0.745 if _n == _N // Add method 1 omega
-
-	insobs 1  
-	replace omega = 0.949 if _n == _N // Add method 2 omega
-
-	insobs 1  
-	replace omega = 0.793 if _n == _N // Add method 3 omega */
-
-	g omega_c = 1-omega
-	g twfe 	  = 0.123
-	g overlap = 0.086
-
-	// TWFE = omega (A-C) + (1-omega) (B-C)
-	g bc = (twfe - (omega*overlap))/omega_c
-	
-	sort omega
-
-	* Generate variables for shading the area 
-// 	gen shade_min = . 
-// 	gen shade_max = .
-// 	replace shade_min = 0 if inrange(omega, 0.745, .95)
-// 	replace shade_max = .4 if inrange(omega, 0.745, 0.95)
-
-	#delimit ;
-	twoway 	(line bc omega, lp(dash) lcolor(orange_red) lwidth(thick)),
-			ytitle("Treatment effect (B-C)", size(medlarge)) 
-			xtitle("{&omega}", size(medlarge))
-			yline(0.086, lp(solid) lwidth(thick) lcolor(orange_red))
-			yline(0, lp(solid) lwidth(medium) lcolor(gs3))
-			ylabel(0(0.1)1)
-			legend(off) 
-			text(.23 .9 "Treatment effect" "for women" "always reporters", color("orange_red") place(r) size(medium))
-			text(.6 .7 "Treatment effect" "for women" "induced reporters", color("orange_red") place(r) size(medium))
-			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
-				   0 "0"
-				  .1 ".1" 
-				  .3 ".3"
-				  .5 ".5"
-				  .7 ".7"
-				  .9 ".9"
-				  1 "1"
-				  1.03 `" " " "Only" "Always" "Reporters""'
-				  1.06 " ", labsize(medsmall) noticks)
-			xsize(8)
-		;
-
-	#delimit cr
-	graph export "$figures/omega_women.png", replace  
-	restore
-
-	***************** MEN *****************
-	preserve 
-	clear
-	
-	set obs 11
-	g omega = (_n - 1) / 10
-
-	/* insobs 1  
-	replace omega = 0.234 if _n == _N // Add method 1 omega
-
-	insobs 1  
-	replace omega = 0.872 if _n == _N // Add method 2 omega
-
-	insobs 1  
-	replace omega = 0.910 if _n == _N // Add method 3 omega */
-
-	g omega_c = 1-omega
-	g twfe 	  = 0.119
-	g overlap = 0.153
-
-	// TWFE = omega (A-C) + (1-omega) (B-C)
-	g bc = (twfe - (omega*overlap))/omega_c
-	
-	sort omega
-
-	* Generate variables for shading the area 
-// 	gen shade_min = . 
-// 	gen shade_max = .
-// 	replace shade_min = -.5 if inrange(omega, 0.22, .92)
-// 	replace shade_max = .5 if inrange(omega, 0.22, .92)
-	gen zero = 0 
-
-	#delimit ;
-	twoway  (line bc omega, lp(dash) lcolor(ebblue) lwidth(thick))
-			(line overlap omega, lp(solid) lwidth(thick) lcolor(ebblue))
-			(line zero omega, lp(solid) lwidth(medium) lcolor(gs3)),
-			ytitle("Treatment effect (B-C)", size(medlarge)) 
-			xtitle("{&omega}{sup:M}", size(medlarge))
-			legend(off) 
-			ylabel(-.5(.1).5)
-			text(.25 .3 "Treatment effect for" "men always reporters", color("ebblue") place(r) size(medium))
-			text(-.2 .65 "Treatment effect" "for men" "induced reporters", color("ebblue") place(r) size(medium))
-			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
-				   0 "0"
-				  .1 ".1" 
-				  .3 ".3"
-				  .5 ".5"
-				  .7 ".7"
-				  .9 ".9"
-				  1 "1"
-				  1.03 `" " " "Only" "Always" "Reporters""'
-				  1.06 " ", labsize(medsmall) noticks)
-			xsize(8)
-		;
-	#delimit cr
- 	graph export "$figures/omega_men.png", replace  
-	restore
-
-
-
 	***************** COMBINED *****************
 	preserve 
 	clear 
@@ -458,16 +340,19 @@ if `selection' == 1 {
 /*******************************************************************************
 Event-study
 *******************************************************************************/
-loc outcomes "settle dismissed win court"
+loc outcomes "settle win court"
+// removed dismissed
 
 if `event' == 1 {
 
 	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
 	cap drop event event_f
-	g event 	    = years_to_treat_res * sh
-	g event_f 		= years_to_treat_res * sh * victim_f		
-	replace event   = event + `offset'
+	g event 	    = years_to_treat_res * sh  
+	g event_f 		= years_to_treat_res * sh * victim_f 	
+	replace event   = event + `offset' 
 	replace event_f = event_f + `offset'
+	
+// make sure ATT numbers are accurate by including all data points 
 	replace event = 1 if event == 0 
 	replace event_f = 1 if event_f == 0 
 // 	drop if event   == 0
@@ -518,29 +403,6 @@ if `event' == 1 {
  		graph export "$figures/eventstudy_`y'.png", replace 
 		estimates clear
 	}	
-
-	reghdfe relief_scale treat, absorb(basis_state ym_res_state) vce(cluster basis)
-	loc att: display %5.3f _b[treat]
-	
-	reghdfe relief_scale ib7.event, ///
-		absorb(basis_state ym_res_state) ///
-		vce(cluster basis) noconstant
-	estimates store TWFE
-
-	#delimit ;
-	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
-		ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
-		yline(0, lp(dash)) 	// yline(`att', lcolor(gray) lwidth(medium) lp(dash))
-		xline(6.5)
-		xtitle("Years relative to treatment", size(medium))
-		ytitle("Effect of MeToo on compensation ($1000s)", size(medium))
-		xlabel(1 "-6" 2 "-5" 3 "-4" 4 "-3" 5 "-2" 6 "-1" 7 "0" 8 "1" 9 "2" 10 "3" 11 "4", labsize(medium)) 
-		text(45 2 "ATT: `att'", size(medsmall) color(black))
-	;
-	#delimit cr
-				
- 	graph export "$figures/eventstudy_relief_scale.png", replace 
-	estimates clear
 
 	******** Overlap ********
 	reghdfe win treat if common_file_date < date("$metoo", "DMY"), ///
@@ -761,12 +623,6 @@ if `event' == 1 {
 	
  	graph export "$figures/eventstudy_win_female_overlap.png", replace 
 	estimates clear
-		
-	******** Rambachan & Roth (2021) for win ********
-	reghdfe win ib7.event, absorb(basis_state ym_res_state) vce(cluster basis)
-	honestdid, numpre(7) omit ///
-		coefplot xtitle(Mbar) ytitle(95% Robust CI)
- 	graph export "$figures/honestdid_win.png", replace
 
 }
 
@@ -825,269 +681,12 @@ if `timeseries' == 1 {
 	restore
 }
 
-/*******************************************************************************
-State-level DID 
-*******************************************************************************/
-
-if `state_did' == 1 {
-
-	** State sample
-	preserve 
-
-	// FWL regression
-	cap drop treat_tilde den num weights c_weights treat_weights sum_weight_by_state
-	reghdfe treat_sex, absorb(basis_state ym_res_state) vce(cluster basis) resid 
-	predict treat_tilde, residuals
-
-	// Calculate weights 
-	g num = treat_tilde  
-	egen den = total(treat_tilde * treat_tilde)
-	g weights = num / den
-	
-	// Check if weights created correctly 
-	egen treat_weights = total(weights) if treat_sex ==1 
-	sum treat_weights // should sum to 1 and they do 
-		
-	egen c_weights = total(weights) if treat_sex ==0 
-	sum c_weights // sum is -1
-	
-	// Range plot
-	bysort state_cat: egen t_weight_by_state = total(weights) if treat_sex == 1
-	bysort state_cat: egen c_weight_by_state = total(weights) if treat_sex == 0
-	bysort state_cat: egen sum_weight_by_state = total(weights)
-	
-	collapse (max) t_weight_by_state c_weight_by_state sum_weight_by_state, by(state)
-	sort sum_weight_by_state
-	gen order = _n
-	labmask order, values(state)
-	
-	twoway rspike t_weight_by_state c_weight_by_state order, ///
-	|| scatter t_weight_by_state order, m(T) mc(green) ///
-	|| scatter c_weight_by_state order, m(S) mc(red) ///
-	|| scatter sum_weight_by_state order, m(O) mc(black) ///
-		mlabel(state) mlabposition(3) ///
-		xlabel(, noticks nolabel nogrid) xtitle(" ") ///
-		legend(label(1 "") label(2 "Treated") label(3 "Control") label(4 "Sum"))
-	
-	graph export "$figures/state_range_weights.png", replace 
-	restore
-
-		
-	preserve 
-
-	label values state_did_sex state_cat
-	reghdfe win i.state_did_sex, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
-	eststo A
-
-	reghdfe win treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
-    loc att: display %5.4f _b[treat_sex]
-	
-	local my_blue "0 102 204"  
-	local my_red "220 20 60"
-	local my_purple "128 0 128"
-
-	#delimit ;
-	coefplot 
-		(A, keep(1.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // AK
-		(A, keep(6.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // CA
-		/* (A, keep(10.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // DE */
-		(A, keep(11.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // FL
-		(A, keep(14.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // HI
-		/* (A, keep(17.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // IL */
-		(A, keep(20.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // KY
-		(A, keep(22.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MA
-		(A, keep(25.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // MI
-		/* (A, keep(26.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // MN
-		(A, keep(29.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // MT
-		(A, keep(30.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // NC */
-		(A, keep(31.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // ND
-		(A, keep(37.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // NY
-		/* (A, keep(41.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))) // PA
-		(A, keep(43.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // RI
-		(A, keep(44.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // SC
-		(A, keep(47.state_did_sex) mcolor("`my_red'") ciopts(color("`my_red'"))) // TX
-		(A, keep(52.state_did_sex) mcolor("`my_blue'") ciopts(color("`my_blue'"))) // WA */
-		(A, keep(53.state_did_sex) mcolor("`my_purple'") ciopts(color("`my_purple'"))), // WI
-		drop(_cons)
-		vertical omitted 
-		legend(off)
-		mlabels(1.state_did_sex = 3 "AK"
-				6.state_did_sex = 3 "CA"
-				/* 10.state_did_sex = 3 "DE" */
-				11.state_did_sex = 3 "FL"
-				14.state_did_sex = 3 "HI" 
-				/* 17.state_did_sex = 3 "IL"  */
-				20.state_did_sex = 3 "KY" 
-				22.state_did_sex = 3 "MA" 
-				25.state_did_sex = 3 "MI"
-				/* 26.state_did_sex = 3 "MN"
-				29.state_did_sex = 3 "MT"
-				30.state_did_sex = 3 "NC" */
-				31.state_did_sex = 3 "ND"
-				37.state_did_sex = 3 "NY"				
-				/* 41.state_did_sex = 3 "PA"
-				43.state_did_sex = 3 "RI"
-				44.state_did_sex = 3 "SC"
-				47.state_did_sex = 3 "TX"
-				52.state_did_sex = 3 "WA" */
-				53.state_did_sex = 3 "WI")
-		ciopts(lwidth(thick) recast(rcap))
-		sort(, by(b))
-		yline(0, lcolor(black)) 
-		yline(`att', lcolor(grey) lwidth(medium) lp(dash))
-		ytitle("Treatment effect on P(win)", size(medium))
-		xtitle("State filed", size(medium))
-		xlabel(, noticks nolabel) //yscale(range(-.1 .5)) ylabel(-.1(.2).5, labsize(small))
-		note("Fixed effects: unit/state and year-month/state", size(small)) 
-		text(0.125 2.5 "Overall ATT: `att'")
-		;
-	#delimit cr
-
-    graph export "$figures/state_fx.png", replace    
-	restore
-}
-
-/*******************************************************************************
-Placebo coef plots 
-*******************************************************************************/
-
-/*******************************************************************************
-Placebo coef plots for outcome = win only
-*******************************************************************************/
-
-if `run_placebo' == 1 {
-
-	// General placebo tests
-	loc i 1
-	preserve
-		drop if basis == "Sex"
-		levelsof basis_cat, local(levels)
-
-		foreach l of local levels {
-			gen placebo_treat_`l' = (post == 1 & basis_cat == `l')
-		}
-
-		forvalues index = 1/6 {
-			reghdfe win placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-			eststo placebo_all_`i'
-			loc ++i
-		}
-	restore
-
-	// Single-basis placebo tests
-	loc i 1
-	preserve
-		drop if basis == "Sex" 
-		keep if multi_cat == 0
-		levelsof basis_cat, local(levels)
-
-		foreach l of local levels {
-			gen placebo_treat_`l' = (post == 1 & basis_cat == `l')
-		}
-
-		forvalues index = 1/6 {
-			reghdfe win placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-			eststo placebo_single_`i'
-			loc ++i
-		}
-	restore
-
-	// Overlap-only placebo tests
-	loc i 1
-	preserve
-		drop if basis == "Sex"
-		keep if common_file_date < date("$metoo", "DMY")
-		levelsof basis_cat, local(levels)
-
-		foreach l of local levels {
-			gen placebo_treat_`l' = (post == 1 & basis_cat == `l')
-		}
-		
-		forvalues index = 1/6 {
-			reghdfe win placebo_treat_`index', absorb(basis_state ym_res_state) vce(cluster basis)
-			eststo placebo_overlap_`i'
-			loc ++i
-		}
-	restore
-
-	// True effects
-	reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
-	eststo true_effect
-
-	reghdfe win treat if multi_cat == 0, absorb(basis_state ym_res_state) vce(cluster basis)
-	eststo true_effect_single
-
-	reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
-	eststo true_effect_overlap
-
-
-	* Plot all together by panel
-	#delimit ;
-	coefplot 
-		placebo_all_1 placebo_all_2 placebo_all_3 placebo_all_4 placebo_all_5 placebo_all_6 true_effect, bylabel(All complaints) 
-		||placebo_single_1 placebo_single_2 placebo_single_3 placebo_single_4 placebo_single_5 placebo_single_6 true_effect_single, bylabel(Single-basis) 
-		||placebo_overlap_1 placebo_overlap_2 placebo_overlap_3 placebo_overlap_4 placebo_overlap_5 placebo_overlap_6 true_effect_overlap, bylabel(Overlap only) 
-		|| , drop(_cons) 
-		byopts(xrescale legend(off))
-		ciopts(lwidth(thick) recast(rcap))
-		ylabel(1 "Age" 2 "Disability" 3 "Nationality" 4 "Race" 5 "Religion" 6 "Retaliation" 7 "SH (actual treatment)", labsize(medium))
-		xline(0, lc(gs8) lp(dash)) 
-		xlabel(-.15(.05).15, labsize(medium))
-		xtitle("Placebo Effect of MeToo on Complainant Win Probability", size(medium))
-		ytitle("Placebo treatment type", size(medium))
-	;
-	#delimit cr
-
-	graph export "$figures/placebo_win.png", replace
-	eststo clear
-	estimates clear
-}
-
 
 /*******************************************************************************
 Duration
 *******************************************************************************/
 
-if `duration' == 1{
-	
-	binscatter win duration , n(50) ///
-		xtitle("Duration)") ytitle("Probability of win")
-	graph export "$figures/duration_cause.png", replace 	
-
-	preserve 
-	keep if common_year == 2017
-	keep if overlap_all == 1
-	#delimit ;
-	twoway (kdensity duration if ym_filed == 684, lcolor(gray) fcolor(gray%0) recast(area))
-		   (kdensity duration if ym_filed == 685, lcolor(yellow) fcolor(yellow%0) recast(area))
-		   (kdensity duration if ym_filed == 686, lcolor(green) fcolor(green%0) recast(area))
-		   (kdensity duration if ym_filed == 687, lcolor(orange) fcolor(orange%0) recast(area))
-		   (kdensity duration if ym_filed == 688, lcolor(red) fcolor(red%0) recast(area))
-		   (kdensity duration if ym_filed == 689, lcolor(navy) fcolor(navy%0) recast(area))
-		   (kdensity duration if ym_filed == 690, lcolor(yellow) fcolor(yellow%0) recast(area))
-		   (kdensity duration if ym_filed == 691, lcolor(lime) fcolor(lime%0) recast(area))
-		   (kdensity duration if ym_filed == 692, lcolor(teal) fcolor(teal%40) recast(area))
-		   (kdensity duration if ym_filed == 693, lcolor(maroon) fcolor(maroon%0) recast(area))
-		   (kdensity duration if ym_filed == 694, lcolor(red) fcolor(red%0) recast(area))
-		   (kdensity duration if ym_filed == 695, lcolor(pink) fcolor(pink%0) recast(area))
-		   , legend(ring(0) pos(2) order(12 11 10 9 8 7 6 5 4 3 2 1)
-					label(1 "Jan") label(2 "Feb") label(3 "March")
-					label(4 "April") label(5 "May") label(6 "June")
-					label(7 "July") label(8 "Aug") label(9 "Sept")
-					label(10 "Oct") label(11 "Nov") label(12 "Dec"))
-			 xtitle("Duration", size(medium)) ytitle("Density by month filed", size(medium))
-			 note("Kruskal–Wallis test where Null is equality of distributions: p < 0.336");
-	#delimit cr
-
-	graph export "$figures/duration_by_file.png", replace
-	restore
-
-	* Keep only overlap complaints
-	graph bar (percent), over(file_month, label(angle(45))) ///
-		bar(1, color(navy%70))                ///
-		title("All cases filed by calendar month") ///
-		ytitle("Percent of cases") legend(off)
-	graph export "$figures/month.png", replace
+if `duration' == 1 {
 
 	graph bar (percent) if overlap_all == 1, over(file_month, label(angle(45))) ///
 		bar(1, color(navy%70))                ///
@@ -1103,57 +702,29 @@ if `duration' == 1{
 
 
 /*******************************************************************************
-Overlap comparison figures  
+Filing invariance
 *******************************************************************************/
-// Take cases filed before MeToo, some overlap and some don't
-// for every month in 2015, 2016, and 2017
-// we take the complaints that did and didn't overlap in each month 
-// we sum the % that are sex_cases 
+if `file_invariance' == 1 {
+	
+// 6 months post	
+	
+	keep if overlap_all == 1
+	
+	collapse (mean) win, by(ym_res sh)
+	list
+	
+	keep if inrange(ym_res, tm(2017m10), tm(2018m4))
 
-if `run_overlap_comparison' == 1 {
-
-	// From 2016m1 to 2017m10
-	forvalues i = 672(1)693 {
-		sum sex_cases if overlap_all == 1 & ym_filed == `i'
-		sum sex_cases if overlap_all == 0 & ym_filed == `i'
-	}
-
-	preserve
-	keep if ym_filed < 693 
-	collapse (mean) avg_sex_cases = sex_cases, by(ym_filed overlap_all)
-
-	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
-		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
-		legend(label(1 "Resolved before") label(2 "Overlap")) ///
-		xtitle("Year-month filed") ytitle("% sex cases") ///
-		title("Trends in overlap and non-overlap cases filed in the same year-month") 
-	graph export "$figures/overlap_balance_sex.png", replace
-	restore
-
-	preserve
-	keep if ym_filed < 693 
-	collapse (mean) avg_sex_cases = win, by(ym_filed overlap_all)
-
-	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
-		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
-		legend(label(1 "Resolved before") label(2 "Overlap")) ///
-		xtitle("Year-month filed") ytitle("Win rate") ///
-		title("% sex cases in overlap and non-overlap cases filed in the same year-month") 
-	graph export "$figures/overlap_balance_win.png", replace
-	restore
-
-
-	preserve
-	keep if ym_filed < 693 
-	collapse (mean) avg_sex_cases = duration, by(ym_filed overlap_all)
-
-	twoway (line avg_sex_cases ym_filed if overlap_all==0, lcolor(blue)) ///
-		(line avg_sex_cases ym_filed if overlap_all==1, lcolor(red)), ///
-		legend(label(1 "Resolved before") label(2 "Overlap")) ///
-		xtitle("Year-month filed") ytitle("Duration") ///
-		title("% sex cases in overlap and non-overlap cases filed in the same year-month") 
-	graph export "$figures/overlap_balance_duration.png", replace
-	restore
+	
+	twoway (line win ym_res if sh == 1, lcolor(green) lwidth(medthick) lpattern(solid)) ///
+		(line win ym_res if sh == 0, lcolor(green) lwidth(medthick) lpattern(shortdash)), ///
+		legend(label(1 "SH Case") label(2 "Non-SH Case") size(medsmall)) ///
+		ylabel(0(.1)1, angle(horizontal) labsize(medsmall)) ///
+		xlabel(#7, format(%tmMon_CCYY) angle(45) labsize(medsmall)) ///
+		xtitle("Resolution Date", size(medlarge)) ///
+		ytitle("Win Rate", size(medlarge)) ///
+		
+ 	graph export "$figures/filing_invariance.png", replace 
+	estimates clear
 
 }
-
