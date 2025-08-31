@@ -4,18 +4,15 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did_win	 		= 0
-loc run_overlap_win		= 0
-loc run_did_outcomes 	 = 0
-loc run_overlap_outcomes = 0
-loc overlap_placebo 	= 0
-loc run_overlap_season  = 0
-loc run_did_sex	 		= 0
-loc run_did_robust 		= 0
-loc run_did_alljuris 	= 0
-loc run_summary  		= 0
-loc run_overlap_balance = 0
-loc run_unit   			= 0
+loc run_did_win	 		= 1
+loc run_overlap_win		= 1
+loc run_did_outcomes 	 = 1
+loc run_overlap_outcomes = 1
+loc run_overlap_season  = 1
+loc run_did_robust 		= 1
+loc run_did_alljuris 	= 1
+loc run_summary  		= 1
+loc run_overlap_balance = 1
 
 
 /*******************************************************************************
@@ -469,98 +466,6 @@ Comparison by filing season
 	di "All Overlap TWFE: " %5.3f `twfe_all_overlap'
 	di "All Overlap Male ATT: " %5.3f `all_overlap_m'
 	di "All Overlap Female ATT: " %5.3f `all_overlap_f'
-
-
-
-/*******************************************************************************
-DiD with Sex as treated
-*******************************************************************************/
-if `run_did_sex' == 1 {
-
-	preserve 
-	use "$clean_data/clean_cases_all_juris.dta", replace
-	keep if juris == "Employment" // Only employment cases
-
-	reghdfe win treat_sex, absorb(basis_state ym_res_state) vce(cluster basis)
-	eststo s1
-	qui estadd loc ut "\checkmark", replace
-	qui: sum win if treat_sex == 0
-	estadd scalar control_mean = `r(mean)'
-
-	reghdfe win treat_sex if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
-	eststo s2
-	qui estadd loc ut "\checkmark", replace
-	qui: sum win if treat_sex == 0 & victim_f != .
-	estadd scalar control_mean = `r(mean)'
-
-	reghdfe win treat_sex treat_sex_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
-	eststo s3
-	qui estadd loc ut "\checkmark", replace
-	qui estadd loc ut_f "\checkmark", replace
-	qui: sum win if treat_sex_f == 0
-	estadd scalar control_mean = `r(mean)'
-
-	#delimit ;	
-	esttab s1 s2 s3 using "$tables/did_sex.tex", style(tex) replace 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
-		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\midrule") 
-		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f) 
-		mlabel(none) nomtitles nonumbers
-		stats(ut ut_f N r2 control_mean, 
-			label("Unit and Time $\times$ State FE" "Unit and Time $\times$ State $\times$ Female FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3)) 
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01) 
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule") 
-		postfoot("\bottomrule" "\end{tabular}");
-	;
-	#delimit cr
-	estimates clear
-	eststo clear
-	restore
-
-	preserve 
-	use "$clean_data/clean_cases_all_juris.dta", replace
-	keep if juris == "Employment" // Only employment cases
-
-	reghdfe win treat_sex if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
-	eststo s1
-	qui estadd loc ut "\checkmark", replace
-	qui: sum win if treat_sex == 0
-	estadd scalar control_mean = `r(mean)'
-
-	reghdfe win treat_sex if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
-	eststo s2
-	qui estadd loc ut "\checkmark", replace
-	qui: sum win if treat_sex == 0 & victim_f != .
-	estadd scalar control_mean = `r(mean)'
-
-	reghdfe win treat_sex treat_sex_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
-	eststo s3
-	qui estadd loc ut "\checkmark", replace
-	qui estadd loc ut_f "\checkmark", replace
-	qui: sum win if treat_sex_f == 0
-	estadd scalar control_mean = `r(mean)'
-
-	#delimit ;	
-	esttab s1 s2 s3 using "$tables/did_sex_overlap.tex", style(tex) replace 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
-		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\midrule") 
-		varlabels(treat_sex "Sex $\times$ Post" treat_sex_f "Sex $\times$ Post $\times$ Female") keep(treat_sex treat_sex_f) 
-		mlabel(none) nomtitles nonumbers
-		stats(ut ut_f N r2 control_mean, 
-			label("Unit and Time $\times$ State FE" "Unit and Time $\times$ State $\times$ Female FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3)) 
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01) 
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule") 
-		postfoot("\bottomrule" "\end{tabular}");
-	;
-	#delimit cr
-	estimates clear
-	eststo clear
-	restore
-}
 
 
 /*******************************************************************************
@@ -1078,121 +983,3 @@ if `run_overlap_balance' == 1 {
         wide(mean diff pval)
 	restore
 }
-
-/*******************************************************************************
-Unit trends 
-*******************************************************************************/
-
-if `run_unit' == 1 {
-
-	reghdfe win treat, absorb(basis_state ym_res_state ym_res_state#basis_state) vce(cluster basis)
-	eststo s1
-	qui estadd loc ut "\checkmark", replace
-	qui estadd loc unit "\checkmark", replace
-	qui: sum win if treat == 0
-	estadd scalar control_mean = `r(mean)'
-
-	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state ym_res_state#basis_state) vce(cluster basis)
-	eststo s2
-	qui estadd loc ut "\checkmark", replace
-	qui estadd loc unit "\checkmark", replace
-	qui: sum win if treat == 0 & victim_f != .
-	estadd scalar control_mean = `r(mean)'
-
-	reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f (basis_cat##state_cat##victim_f)#ym_res) vce(cluster basis)
-	eststo s3
-	qui estadd loc ut_f "\checkmark", replace
-	qui estadd loc unit_f "\checkmark", replace
-	qui: sum win if treat_f == 0
-	estadd scalar control_mean = `r(mean)'
-	
-		#delimit ;	
-	esttab s1 s2 s3 using "$tables/sdid.tex", style(tex) replace 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
-		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\midrule") 
-		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
-		mlabel(none) nomtitles nonumbers
-		stats(ut unit ut_f unit_f N r2, label("Unit and Time $\times$ State FE" "Unit $\times$ Time $\times$ State FE" "Unit and Time $\times$ Female $\times$ State FE" "Unit $\times$ Time $\times$ Female $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01) 
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule") 
-		postfoot("\bottomrule" "\end{tabular}");
-
-	#delimit cr
-	estimates clear
-	eststo clear
-
-
-	reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state ym_res_state#basis_state) vce(cluster basis)
-	eststo s1
-	qui estadd loc ut "\checkmark", replace
-	qui estadd loc unit "\checkmark", replace
-	qui: sum win if treat == 0
-	estadd scalar control_mean = `r(mean)'
-
-	reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state ym_res_state#basis_state) vce(cluster basis)
-	eststo s2
-	qui estadd loc ut "\checkmark", replace
-	qui estadd loc unit "\checkmark", replace
-	qui: sum win if treat == 0 & victim_f != .
-	estadd scalar control_mean = `r(mean)'
-
-	reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f (basis_cat##state_cat##victim_f)#ym_res) vce(cluster basis)
-	eststo s3
-	qui estadd loc ut_f "\checkmark", replace
-	qui estadd loc unit_f "\checkmark", replace
-	qui: sum win if treat_f == 0
-	estadd scalar control_mean = `r(mean)'
-	
-		#delimit ;	
-	esttab s1 s2 s3 using "$tables/sdid_overlap.tex", style(tex) replace 
-		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
-		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
-				"\midrule") 
-		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
-		mlabel(none) nomtitles nonumbers
-		stats(ut unit ut_f unit_f N r2, label("Unit and Time $\times$ State FE" "Unit $\times$ Time $\times$ State FE" "Unit and Time $\times$ Female $\times$ State FE" "Unit $\times$ Time $\times$ Female $\times$ State FE" `"N"' `" \(R^{2}\)"') fmt(3 3 3 3 %9.0fc 3))
-		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01) 
-		cells("b(fmt(3)star)" "se(fmt(3)par)") 
-		prefoot("\\" "\midrule") 
-		postfoot("\bottomrule" "\end{tabular}");
-
-	#delimit cr
-	estimates clear
-	eststo clear
-}
-
-/*******************************************************************************
-EEOC foia
-*******************************************************************************/
-use "$clean_data/eeoc_foia.dta", clear
-
-keep if eeoc_foia == 1
-
-
- estpost summarize relief_scale if sh == 1 & post == 0
- eststo sh_pre
-
- estpost summarize relief_scale if sh == 1 & post == 1
- eststo sh_post
-
- estpost summarize relief_scale if sh == 0 & post == 0
- eststo non_pre
-
- estpost summarize relief_scale if sh == 0 & post == 1
- eststo non_post
-
- // Output LaTeX table with grouped columns and clean headers
- esttab sh_pre sh_post non_pre non_post using "$tables/eeoc_relief.tex", style(tex) replace ///
-     prehead("\begin{tabular}{lcccc}" "\toprule") ///
-     posthead("\multicolumn{1}{c}{} " ///
-         "& \multicolumn{1}{c}{\textbf{Pre}} & \multicolumn{1}{c}{\textbf{Post}} " ///
-         "& \multicolumn{1}{c}{\textbf{Pre}} & \multicolumn{1}{c}{\textbf{Post}} \\" ///
-         "\midrule") ///
-     varlabels(relief_scale "Relief (mean)") ///
- 	mgroups("SH complaints" "Non-SH complaints", pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) ///
-     nomtitles nonumbers noobs ///
-	 collabels(none) ///
-     cells(mean(fmt(3) label(""))) ///
-     postfoot("\bottomrule" "\end{tabular}")
