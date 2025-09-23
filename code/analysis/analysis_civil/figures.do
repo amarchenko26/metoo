@@ -640,8 +640,7 @@ if `duration' == 1 {
 
 	graph bar (percent) if overlap_all == 1, over(file_month, label(angle(45))) ///
 		bar(1, color(navy%70))                ///
-		title("Overlap cases filed by calendar month") ///
-		ytitle("Percent of cases") legend(off)
+		ytitle("Percent of cases", size(medium)) legend(off) 
 	graph export "$figures/month_overlap.png", replace
 
 	// we see 
