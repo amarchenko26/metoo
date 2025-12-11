@@ -11,6 +11,7 @@ loc event 	   		= 1
 loc timeseries 		= 1
 loc duration   		= 1
 loc file_invariance = 1
+loc fake_win        = 1
 
 /*******************************************************************************
 Tabulations
@@ -640,8 +641,7 @@ if `duration' == 1 {
 
 	graph bar (percent) if overlap_all == 1, over(file_month, label(angle(45))) ///
 		bar(1, color(navy%70))                ///
-		title("Overlap cases filed by calendar month") ///
-		ytitle("Percent of cases") legend(off)
+		ytitle("Percent of cases", size(medium)) legend(off) 
 	graph export "$figures/month_overlap.png", replace
 
 	// we see 
@@ -678,3 +678,55 @@ if `file_invariance' == 1 {
 
 }
 
+/*******************************************************************************
+Fake win
+*******************************************************************************/
+
+if `fake_win' == 1 {
+	
+	// first regression: fake_win
+	
+	set seed 1 
+	count if post == 1 & court == 1 & sh == 1 //18,984
+	local N = r(N)
+	
+	local C = round(.007 * `N')
+	display `C'
+	
+	// generate random numbers for cases that match criteria 
+	gen random = runiform() if post == 1 & court == 1 & sh == 1
+	
+	// sort in order of randomly asisgned numbers
+	sort post court sh random
+	
+	// initialize fake_win variable 
+	gen fake_win = . 
+	
+	// all win == 1 cases are also fake_win == 1
+	replace fake_win = 1 if win == 1
+	replace fake_win = 0 if win == 0
+	
+	// add 0.7% of post/court/sh cases
+	by post court sh: replace fake_win = 1 if post == 1 & court == 1 & sh == 1 & _n <= `C'
+	
+	// run regression
+	preserve 
+	reghdfe fake_win treat, absorb(basis_state ym_res_state) vce(cluster basis) // .1022696  
+	restore 
+	
+	
+	// second regression: fake_win2 
+	
+	gen fake_win2 = . 
+	
+	replace fake_win2 = 1 if win == 1
+	replace fake_win2 = 0 if win == 0
+	
+	by post court sh: replace fake_win2 = 0 if post == 1 & court == 1 & sh == 1 & _n <= `C'
+	
+	// run regression
+	preserve 
+	reghdfe fake_win2 treat, absorb(basis_state ym_res_state) vce(cluster basis) // .0999922
+	restore 
+		
+} 
