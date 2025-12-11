@@ -6,11 +6,11 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 1
-loc selection 		= 1
-loc event 	   		= 1
-loc timeseries 		= 1
-loc duration   		= 1
-loc file_invariance = 1
+loc selection 		= 0
+loc event 	   		= 0
+loc timeseries 		= 0
+loc duration   		= 0
+loc file_invariance = 0
 
 /*******************************************************************************
 Tabulations
@@ -119,6 +119,7 @@ if `tabulations' == 1 {
 	gen omega_1 = sex_pre_metoo/(sex_post_metoo/0.989)
 	global omega_1 = omega_1
 	tab omega_1
+	stop
 	drop *metoo
 
 	// Male complainants as share of total sex complaints after MeToo: -.3072776 when run on Feb 26, 2025
@@ -306,10 +307,10 @@ if `event' == 1 {
 	******** All outcomes ********
 	foreach y in `outcomes' {
 		
-		reghdfe `y' treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe `y' treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
 		loc att: display %5.3f _b[treat]
 		
-		reghdfe `y' ib7.event, absorb(basis_state ym_res_state) vce(cluster basis) noconstant
+		reghdfe `y' ib7.event, absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
 		estimates store TWFE
 		
 		// Create dynamic xlabel with offset adjustment
@@ -335,9 +336,10 @@ if `event' == 1 {
 
 		#delimit ;
 		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
 			ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
 			yline(0, lp(dash)) // yline(`att', lcolor(grey) lwidth(medium) lp(dash))
-			ylabel(-0.1(0.05)0.25)
+			ylabel(-0.1(0.1)0.4)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
@@ -353,12 +355,12 @@ if `event' == 1 {
 	******** Overlap ********
 	reghdfe win treat if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_state ym_res_state) ///
-		vce(cluster basis)
+		vce(cluster basis_state)
 	loc att: display %5.3f _b[treat]
 	
 	reghdfe win ib7.event if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_state ym_res_state) ///
-		vce(cluster basis) noconstant
+		vce(cluster basis_state) noconstant
 	estimates store TWFE
 
 	// Create dynamic xlabel with offset adjustment
@@ -384,6 +386,7 @@ if `event' == 1 {
 
 	#delimit ;
 	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+				levels(95)
 		ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
 		yline(0, lp(dash)) 
 		ylabel(-0.1(0.1)0.4)
@@ -406,7 +409,7 @@ if `event' == 1 {
 
 	reghdfe win treat_f treat, ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
-		vce(cluster basis)
+		vce(cluster basis_state)
 	local att_diff = _b[treat_f]
 	local att_m    = _b[treat]
 	
@@ -420,7 +423,7 @@ if `event' == 1 {
 	
 	reghdfe win ib7.event_f ib7.event, ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
-		vce(cluster basis) noconstant
+		vce(cluster basis_state) noconstant
 	estimates store full
 
 	// Create dynamic xlabel with offset adjustment
@@ -471,6 +474,7 @@ if `event' == 1 {
 	(coef15\coef16\coef17\coef18\coef19\coef20\coef21\coef22\coef23\coef24\coef25\coef26\coef27\coef28,
 	omitted baselevel label(Female) mcolor(orange_red) ciopts(recast(rcap) lwidth(.5) color(orange_red))),
 		vertical
+					levels(95)
 		legend(ring(0) bplacement(nwest) size(medium))
 		offset(0)
 		yline(0, lp(dash)) ylabel(-1(0.2)1)
@@ -489,7 +493,7 @@ if `event' == 1 {
 	******** Female OVERLAP ********
 	reghdfe win treat_f treat if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
-		vce(cluster basis)
+		vce(cluster basis_state)
 	local att_diff = _b[treat_f]
 	local att_m    = _b[treat]
 	local att_f    = `att_diff' + `att_m'
@@ -503,7 +507,7 @@ if `event' == 1 {
 
 	reghdfe win ib7.event_f ib7.event if common_file_date < date("$metoo", "DMY"), ///
 		absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) ///
-		vce(cluster basis) noconstant
+		vce(cluster basis_state) noconstant
 	estimates store full
 
 	// Create dynamic xlabel with offset adjustment
@@ -554,6 +558,7 @@ if `event' == 1 {
 	(coef10\coef11\coef12\coef13\coef14\coef15\coef16\coef17\coef18,
 	omitted baselevel label(Female) mcolor(orange_red) ciopts(recast(rcap) lwidth(.5) color(orange_red))),
 		vertical
+		levels(95)
 		legend(ring(0) bplacement(nwest) size(medium))
 		ciopts(recast(rcap) lwidth(.5) color(orange_red)) 
 		offset(0)
@@ -650,6 +655,16 @@ if `duration' == 1 {
 
 }
 
+graph bar (percent), ///
+    over(file_month, label(angle(45))) ///
+    over(overlap_all, relabel(1 "No overlap" 2 "Overlap")) ///
+    bar(1, color(gs10)) ///
+    bar(2, color(navy%70)) ///
+    title("Overlap cases filed by calendar month") ///
+    ytitle("Percent of cases") ///
+    legend(order(1 "No overlap" 2 "Overlap"))
+
+	
 /*******************************************************************************
 Filing invariance
 *******************************************************************************/

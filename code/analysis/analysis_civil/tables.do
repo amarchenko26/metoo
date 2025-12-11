@@ -4,12 +4,12 @@ Tables for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc run_did_win	 		= 1
-loc run_overlap_win		= 1
-loc run_did_outcomes 	 = 1
-loc run_overlap_outcomes = 1
-loc run_overlap_season  = 1
-loc run_did_robust 		= 1
+loc run_did_win	 		= 0
+loc run_overlap_win		= 0
+loc run_did_outcomes 	 = 0
+loc run_overlap_outcomes = 0
+loc run_overlap_season  = 0
+loc run_did_robust 		= 0
 loc run_did_alljuris 	= 1
 loc run_summary  		= 1
 loc run_overlap_balance = 1
@@ -21,19 +21,19 @@ Win-only Main DID
 
 if `run_did_win' == 1 {
 	preserve 
-	reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s1
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s2
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0 & victim_f != .
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	eststo s3
 	qui estadd loc ut "\checkmark", replace
 	qui estadd loc ut_f "\checkmark", replace
@@ -68,19 +68,19 @@ Win-only Overlap DID
 
 if `run_overlap_win' == 1 {
 
-	reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s1
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s2
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0 & victim_f != .
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	eststo s3
 	qui estadd loc ut "\checkmark", replace
 	qui estadd loc ut_f "\checkmark", replace
@@ -120,21 +120,21 @@ if `run_did_outcomes' == 1 {
 	preserve 
 	foreach y of local outcome_vars {
         
-        reghdfe ``y'' treat, absorb(basis_state ym_res_state) vce(cluster basis)
+        reghdfe ``y'' treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
         eststo s`i'
         qui estadd loc ut "\checkmark", replace
         qui: sum ``y'' if treat == 0
         estadd scalar control_mean = `r(mean)'
         loc ++i
 
-        reghdfe ``y'' treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+        reghdfe ``y'' treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
         eststo s`i'
         qui estadd loc ut "\checkmark", replace
         qui: sum ``y'' if treat == 0 & victim_f != .
         estadd scalar control_mean = `r(mean)'
         loc ++i
 
-        reghdfe ``y'' treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+        reghdfe ``y'' treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
         eststo s`i'
         qui estadd loc ut "\checkmark", replace
         qui estadd loc ut_f "\checkmark", replace
@@ -182,21 +182,21 @@ if `run_overlap_outcomes' == 1 {
 	preserve 
 	foreach y of local outcome_vars {
         
-        reghdfe ``y'' treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+        reghdfe ``y'' treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
         eststo s`i'
         qui estadd loc ut "\checkmark", replace
         qui: sum ``y'' if treat == 0
         estadd scalar control_mean = `r(mean)'
         loc ++i
 
-        reghdfe ``y'' treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+        reghdfe ``y'' treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
         eststo s`i'
         qui estadd loc ut "\checkmark", replace
         qui: sum ``y'' if treat == 0 & victim_f != .
         estadd scalar control_mean = `r(mean)'
         loc ++i
 
-        reghdfe ``y'' treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+        reghdfe ``y'' treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
         eststo s`i'
         qui estadd loc ut "\checkmark", replace
         qui estadd loc ut_f "\checkmark", replace
@@ -238,19 +238,19 @@ DiD overlap - by season
 
 if `run_overlap_season' == 1 {
 
-	reghdfe win treat if file_season == 4 & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 4 & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s1
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat if file_season == 4 & victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 4 & victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s2
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0 & victim_f != .
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat treat_f if file_season == 4 &common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if file_season == 4 &common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	eststo s3
 	qui estadd loc ut "\checkmark", replace
 	qui estadd loc ut_f "\checkmark", replace
@@ -274,19 +274,19 @@ if `run_overlap_season' == 1 {
 	estimates clear
 	eststo clear
 
-	reghdfe win treat if file_season == 1 & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 1 & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s1
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat if file_season == 1 & victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 1 & victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s2
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0 & victim_f != .
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat treat_f if file_season == 1 & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if file_season == 1 & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	eststo s3
 	qui estadd loc ut "\checkmark", replace
 	qui estadd loc ut_f "\checkmark", replace
@@ -309,19 +309,19 @@ if `run_overlap_season' == 1 {
 	estimates clear
 	eststo clear
 
-	reghdfe win treat if file_season == 2 & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 2 & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s1
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat if file_season == 2 & victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 2 & victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s2
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0 & victim_f != .
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat treat_f if file_season == 2 & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if file_season == 2 & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	eststo s3
 	qui estadd loc ut "\checkmark", replace
 	qui estadd loc ut_f "\checkmark", replace
@@ -344,19 +344,19 @@ if `run_overlap_season' == 1 {
 	estimates clear
 	eststo clear
 
-	reghdfe win treat if file_season == 3 & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 3 & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s1
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat if file_season == 3 & victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 3 & victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s2
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0 & victim_f != .
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat treat_f if file_season == 3 & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if file_season == 3 & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	eststo s3
 	qui estadd loc ut "\checkmark", replace
 	qui estadd loc ut_f "\checkmark", replace
@@ -387,56 +387,56 @@ Comparison by filing season
 *******************************************************************************/
 
 // Winter 
-	reghdfe win treat if file_season == 4 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 4 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 	loc twfe_winter: display %5.3f _b[treat]
 
-	reghdfe win treat treat_f if file_season == 4 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if file_season == 4 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	local winter_diff = round(_b[treat_f], 0.001)
 	local winter_m = round(_b[treat], 0.001)
 	local winter_f = `winter_m' + `winter_diff'
 
 // Spring
-	reghdfe win treat if file_season == 1 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 1 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 	loc twfe_spring: display %5.3f _b[treat]
 	
-	reghdfe win treat treat_f if file_season == 1 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if file_season == 1 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	local spring_diff = round(_b[treat_f], 0.001)
 	local spring_m = round(_b[treat], 0.001)
 	local spring_f = `spring_diff' + `spring_m'
 
 
 // Summer 
-	reghdfe win treat if file_season == 2 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 2 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 	loc twfe_summer: display %5.3f _b[treat]
 	
-	reghdfe win treat treat_f if file_season == 2 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if file_season == 2 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	local summer_diff = round(_b[treat_f], 0.001)
 	local summer_m = round(_b[treat], 0.001)
 	local summer_f = `summer_diff' + `summer_m'
 
 // Fall
-	reghdfe win treat if file_season == 3 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if file_season == 3 & victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 	loc twfe_fall: display %5.3f _b[treat]
 	
-	reghdfe win treat treat_f if file_season == 3 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if file_season == 3 & victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	local fall_diff = round(_b[treat_f], 0.001)
 	local fall_m = round(_b[treat], 0.001)
 	local fall_f = `fall_diff' + `fall_m'
 	
 // All 
-	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 	loc twfe_all: display %5.3f _b[treat]
 
-	reghdfe win treat treat_f if victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if victim_f != ., absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	local all_diff = round(_b[treat_f], 0.001)
 	local all_m = round(_b[treat], 0.001)
 	local all_f = `all_m' + `all_diff'
 	
 // All Overlap 
-	reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	loc twfe_all_overlap: display %5.3f _b[treat]
 
-	reghdfe win treat treat_f if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	local all_overlap_diff = round(_b[treat_f], 0.001)
 	local all_overlap_m = round(_b[treat], 0.001)
 	local all_overlap_f = `all_overlap_m' + `all_overlap_diff'
@@ -479,7 +479,7 @@ if `run_did_robust' == 1 {
 	// (1) all complaints 
 	preserve 
 		keep if multi_cat == 0
-		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s1
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  
@@ -489,7 +489,7 @@ if `run_did_robust' == 1 {
 	// (2) gender TWFE
 	preserve 
 		keep if multi_cat == 0
-		reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s2
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  & victim_f != .
@@ -499,7 +499,7 @@ if `run_did_robust' == 1 {
 	// (3) gender triple diff
 	preserve 
 		keep if multi_cat == 0
-		reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+		reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 		eststo s3
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat_f == 0
@@ -513,7 +513,7 @@ if `run_did_robust' == 1 {
 	// (1) all complaints 
 	preserve 
 		drop if basis == "Retaliation"
-		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s4
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  
@@ -523,7 +523,7 @@ if `run_did_robust' == 1 {
 	// (2) gender TWFE
 	preserve 
 		drop if basis == "Retaliation"
-		reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s5
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  & victim_f != .
@@ -533,7 +533,7 @@ if `run_did_robust' == 1 {
 	// (3) gender triple diff
 	preserve 
 		drop if basis == "Retaliation"
-		reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+		reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 		eststo s6
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat_f == 0
@@ -547,7 +547,7 @@ if `run_did_robust' == 1 {
 	// (1) all complaints
 	preserve 
 		keep if ym_filed < 722
-		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s7
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  
@@ -557,7 +557,7 @@ if `run_did_robust' == 1 {
 	// (2) gender TWFE
 	preserve 
 		keep if ym_filed < 722
-		reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s8
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  & victim_f != .
@@ -567,7 +567,7 @@ if `run_did_robust' == 1 {
 	// (3) gender triple diff
 	preserve 
 		keep if ym_filed < 722
-		reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+		reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 		eststo s9
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat_f == 0
@@ -606,7 +606,7 @@ if `run_did_robust' == 1 {
 	// (1) all complaints 
 	preserve 
 		keep if multi_cat == 0
-		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s1
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  
@@ -616,7 +616,7 @@ if `run_did_robust' == 1 {
 	// (2) gender TWFE
 	preserve 
 		keep if multi_cat == 0
-		reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s2
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  & victim_f != .
@@ -626,7 +626,7 @@ if `run_did_robust' == 1 {
 	// (3) gender triple diff
 	preserve 
 		keep if multi_cat == 0
-		reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+		reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 		eststo s3
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat_f == 0
@@ -640,7 +640,7 @@ if `run_did_robust' == 1 {
 	// (1) all complaints 
 	preserve 
 		drop if basis == "Retaliation"
-		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s4
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  
@@ -650,7 +650,7 @@ if `run_did_robust' == 1 {
 	// (2) gender TWFE
 	preserve 
 		drop if basis == "Retaliation"
-		reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s5
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  & victim_f != .
@@ -660,7 +660,7 @@ if `run_did_robust' == 1 {
 	// (3) gender triple diff
 	preserve 
 		drop if basis == "Retaliation"
-		reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+		reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 		eststo s6
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat_f == 0
@@ -674,7 +674,7 @@ if `run_did_robust' == 1 {
 	// (1) all complaints
 	preserve 
 		keep if ym_filed < 722
-		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s7
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  
@@ -684,7 +684,7 @@ if `run_did_robust' == 1 {
 	// (2) gender TWFE
 	preserve 
 		keep if ym_filed < 722
-		reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+		reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 		eststo s8
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat ==0  & victim_f != .
@@ -694,7 +694,7 @@ if `run_did_robust' == 1 {
 	// (3) gender triple diff
 	preserve 
 		keep if ym_filed < 722
-		reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+		reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 		eststo s9
 		qui estadd loc ut "\checkmark", replace
 		qui: sum win if treat_f == 0
@@ -736,19 +736,19 @@ if `run_did_alljuris' == 1 {
 	preserve 
 	use "$clean_data/clean_cases_all_juris.dta", replace
 
-	reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s1
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s2
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0 & victim_f != .
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	eststo s3
 	qui estadd loc ut "\checkmark", replace
 	qui estadd loc ut_f "\checkmark", replace
@@ -777,19 +777,19 @@ if `run_did_alljuris' == 1 {
 	preserve 
 	use "$clean_data/clean_cases_all_juris.dta", replace
 
-	reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s1
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis)
+	reghdfe win treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
 	eststo s2
 	qui estadd loc ut "\checkmark", replace
 	qui: sum win if treat == 0 & victim_f != .
 	estadd scalar control_mean = `r(mean)'
 
-	reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis)
+	reghdfe win treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
 	eststo s3
 	qui estadd loc ut "\checkmark", replace
 	qui estadd loc ut_f "\checkmark", replace
