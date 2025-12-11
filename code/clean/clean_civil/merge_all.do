@@ -432,7 +432,7 @@ drop id
 
 // EEOC
 la var resp_org "Respondent organization"
-la var resp_ln "Respondent last name"
+// la var resp_ln "Respondent last name"
 la var civil_action_number "ID of court case"
 la var court_name "Court ID where case filed"
 la var court_file_date "Court filing date"
@@ -495,6 +495,7 @@ restore
 preserve 
 reghdfe relief_scale treat if (eeoc == 1 | eeoc_filed == 1), absorb(basis_state ym_res_state) vce(cluster basis)
 restore
+
 
 save "$clean_data/eeoc_foia.dta", replace
 
