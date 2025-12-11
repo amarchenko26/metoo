@@ -744,3 +744,64 @@ if `fake_win' == 1 {
 	restore 
 		
 } 
+
+
+/*******************************************************************************
+* Avg duration of unresolved cases for the year prior to #MeToo
+*******************************************************************************/
+
+use "$clean_data/clean_cases.dta", replace
+
+preserve 
+keep ym_filed ym_res
+
+* --------------------------------------------------
+* 1. Compute MeToo month window
+* --------------------------------------------------
+local metoo_date = date("$metoo", "DMY")
+local metoo_ym   = mofd(`metoo_date')
+
+local start_ym = `metoo_ym' - 12     // start month
+local end_ym   = `metoo_ym'     // end month (13 months total)
+
+* --------------------------------------------------
+* 2. Expand the dataset into a case–month panel
+*    Every case now has 13 rows
+* --------------------------------------------------
+gen panel_month = _n 
+expand 13
+
+bys panel_month: gen month_index = _n - 1
+drop panel_month
+
+gen month_ym = `start_ym' + month_index
+format month_ym %tm
+
+* --------------------------------------------------
+* 3. Compute open-case indicator and duration
+* --------------------------------------------------
+gen is_open = (ym_filed <= month_ym) & ///
+              (ym_res >= month_ym | missing(ym_res))
+
+gen duration = month_ym - ym_filed if is_open
+
+* --------------------------------------------------
+* 4. Collapse to the monthly average duration
+* --------------------------------------------------
+collapse (mean) avg_duration = duration, by(month_ym)
+format month_ym %tm
+
+* --------------------------------------------------
+* 5. Plot
+* --------------------------------------------------
+twoway line avg_duration month_ym, ///
+    xtitle("Month") ///
+    ytitle("Avg Duration (Months)") ///
+    xlabel(, format(%tmMon_CCYY) angle(45)) ///
+	ylabel(0(1)12) ///
+    xline(`metoo_ym', lpattern(dash))
+
+  	graph export "$figures/duration_open.png", replace 
+
+restore 
+

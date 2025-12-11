@@ -10,9 +10,11 @@ loc run_did_outcomes 	 = 0
 loc run_overlap_outcomes = 0
 loc run_overlap_season  = 0
 loc run_did_robust 		= 0
-loc run_did_alljuris 	= 1
-loc run_summary  		= 1
-loc run_overlap_balance = 1
+loc run_did_alljuris 	= 0
+loc run_summary  		= 0
+loc run_overlap_balance = 0
+loc run_did_duration 	= 1
+loc run_overlap_duration 	= 1
 
 
 /*******************************************************************************
@@ -966,15 +968,28 @@ if `run_overlap_balance' == 1 {
 
 	preserve	
 	
+	gen top_state = (state == "NY")
+	la var top_state "\hspace{0.1cm} Top state share (NY)"
+	
+	tab file_season, gen(season)
+	la var season1 "\hspace{0.1cm} Filed in Spring"
+	la var season2 "\hspace{0.1cm} Filed in Summer"
+	la var season3 "\hspace{0.1cm} Filed in Fall"
+	la var season4 "\hspace{0.1cm} Filed in Winter"
+	
 	loc balance ///
 	victim_f ///
     sh ///
-	duration
+	top_state ///
+	season1 ///
+	season2 ///
+	season3 ///
+	season4
 	
 	g overlap_balance = 1 if overlap_2 == 1
 	replace overlap_balance = 0 if common_file_date < 20742 & common_res_date > 20742 
-	replace overlap_balance = . if common_file_date < 20377 & overlap_balance == 0
-	replace overlap_balance = . if common_res_date > 21107 & overlap_balance == 0
+// 	replace overlap_balance = . if common_file_date < 20377 & overlap_balance == 0
+// 	replace overlap_balance = . if common_res_date > 21107 & overlap_balance == 0
 	
     balancetable overlap_balance `balance' using "$tables/overlap_balance.tex" if overlap_balance != ., ///
         varlabels vce(robust) replace ///
@@ -983,3 +998,98 @@ if `run_overlap_balance' == 1 {
         wide(mean diff pval)
 	restore
 }
+
+
+
+
+/*******************************************************************************
+Duration Main DID 
+*******************************************************************************/
+
+if `run_did_duration' == 1 {
+	preserve 
+	reghdfe duration treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
+	eststo s1
+	qui estadd loc ut "\checkmark", replace
+	qui: sum duration if treat == 0
+	estadd scalar control_mean = `r(mean)'
+
+	reghdfe duration treat if victim_f != ., absorb(basis_state ym_res_state) vce(cluster basis_state)
+	eststo s2
+	qui estadd loc ut "\checkmark", replace
+	qui: sum duration if treat == 0 & victim_f != .
+	estadd scalar control_mean = `r(mean)'
+
+	reghdfe duration treat treat_f, absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
+	eststo s3
+	qui estadd loc ut "\checkmark", replace
+	qui estadd loc ut_f "\checkmark", replace
+	qui: sum duration if treat_f == 0
+	estadd scalar control_mean = `r(mean)'
+
+	#delimit ;	
+ 	esttab s1 s2 s3 using "$tables/did_duration.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
+		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\"  
+				"\midrule") 
+		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
+		mlabel(none) nomtitles nonumbers
+		stats(ut ut_f N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" "Unit and Time $\times$ State $\times$ Female FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3)) 
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01) 
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule") 
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+
+	restore
+}
+
+
+/*******************************************************************************
+Duration Overlap DID 
+*******************************************************************************/
+
+if `run_overlap_duration' == 1 {
+
+	reghdfe duration treat if common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
+	eststo s1
+	qui estadd loc ut "\checkmark", replace
+	qui: sum duration if treat == 0
+	estadd scalar control_mean = `r(mean)'
+
+	reghdfe duration treat if victim_f != . & common_file_date < date("$metoo", "DMY"), absorb(basis_state ym_res_state) vce(cluster basis_state)
+	eststo s2
+	qui estadd loc ut "\checkmark", replace
+	qui: sum duration if treat == 0 & victim_f != .
+	estadd scalar control_mean = `r(mean)'
+
+	reghdfe duration treat treat_f if common_file_date < date("$metoo", "DMY"), absorb(basis_cat##state_cat##victim_f ym_res##state_cat##victim_f) vce(cluster basis_state)
+	eststo s3
+	qui estadd loc ut "\checkmark", replace
+	qui estadd loc ut_f "\checkmark", replace
+	qui: sum duration if treat_f == 0
+	estadd scalar control_mean = `r(mean)'
+
+	#delimit ;	
+	esttab s1 s2 s3 using "$tables/did_overlap_duration.tex", style(tex) replace 
+		prehead("\begin{tabular}{l*{@E}{c}}" "\toprule") 
+		posthead("& \multicolumn{1}{c}{\textbf{All complaints}} & \multicolumn{2}{c}{\textbf{Complaints with gender}} \\" 
+				"\midrule") 
+		varlabels(treat "SH $\times$ Post" treat_f "SH $\times$ Post $\times$ Female") keep(treat treat_f) 
+		mlabel(none) nomtitles nonumbers
+		stats(ut ut_f N r2 control_mean, 
+			label("Unit and Time $\times$ State FE" "Unit and Time $\times$ State $\times$ Female FE" `"N"' `" \(R^{2}\)"' "Control mean") fmt(3 3 %9.0fc 3)) 
+		nobaselevels collabels(none) label starlevels(* .1 ** .05 *** .01) 
+		cells("b(fmt(3)star)" "se(fmt(3)par)") 
+		prefoot("\\" "\midrule") 
+		postfoot("\bottomrule" "\end{tabular}");
+
+	#delimit cr
+	estimates clear
+	eststo clear
+}
+
