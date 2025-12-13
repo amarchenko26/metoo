@@ -52,7 +52,7 @@ if `tabulations' == 1 {
 	di tm(2017m10) // 693
 	tab state if ym_filed > 693 & ym_filed < 722
 	tab state if ym_filed < 693 & ym_filed > 664
-	drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
+	//drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
 	count if ym_filed > 693 & ym_filed < 722 & sh == 1
 	gen sex_post_metoo = r(N)  
 	count if ym_filed > 693 & ym_filed < 722 & sh == 0
@@ -71,7 +71,9 @@ if `tabulations' == 1 {
 	di td($metoo) // 21107
 	tab state if charge_file_date > 21107 & charge_file_date < 21472
 	tab state if charge_file_date < 21107 & charge_file_date > 20742
-	drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
+	//drop if inlist(state, "CA", "FL", "WI") // based on tabbing and seeing if there were large differences
+
+	drop if inlist(state, "CA") // based on tabbing and seeing if there were large differences
 
 	g filed_first_year_post = 1 if charge_file_date > 21107 & charge_file_date < 21472
 	g filed_first_year_pre  = 1 if charge_file_date < 21107 & charge_file_date > 20742
@@ -89,14 +91,15 @@ if `tabulations' == 1 {
 	// Percent change in cases filed (MeToo): 0.1388661 when run on Feb 25, 2025
 	// .0532972 when run on May 27, 2025
 	// .1624251 when run on Aug 24, 2025
-	count if filed_first_year_post == 1 & sh == 1
-	gen sex_post_metoo = r(N)
-	count if filed_first_year_post == 1 & sh == 0
-	gen no_sex_post_metoo = r(N)
-	count if filed_first_year_pre == 1 & sh == 1
-	gen sex_pre_metoo = r(N)
 	count if filed_first_year_pre == 1 & sh == 0
 	gen no_sex_pre_metoo = r(N)
+	count if filed_first_year_post == 1 & sh == 0
+	gen no_sex_post_metoo = r(N)
+	
+	count if filed_first_year_pre == 1 & sh == 1
+	gen sex_pre_metoo = r(N)
+	count if filed_first_year_post == 1 & sh == 1
+	gen sex_post_metoo = r(N)
 
 	gen metoo_percent_increase = ((sex_post_metoo/no_sex_post_metoo) - (sex_pre_metoo/no_sex_pre_metoo))/(sex_pre_metoo/no_sex_pre_metoo)
 	tab metoo_percent_increase
@@ -753,7 +756,7 @@ if `fake_win' == 1 {
 use "$clean_data/clean_cases.dta", replace
 
 preserve 
-keep ym_filed ym_res
+keep ym_filed ym_res sh
 
 * --------------------------------------------------
 * 1. Compute MeToo month window
@@ -788,18 +791,24 @@ gen duration = month_ym - ym_filed if is_open
 * --------------------------------------------------
 * 4. Collapse to the monthly average duration
 * --------------------------------------------------
-collapse (mean) avg_duration = duration, by(month_ym)
+collapse (mean) avg_duration = duration, by(month_ym sh)
 format month_ym %tm
+drop if sh ==.
 
 * --------------------------------------------------
 * 5. Plot
 * --------------------------------------------------
-twoway line avg_duration month_ym, ///
-    xtitle("Month") ///
-    ytitle("Avg Duration (Months)") ///
+twoway ///
+    (line avg_duration month_ym if sh == 0, lcolor(green) lwidth(medthick) lpattern(dash)) ///
+	(line avg_duration month_ym if sh == 1, ///
+        lcolor(green) lwidth(medthick) lpattern(solid)), ///
+    xtitle("Month", size(medlarge)) ///
+    ytitle("Avg Duration (Months)", size(medlarge)) ///
     xlabel(, format(%tmMon_CCYY) angle(45)) ///
-	ylabel(0(1)12) ///
-    xline(`metoo_ym', lpattern(dash))
+    ylabel(0(1)12) ///
+    xline(`metoo_ym', lpattern(dash)) ///
+    legend(order(2 "SH Case" 1 "Non-SH Case") size(medsmall) symxsize(10))
+
 
   	graph export "$figures/duration_open.png", replace 
 

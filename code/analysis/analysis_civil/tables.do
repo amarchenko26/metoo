@@ -12,9 +12,9 @@ loc run_overlap_season  = 0
 loc run_did_robust 		= 0
 loc run_did_alljuris 	= 0
 loc run_summary  		= 0
-loc run_overlap_balance = 0
-loc run_did_duration 	= 1
-loc run_overlap_duration 	= 1
+loc run_overlap_balance = 1
+loc run_did_duration 	= 0
+loc run_overlap_duration = 0
 
 
 /*******************************************************************************
@@ -967,10 +967,7 @@ Overlap balance table
 if `run_overlap_balance' == 1 {
 
 	preserve	
-	
-	gen top_state = (state == "NY")
-	la var top_state "\hspace{0.1cm} Top state share (NY)"
-	
+		
 	tab file_season, gen(season)
 	la var season1 "\hspace{0.1cm} Filed in Spring"
 	la var season2 "\hspace{0.1cm} Filed in Summer"
@@ -980,7 +977,6 @@ if `run_overlap_balance' == 1 {
 	loc balance ///
 	victim_f ///
     sh ///
-	top_state ///
 	season1 ///
 	season2 ///
 	season3 ///
