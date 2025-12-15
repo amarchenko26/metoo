@@ -5,8 +5,8 @@ Figures for MeToo project
 
 use "$clean_data/clean_cases.dta", replace
 
-loc tabulations		= 1
-loc selection 		= 0
+loc tabulations		= 0
+loc selection 		= 1
 loc event 	   		= 0
 loc timeseries 		= 0
 loc duration   		= 0
@@ -116,11 +116,11 @@ if `tabulations' == 1 {
 // 	tab omega_1
 	
 	gen omega_2 = sex_pre_metoo/(sex_post_metoo/(1+control_frac))
-	global omega_2 = omega_2
+// 	global omega_2 = omega_2
 	tab omega_2
 	
 	gen omega_1 = sex_pre_metoo/(sex_post_metoo/0.989)
-	global omega_1 = omega_1
+// 	global omega_1 = omega_1
 	tab omega_1
 	stop
 	drop *metoo
@@ -150,6 +150,10 @@ Selection
 *******************************************************************************/
 
 if `selection' == 1 {
+	
+	global omega_1 = 0.801
+	global omega_2 = 0.928
+
 	preserve 
 	clear
 	
@@ -180,8 +184,8 @@ if `selection' == 1 {
 	* Generate variables for shading the area between 0.745 and 0.949
 	gen shade_min = . 
 	gen shade_max = .
-	replace shade_min = 0 if inrange(omega, $omega_1, $omega_2)
-	replace shade_max = .4 if inrange(omega, $omega_1, $omega_2)
+	replace shade_min = 0 if inrange(omega, .8, $omega_2)
+	replace shade_max = .4 if inrange(omega, .8, $omega_2)
 
 	#delimit ;
 	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
@@ -196,7 +200,7 @@ if `selection' == 1 {
 			text(.175 .2 "ATT for IR", color("dkgreen") place(r) size(medsmall))
 			text(.25 .645 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
 			text(.35 .755 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
-			text(.35 .868 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
+			text(.35 .882 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
@@ -289,6 +293,7 @@ if `selection' == 1 {
 /*******************************************************************************
 Event-study
 *******************************************************************************/
+
 loc outcomes "settle win court"
 // deleted dismissed
 
@@ -342,12 +347,12 @@ if `event' == 1 {
 			levels(95)
 			ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
 			yline(0, lp(dash)) // yline(`att', lcolor(grey) lwidth(medium) lp(dash))
-			ylabel(-0.1(0.1)0.4)
+			ylabel(-.7(0.2).7)
 			xline(7.5)
 			xtitle("Years relative to treatment", size(medium))
 			ytitle("Effect of MeToo on `y'", size(medium))
 			`xlabel' 
-			text(0.19 2 "{&beta}{sup:CE}: `att'", size(medium) color(black))
+			text(0.3 2 "{&beta}{sup:CE}: `att'", size(medium) color(black))
 		;
 		#delimit cr
  		graph export "$figures/eventstudy_`y'.png", replace 
@@ -392,12 +397,12 @@ if `event' == 1 {
 				levels(95)
 		ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
 		yline(0, lp(dash)) 
-		ylabel(-0.1(0.1)0.4)
+		ylabel(-.7(0.2).7)
 		xline(7.5)
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
-		text(.33 1.6 "{&beta}{sup:O}: `att'", size(medium) color(black))
+		text(.33 2 "{&beta}{sup:O}: `att'", size(medium) color(black))
 		;
 	#delimit cr
 				
@@ -480,13 +485,14 @@ if `event' == 1 {
 					levels(95)
 		legend(ring(0) bplacement(nwest) size(medium))
 		offset(0)
-		yline(0, lp(dash)) ylabel(-1(0.2)1)
+		yline(0, lp(dash)) 
+		ylabel(-.7(0.2).7)
 		xline(7.5)
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
-		text(.55 2.2 "{&beta}{sup:CE}{sub:M}: `att_m_display'", size(medium) color(black))
-		text(.42 2.2 "{&beta}{sup:CE}{sub:W}: `att_f_display'", size(medium) color(black))
+		text(.43 2 "{&beta}{sup:CE}{sub:M}: `att_m_display'", size(medium) color(black))
+		text(.30 2 "{&beta}{sup:CE}{sub:W}: `att_f_display'", size(medium) color(black))
 	;
 	#delimit cr
 				
@@ -565,13 +571,14 @@ if `event' == 1 {
 		legend(ring(0) bplacement(nwest) size(medium))
 		ciopts(recast(rcap) lwidth(.5) color(orange_red)) 
 		offset(0)
-		yline(0, lp(dash)) ylabel(-1(0.2)1)
+		yline(0, lp(dash)) 
+		ylabel(-.7(0.2).7)
 		xline(7.5)
 		xtitle("Years relative to treatment", size(medium))
 		ytitle("Effect of MeToo on win", size(medium))
 		`xlabel'
-		text(.55 1.6 "{&beta}{sup:O}{sub:M}: `att_m_display'", size(medium) color(black))
-		text(.42 1.6 "{&beta}{sup:O}{sub:W}: `att_f_display'", size(medium) color(black))
+		text(.43 2 "{&beta}{sup:O}{sub:M}: `att_m_display'", size(medium) color(black))
+		text(.30 2 "{&beta}{sup:O}{sub:W}: `att_f_display'", size(medium) color(black))
 	;
 	#delimit cr
 	
