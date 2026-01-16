@@ -103,6 +103,7 @@ replace withdraw = . if outcome == "Schedule For Hearing"
 // Dismissal
 g dismissed = 0
 replace dismissed = 1 if outcome == "Complaint Dismissed"
+replace dismissed = 1 if outcome == "Complaint Rejected" // anya added this
 replace dismissed = . if outcome == "Schedule For Hearing"
 
 

@@ -294,6 +294,126 @@ if `selection' == 1 {
 Event-study
 *******************************************************************************/
 
+
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+// make sure ATT numbers are accurate by including all data points 
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+// 	drop if event   == 0
+// 	drop if event_f == 0
+
+	******** All outcomes ********	
+		loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+
+		reghdfe duration treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
+		loc att: display %5.3f _b[treat]
+		
+		reghdfe duration ib7.event, absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+		
+		// Create dynamic xlabel with offset adjustment
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
+			yline(0, lp(dash)) // yline(`att', lcolor(grey) lwidth(medium) lp(dash))
+			xline(7.5)
+			ylabel(-60(20)60)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on `y'", size(medium))
+			`xlabel' 
+			text(20 2 "{&beta}{sup:CE}: `att'", size(medium) color(black))
+		;
+		#delimit cr
+ 		graph export "$figures/eventstudy_duration.png", replace 
+		estimates clear
+
+
+	******** Overlap ********
+	reghdfe duration treat if common_file_date < date("$metoo", "DMY"), ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state)
+	loc att: display %5.3f _b[treat]
+	
+	reghdfe duration ib7.event if common_file_date < date("$metoo", "DMY"), ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state) noconstant
+	estimates store TWFE
+
+	// Create dynamic xlabel with offset adjustment
+	local max_event = 0
+	local coef_names : colnames e(b)
+
+	foreach cname of local coef_names {
+		if strpos("`cname'", ".event") > 0 {
+			local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+			
+			capture confirm number `evnum'
+			if _rc == 0 & real("`evnum'") > `max_event' {
+				local max_event = real("`evnum'")
+			}
+		}
+	}
+	local xlabel "xlabel("
+	forvalues x = 1/`max_event' {
+		local rel = `x' - `offset'
+		local xlabel `xlabel' `x' "`rel'"
+	}
+	local xlabel "`xlabel', labsize(medium))"
+
+	#delimit ;
+	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+				levels(95)
+		ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
+		yline(0, lp(dash)) 
+		xline(7.5)
+		ylabel(-60(20)60)
+		xtitle("Years relative to treatment", size(medium))
+		ytitle("Effect of MeToo on win", size(medium))
+		`xlabel'
+		text(20 2 "{&beta}{sup:O}: `att'", size(medium) color(black))
+		;
+	#delimit cr
+				
+ 	graph export "$figures/eventstudy_duration_overlap.png", replace 
+	estimates clear
+
+
+
+
+
+
+
+
+
+
+
 loc outcomes "settle win court"
 // deleted dismissed
 
@@ -820,4 +940,174 @@ twoway ///
   	graph export "$figures/duration_open.png", replace 
 
 restore 
+
+
+
+
+
+
+
+* ------------------------------------------------------------
+* RD Plot MEN ONLY 
+* ------------------------------------------------------------
+
+preserve
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 0
+
+local cutoff_tm = tm(2017m10)
+
+* Running variable centered at cutoff (in months)
+gen t = ym_filed - `cutoff_tm'
+
+* Detrend / residualize outcome
+quietly regress win i.ym_res 
+predict double win_det, resid
+
+* ------------------------------------------------------------
+* Manual window for the PLOT only: +/- 6 months
+* ------------------------------------------------------------
+rdbwselect win_det t, c(0) bwselect(mserd) // it chose 5.83
+
+// point estimate 
+rdrobust win_det t, c(0) h(6)
+ereturn list
+local rd_point_estimate : display %5.3f `e(tau_cl)'
+local rd_se : display %5.3f `e(se_tau_cl)'
+
+gen in_window6 = (abs(t) <= 6)
+
+// graph, poly of order 2, 
+rdplot win_det t if in_window6, c(0) p(2) ///
+    graph_options( ///
+	    xtitle("Months relative to #MeToo", size(medium)) ///
+		ytitle("Win (residualized on time of resolution FE)", size(medium)) ///
+		ylabel(-.4(.2).4) ///
+		xlabel(-6(1)6) ///
+        legend(off) ///
+		text(.3 -3.5 "RD Effect{sub:M} = `rd_point_estimate' (`rd_se')", size(medium) color(black)) ///
+    )
+	
+graph export "$figures/rd_men.png", replace 
+restore
+
+
+* ------------------------------------------------------------
+* RD Plot WOMEN ONLY 
+* ------------------------------------------------------------
+
+preserve
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 1
+
+local cutoff_tm = tm(2017m10)
+
+* Running variable centered at cutoff (in months)
+gen t = ym_filed - `cutoff_tm'
+
+* Detrend / residualize outcome
+quietly regress win i.ym_res 
+predict double win_det, resid
+
+* ------------------------------------------------------------
+* Manual window for the PLOT only: +/- 6 months
+* ------------------------------------------------------------
+rdbwselect win_det t, c(0) bwselect(mserd) // it chose 8.94
+
+// point estimate 
+rdrobust win_det t, c(0) h(9)
+ereturn list
+local rd_point_estimate : display %5.3f `e(tau_cl)'
+local rd_se : display %5.3f `e(se_tau_cl)'
+
+gen in_window6 = (abs(t) <= 9)
+
+// graph, poly of order 2, 
+rdplot win_det t if in_window6, c(0) p(2) ///
+    graph_options( ///
+	    xtitle("Months relative to #MeToo", size(medium)) ///
+		ytitle("Win (residualized on time of resolution FE)", size(medium)) ///
+		ylabel(-.4(.2).4) ///
+		xlabel(-9(1)9) ///
+        legend(off) ///
+		text(.3 -3.5 "RD Effect{sub:W} = `rd_point_estimate' (`rd_se')", size(medium) color(black)) ///
+    )
+	
+graph export "$figures/rd_women.png", replace 
+restore
+
+
+
+
+
+
+
+
+cap drop filed_post
+cap drop test
+g filed_post = 1 if common_file_date > date("$metoo", "DMY")
+
+
+g test = 0 if filed_post == 1
+replace test = 1 if overlap_all == 1 
+
+
+preserve 
+drop if inlist(state, "CA", "WI", "FL")
+
+// overlap SH women 
+sum win if sh == 1 & victim_f == 1 & overlap_all ==1 
+
+// overlap SH men 
+sum win if sh == 1 & victim_f == 0 & overlap_all ==1 
+
+// filed post SH women 
+sum win if sh == 1 & victim_f == 1 & filed_post ==1 
+
+// filed post SH men 
+sum win if sh == 1 & victim_f == 0 & filed_post ==1 
+
+// ttest of win for women b/w two groups
+ttest win if sh == 1 & victim_f == 1, by(test) 
+
+// ttest of win for men b/w two groups
+ttest win if sh == 1 & victim_f == 0, by(test) 
+
+//ttest everyone 
+ttest win if sh == 1, by(test) 
+
+restore 
+
+
+// Now drop all states that don't show up a year before 
+
+
+
+
+
+
+reghdfe win filed_post overlap_all, absorb(ym_res) cluster(basis_state)
+
+reghdfe win overlap_all##victim_f, absorb(ym_res) cluster(basis_state)
+
+reghdfe win filed_post#victim_f, absorb(ym_res) cluster(basis_state)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
