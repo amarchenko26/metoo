@@ -952,17 +952,20 @@ restore
 * ------------------------------------------------------------
 
 preserve
+set graphics on
 keep if sh == 1
 keep if common_res_date > date("$metoo", "DMY")
 keep if victim_f == 0
 
-local cutoff_tm = tm(2017m10)
+// local cutoff_tm = tm(2017m10)
+local cutoff_tm = td(15oct2017)
 
 * Running variable centered at cutoff (in months)
-gen t = ym_filed - `cutoff_tm'
+// gen t = ym_filed - `cutoff_tm'
+gen t = common_file_date - `cutoff_tm'
 
 * Detrend / residualize outcome
-quietly regress win i.ym_res 
+quietly regress win i.ym_res_state
 predict double win_det, resid
 
 * ------------------------------------------------------------
@@ -971,27 +974,117 @@ predict double win_det, resid
 rdbwselect win_det t, c(0) bwselect(mserd) // it chose 5.83
 
 // point estimate 
-rdrobust win_det t, c(0) h(6)
-ereturn list
+// rdrobust win_det t, c(0) h(6) p(2)
+rdrobust win_det t, c(0) h(200) p(2)
+
 local rd_point_estimate : display %5.3f `e(tau_cl)'
 local rd_se : display %5.3f `e(se_tau_cl)'
 
-gen in_window6 = (abs(t) <= 6)
+gen in_window6 = (abs(t) <= 200)
 
 // graph, poly of order 2, 
 rdplot win_det t if in_window6, c(0) p(2) ///
     graph_options( ///
-	    xtitle("Months relative to #MeToo", size(medium)) ///
-		ytitle("Win (residualized on time of resolution FE)", size(medium)) ///
+	    xtitle("Days relative to #MeToo", size(medium)) ///
+		ytitle("Win (residualized)", size(medium)) ///
 		ylabel(-.4(.2).4) ///
-		xlabel(-6(1)6) ///
         legend(off) ///
-		text(.3 -3.5 "RD Effect{sub:M} = `rd_point_estimate' (`rd_se')", size(medium) color(black)) ///
+		text(.3 -100 "RD Effect{sub:M} = `rd_point_estimate' (`rd_se')", size(medium) color(black)) ///
     )
+// 		xlabel(-6(1)6) ///
 	
 graph export "$figures/rd_men.png", replace 
 restore
 
+
+
+
+use "$clean_data/clean_cases.dta", replace
+
+* men, no FE, p1
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 0
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+rdrobust win t, c(0) h(200) p(1)
+restore 
+
+* men, no FE, p2
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 0
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+rdrobust win t, c(0) h(200) p(2)
+restore 
+
+* men, state and time, p1
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 0
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+quietly regress win i.state_cat i.ym_res
+predict double win_det, resid
+
+rdrobust win_det t, c(0) h(200) p(1)
+restore 
+
+* men, state and time, p2
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 0
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+quietly regress win i.state_cat i.ym_res
+predict double win_det, resid
+
+rdrobust win_det t, c(0) h(200) p(2)
+restore 
+
+* men, state X time, p1
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 0
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+quietly regress win i.ym_res_state
+predict double win_det, resid
+
+rdrobust win_det t, c(0) h(200) p(1)
+restore 
+
+* men, state X time, p2
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 0
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+quietly regress win i.ym_res_state
+predict double win_det, resid
+
+rdrobust win_det t, c(0) h(200) p(2)
+restore 
+ 
 
 * ------------------------------------------------------------
 * RD Plot WOMEN ONLY 
@@ -1002,41 +1095,146 @@ keep if sh == 1
 keep if common_res_date > date("$metoo", "DMY")
 keep if victim_f == 1
 
-local cutoff_tm = tm(2017m10)
+// local cutoff_tm = tm(2017m10)
+local cutoff_tm = td(15oct2017)
 
 * Running variable centered at cutoff (in months)
-gen t = ym_filed - `cutoff_tm'
+// gen t = ym_filed - `cutoff_tm'
+gen t = common_file_date - `cutoff_tm'
 
 * Detrend / residualize outcome
-quietly regress win i.ym_res 
+quietly regress win i.ym_res_state
 predict double win_det, resid
 
 * ------------------------------------------------------------
-* Manual window for the PLOT only: +/- 6 months
+* Manual window for the PLOT only: +/- 9 months
 * ------------------------------------------------------------
 rdbwselect win_det t, c(0) bwselect(mserd) // it chose 8.94
 
 // point estimate 
-rdrobust win_det t, c(0) h(9)
+rdrobust win_det t, c(0) h(240) p(2)
 ereturn list
 local rd_point_estimate : display %5.3f `e(tau_cl)'
 local rd_se : display %5.3f `e(se_tau_cl)'
 
-gen in_window6 = (abs(t) <= 9)
+gen in_window6 = (abs(t) <= 240)
 
 // graph, poly of order 2, 
 rdplot win_det t if in_window6, c(0) p(2) ///
     graph_options( ///
-	    xtitle("Months relative to #MeToo", size(medium)) ///
-		ytitle("Win (residualized on time of resolution FE)", size(medium)) ///
+	    xtitle("Days relative to #MeToo", size(medium)) ///
+		ytitle("Win (residualized)", size(medium)) ///
 		ylabel(-.4(.2).4) ///
-		xlabel(-9(1)9) ///
         legend(off) ///
-		text(.3 -3.5 "RD Effect{sub:W} = `rd_point_estimate' (`rd_se')", size(medium) color(black)) ///
+		text(.3 -100 "RD Effect{sub:W} = `rd_point_estimate' (`rd_se')", size(medium) color(black)) ///
     )
 	
 graph export "$figures/rd_women.png", replace 
 restore
+
+
+
+
+use "$clean_data/clean_cases.dta", replace
+
+* women, no FE, p1
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 1
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+rdrobust win t, c(0) h(240) p(1)
+restore 
+
+* women, no FE, p2
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 1
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+rdrobust win t, c(0) h(240) p(2)
+restore 
+
+* women, state and time, p1
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 1
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+quietly regress win i.state_cat i.ym_res
+predict double win_det, resid
+
+rdrobust win_det t, c(0) h(240) p(1)
+restore 
+
+* women, state and time, p2
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 1
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+quietly regress win i.state_cat i.ym_res
+predict double win_det, resid
+
+rdrobust win_det t, c(0) h(240) p(2)
+restore 
+
+* women, state X time, p1
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 1
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+quietly regress win i.ym_res_state
+predict double win_det, resid
+
+rdrobust win_det t, c(0) h(240) p(1)
+restore 
+
+* women, state X time, p2
+preserve 
+keep if sh == 1
+keep if common_res_date > date("$metoo", "DMY")
+keep if victim_f == 1
+local cutoff_tm = td(15oct2017)
+// local cutoff_tm = tm(2017m10)
+gen t = common_file_date - `cutoff_tm'
+
+quietly regress win i.ym_res_state
+predict double win_det, resid
+
+rdrobust win_det t, c(0) h(240) p(2)
+restore 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
