@@ -6,8 +6,8 @@ Figures for MeToo project
 use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
-loc selection 		= 1
-loc event 	   		= 0
+loc selection 		= 0
+loc event 	   		= 1
 loc timeseries 		= 0
 loc duration   		= 0
 loc file_invariance = 0
@@ -707,6 +707,602 @@ if `event' == 1 {
 		
 
 }
+
+
+
+
+
+//**************** 
+//**************** BLUE STATES 
+//**************** 
+
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+
+	******** All outcomes ********	
+	loc offset = 8 
+		
+	* Get all unique state codes (strings like "AK")
+
+preserve 
+	keep if inlist(state, "CA", "NY", "MA", "HI")
+// 	keep if common_file_date < date("$metoo", "DMY")
+	
+		di as txt "Running BLUE ONLY states"
+
+		*------------------------------
+		* ATT (combined effect)
+		*------------------------------
+		reghdfe win treat, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state)
+		local att: display %5.3f _b[treat]
+
+		*------------------------------
+		* Event study
+		*------------------------------
+		reghdfe win ib7.event, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+
+		*------------------------------
+		* Dynamic xlabel construction
+		*------------------------------
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		*------------------------------
+		* Plot + export
+		*------------------------------
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+			yline(0, lp(dash))
+			xline(7.5)
+			ylabel(-.7(0.2).7)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			`xlabel'
+			text(0.3 4 "{&beta}{sup:CE}, blue states only: `att'", size(medium) color(black))
+		;
+		#delimit cr
+
+		graph export "$figures/eventstudy_leaveoneout_blue.png", replace
+
+		estimates clear
+restore 
+
+
+//**************** 
+//**************** BLUE STATES - OVERLAP
+//**************** 
+
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+
+	******** All outcomes ********	
+	loc offset = 8 
+		
+	* Get all unique state codes (strings like "AK")
+
+preserve 
+	keep if inlist(state, "CA", "NY", "MA", "HI")
+	keep if common_file_date < date("$metoo", "DMY")
+	
+		di as txt "Running BLUE ONLY states"
+
+		*------------------------------
+		* ATT (combined effect)
+		*------------------------------
+		reghdfe win treat, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state)
+		local att: display %5.3f _b[treat]
+
+		*------------------------------
+		* Event study
+		*------------------------------
+		reghdfe win ib7.event, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+
+		*------------------------------
+		* Dynamic xlabel construction
+		*------------------------------
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		*------------------------------
+		* Plot + export
+		*------------------------------
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+			yline(0, lp(dash))
+			xline(7.5)
+			ylabel(-.7(0.2).7)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			`xlabel'
+			text(0.3 4 "{&beta}{sup:O}, blue states only: `att'", size(medium) color(black))
+		;
+		#delimit cr
+
+		graph export "$figures/eventstudy_leaveoneout_blue_overlap.png", replace
+
+		estimates clear
+restore 
+
+
+
+//**************** 
+//**************** RED STATES 
+//**************** 
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+
+	******** All outcomes ********	
+	loc offset = 8 
+		
+	* Get all unique state codes (strings like "AK")
+
+preserve 
+	keep if inlist(state, "FL", "AK", "KY", "ND")
+	
+		di as txt "Running RED ONLY states"
+
+		*------------------------------
+		* ATT (combined effect)
+		*------------------------------
+		reghdfe win treat, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state)
+		local att: display %5.3f _b[treat]
+
+		*------------------------------
+		* Event study
+		*------------------------------
+		reghdfe win ib7.event, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+
+		*------------------------------
+		* Dynamic xlabel construction
+		*------------------------------
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		*------------------------------
+		* Plot + export
+		*------------------------------
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+			yline(0, lp(dash))
+			xline(7.5)
+			ylabel(-.7(0.2).7)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			`xlabel'
+			text(0.3 4 "{&beta}{sup:CE}, red states only: `att'", size(medium) color(black))
+		;
+		#delimit cr
+
+		graph export "$figures/eventstudy_leaveoneout_red.png", replace
+
+		estimates clear
+restore 
+
+
+
+//**************** 
+//**************** RED+ PURPLE STATES 
+//**************** 
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+
+	******** All outcomes ********	
+	loc offset = 8 
+		
+	* Get all unique state codes (strings like "AK")
+
+preserve 
+	keep if inlist(state, "FL", "AK", "KY", "ND", "WI", "MI")
+
+		di as txt "Running RED+PURPLE ONLY states"
+
+		*------------------------------
+		* ATT (combined effect)
+		*------------------------------
+		reghdfe win treat, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state)
+		local att: display %5.3f _b[treat]
+
+		*------------------------------
+		* Event study
+		*------------------------------
+		reghdfe win ib7.event, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+
+		*------------------------------
+		* Dynamic xlabel construction
+		*------------------------------
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		*------------------------------
+		* Plot + export
+		*------------------------------
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+			yline(0, lp(dash))
+			xline(7.5)
+			ylabel(-.7(0.2).7)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			`xlabel'
+			text(0.3 4 "{&beta}{sup:CE}, red+purple states only: `att'", size(medium) color(black))
+		;
+		#delimit cr
+
+		graph export "$figures/eventstudy_leaveoneout_red_purp.png", replace
+
+		estimates clear
+restore 
+
+
+//**************** 
+//**************** RED+ PURPLE STATES - OVERLAP
+//**************** 
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+
+	******** All outcomes ********	
+	loc offset = 8 
+		
+	* Get all unique state codes (strings like "AK")
+
+preserve 
+	keep if inlist(state, "FL", "AK", "KY", "ND", "WI", "MI")
+	keep if common_file_date < date("$metoo", "DMY")
+
+		di as txt "Running RED+PURPLE ONLY states"
+
+		*------------------------------
+		* ATT (combined effect)
+		*------------------------------
+		reghdfe win treat, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state)
+		local att: display %5.3f _b[treat]
+
+		*------------------------------
+		* Event study
+		*------------------------------
+		reghdfe win ib7.event, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+
+		*------------------------------
+		* Dynamic xlabel construction
+		*------------------------------
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		*------------------------------
+		* Plot + export
+		*------------------------------
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+			yline(0, lp(dash))
+			xline(7.5)
+			ylabel(-.7(0.2).7)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			`xlabel'
+			text(0.3 4 "{&beta}{sup:O}, red+purple states only: `att'", size(medium) color(black))
+		;
+		#delimit cr
+
+		graph export "$figures/eventstudy_leaveoneout_red_purp_overlap.png", replace
+
+		estimates clear
+restore 
+
+
+//**************** 
+//**************** PURPLE STATES 
+//**************** 
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+
+	******** All outcomes ********	
+	loc offset = 8 
+		
+	* Get all unique state codes (strings like "AK")
+
+preserve 
+	keep if inlist(state, "WI", "MI")
+
+		di as txt "Running PURPLE ONLY states"
+
+		*------------------------------
+		* ATT (combined effect)
+		*------------------------------
+		reghdfe win treat, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state)
+		local att: display %5.3f _b[treat]
+
+		*------------------------------
+		* Event study
+		*------------------------------
+		reghdfe win ib7.event, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+
+		*------------------------------
+		* Dynamic xlabel construction
+		*------------------------------
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		*------------------------------
+		* Plot + export
+		*------------------------------
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+			yline(0, lp(dash))
+			xline(7.5)
+			ylabel(-.7(0.2).7)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			`xlabel'
+			text(0.3 4 "{&beta}{sup:CE}, purple states only: `att'", size(medium) color(black))
+		;
+		#delimit cr
+
+		graph export "$figures/eventstudy_leaveoneout_purp.png", replace
+
+		estimates clear
+restore 
+
+
+
+
+//**************** 
+//**************** BLUE+PURPLE STATES 
+//**************** 
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+
+	******** All outcomes ********	
+	loc offset = 8 
+		
+preserve 
+	keep if inlist(state, "CA", "NY", "MA", "HI", "WI", "MI")
+
+		di as txt "Running BLUE+PURPLE ONLY states"
+
+		*------------------------------
+		* ATT (combined effect)
+		*------------------------------
+		reghdfe win treat, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state)
+		local att: display %5.3f _b[treat]
+
+		*------------------------------
+		* Event study
+		*------------------------------
+		reghdfe win ib7.event, ///
+			absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+
+		*------------------------------
+		* Dynamic xlabel construction
+		*------------------------------
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		*------------------------------
+		* Plot + export
+		*------------------------------
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+			yline(0, lp(dash))
+			xline(7.5)
+			ylabel(-.7(0.2).7)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on win", size(medium))
+			`xlabel'
+			text(0.3 4 "{&beta}{sup:CE}, blue+purple states only: `att'", size(medium) color(black))
+		;
+		#delimit cr
+
+		graph export "$figures/eventstudy_leaveoneout_blue_purp.png", replace
+
+		estimates clear
+restore 
+
+
+
+
+
 
 
 /*******************************************************************************

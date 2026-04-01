@@ -191,6 +191,12 @@ Append to SC
 
 append using "$clean_data/clean_sc.dta"
 
+/*******************************************************************************
+Append to CT
+*******************************************************************************/
+
+// append using "$clean_data/clean_ct.dta"
+
 
 /*******************************************************************************
 Clean dates
@@ -488,15 +494,6 @@ tab post if (eeoc == 1 | eeoc_filed == 1) & sh == 0, sum(relief_scale)
 // post = 0, mean 19.984863
 // post = 1, mean 23.153402
 
-preserve 
-reghdfe relief_scale treat, absorb(basis_state ym_res_state) vce(cluster basis)
-restore
-
-preserve 
-reghdfe relief_scale treat if (eeoc == 1 | eeoc_filed == 1), absorb(basis_state ym_res_state) vce(cluster basis)
-restore
-
-
 save "$clean_data/eeoc_foia.dta", replace
 
 /*******************************************************************************
@@ -513,8 +510,11 @@ keep if sample_sh == 1
 bysort state eeoc: egen earliest_date = min(common_file_date)
 bysort state eeoc: egen last_date = max(common_file_date)
 
-
 format earliest_date last_date %td
+
+save "$clean_data/clean_cases_w_ct.dta", replace
+
+drop if state == "CT" // remove CT 
 
 save "$clean_data/clean_cases.dta", replace
 
