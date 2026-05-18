@@ -7,9 +7,9 @@ use "$clean_data/clean_cases.dta", replace
 
 loc tabulations		= 0
 loc selection 		= 0
-loc event 	   		= 1
+loc event 	   		= 0
 loc timeseries 		= 0
-loc duration   		= 0
+loc duration   		= 1
 loc file_invariance = 0
 
 /*******************************************************************************
@@ -149,11 +149,11 @@ if `tabulations' == 1 {
 Selection 
 *******************************************************************************/
 
+global omega_1 = 0.801
+global omega_2 = 0.928
+	
 if `selection' == 1 {
 	
-	global omega_1 = 0.801
-	global omega_2 = 0.928
-
 	preserve 
 	clear
 	
@@ -308,7 +308,6 @@ Event-study
 // 	drop if event   == 0
 // 	drop if event_f == 0
 
-	******** All outcomes ********	
 		loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
 
 		reghdfe duration treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
@@ -404,12 +403,289 @@ Event-study
  	graph export "$figures/eventstudy_duration_overlap.png", replace 
 	estimates clear
 
+	
+	
+	
+	loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+// make sure ATT numbers are accurate by including all data points 
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+
+	
+	******** Overlap, men (victim_f == 0) ********
+	reghdfe duration treat if common_file_date < date("$metoo", "DMY") & victim_f == 0, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state)
+	loc att: display %5.3f _b[treat]
+
+	reghdfe duration ib7.event if common_file_date < date("$metoo", "DMY") & victim_f == 0, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state) noconstant
+	estimates store TWFE
+
+	// Create dynamic xlabel with offset adjustment
+	local max_event = 0
+	local coef_names : colnames e(b)
+
+	foreach cname of local coef_names {
+		if strpos("`cname'", ".event") > 0 {
+			local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+
+			capture confirm number `evnum'
+			if _rc == 0 & real("`evnum'") > `max_event' {
+				local max_event = real("`evnum'")
+			}
+		}
+	}
+	local xlabel "xlabel("
+	forvalues x = 1/`max_event' {
+		local rel = `x' - `offset'
+		local xlabel `xlabel' `x' "`rel'"
+	}
+	local xlabel "`xlabel', labsize(medium))"
+
+	#delimit ;
+	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+				levels(95)
+		ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+		yline(0, lp(dash))
+		xline(7.5)
+		ylabel(-60(20)60)
+		xtitle("Years relative to treatment", size(medium))
+		ytitle("Effect of MeToo on duration (men)", size(medium))
+		`xlabel'
+		text(20 2 "{&beta}{sup:O}: `att'", size(medium) color(black))
+		;
+	#delimit cr
+
+ 	graph export "$figures/eventstudy_duration_overlap_m.png", replace
+	estimates clear
+
+
+	******** Overlap, women (victim_f == 1) ********
+	reghdfe duration treat if common_file_date < date("$metoo", "DMY") & victim_f == 1, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state)
+	loc att: display %5.3f _b[treat]
+
+	reghdfe duration ib7.event if common_file_date < date("$metoo", "DMY") & victim_f == 1, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state) noconstant
+	estimates store TWFE
+
+	// Create dynamic xlabel with offset adjustment
+	local max_event = 0
+	local coef_names : colnames e(b)
+
+	foreach cname of local coef_names {
+		if strpos("`cname'", ".event") > 0 {
+			local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+
+			capture confirm number `evnum'
+			if _rc == 0 & real("`evnum'") > `max_event' {
+				local max_event = real("`evnum'")
+			}
+		}
+	}
+	local xlabel "xlabel("
+	forvalues x = 1/`max_event' {
+		local rel = `x' - `offset'
+		local xlabel `xlabel' `x' "`rel'"
+	}
+	local xlabel "`xlabel', labsize(medium))"
+
+	#delimit ;
+	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+				levels(95)
+		ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+		yline(0, lp(dash))
+		xline(7.5)
+		ylabel(-60(20)60)
+		xtitle("Years relative to treatment", size(medium))
+		ytitle("Effect of MeToo on duration (women)", size(medium))
+		`xlabel'
+		text(20 2 "{&beta}{sup:O}: `att'", size(medium) color(black))
+		;
+	#delimit cr
+
+ 	graph export "$figures/eventstudy_duration_overlap_f.png", replace
+	estimates clear
+
+
+	******** Normal (no overlap filter), men (victim_f == 0) ********
+	reghdfe duration treat if victim_f == 0, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state)
+	loc att: display %5.3f _b[treat]
+
+	reghdfe duration ib7.event if victim_f == 0, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state) noconstant
+	estimates store TWFE
+
+	// Create dynamic xlabel with offset adjustment
+	local max_event = 0
+	local coef_names : colnames e(b)
+
+	foreach cname of local coef_names {
+		if strpos("`cname'", ".event") > 0 {
+			local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+
+			capture confirm number `evnum'
+			if _rc == 0 & real("`evnum'") > `max_event' {
+				local max_event = real("`evnum'")
+			}
+		}
+	}
+	local xlabel "xlabel("
+	forvalues x = 1/`max_event' {
+		local rel = `x' - `offset'
+		local xlabel `xlabel' `x' "`rel'"
+	}
+	local xlabel "`xlabel', labsize(medium))"
+
+	#delimit ;
+	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+				levels(95)
+		ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+		yline(0, lp(dash))
+		xline(7.5)
+		ylabel(-60(20)60)
+		xtitle("Years relative to treatment", size(medium))
+		ytitle("Effect of MeToo on duration (men)", size(medium))
+		`xlabel'
+		text(20 2 "{&beta}{sup:CE}: `att'", size(medium) color(black))
+		;
+	#delimit cr
+
+ 	graph export "$figures/eventstudy_duration_m.png", replace
+	estimates clear
+
+
+	******** Normal (no overlap filter), women (victim_f == 1) ********
+	reghdfe duration treat if victim_f == 1, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state)
+	loc att: display %5.3f _b[treat]
+
+	reghdfe duration ib7.event if victim_f == 1, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state) noconstant
+	estimates store TWFE
+
+	// Create dynamic xlabel with offset adjustment
+	local max_event = 0
+	local coef_names : colnames e(b)
+
+	foreach cname of local coef_names {
+		if strpos("`cname'", ".event") > 0 {
+			local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+
+			capture confirm number `evnum'
+			if _rc == 0 & real("`evnum'") > `max_event' {
+				local max_event = real("`evnum'")
+			}
+		}
+	}
+	local xlabel "xlabel("
+	forvalues x = 1/`max_event' {
+		local rel = `x' - `offset'
+		local xlabel `xlabel' `x' "`rel'"
+	}
+	local xlabel "`xlabel', labsize(medium))"
+
+	#delimit ;
+	coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+				levels(95)
+		ciopts(recast(rcap) lwidth(.5) color(dkgreen))
+		yline(0, lp(dash))
+		xline(7.5)
+		ylabel(-60(20)60)
+		xtitle("Years relative to treatment", size(medium))
+		ytitle("Effect of MeToo on duration (women)", size(medium))
+		`xlabel'
+		text(20 2 "{&beta}{sup:CE}: `att'", size(medium) color(black))
+		;
+	#delimit cr
+
+ 	graph export "$figures/eventstudy_duration_f.png", replace
+	estimates clear
 
 
 
 
 
+loc outcomes "win"
 
+
+// SAME EVENT STUDY AS WIN BUT WITH BIGGER Y AXIS for presentation -- delete me 
+		loc offset = 8 // offset for event studies, to adjust for the fact that we start at -7
+	cap drop event event_f
+	g event 	    = years_to_treat_res * sh
+	g event_f 		= years_to_treat_res * sh * victim_f		
+	replace event   = event + `offset'
+	replace event_f = event_f + `offset'
+	
+// make sure ATT numbers are accurate by including all data points 
+	replace event = 1 if event == 0 
+	replace event_f = 1 if event_f == 0 
+// 	drop if event   == 0
+// 	drop if event_f == 0
+
+	******** All outcomes ********
+	foreach y in `outcomes' {
+		
+		reghdfe `y' treat, absorb(basis_state ym_res_state) vce(cluster basis_state)
+		loc att: display %5.3f _b[treat]
+		
+		reghdfe `y' ib7.event, absorb(basis_state ym_res_state) vce(cluster basis_state) noconstant
+		estimates store TWFE
+		
+		// Create dynamic xlabel with offset adjustment
+		local max_event = 0
+		local coef_names : colnames e(b)
+
+		foreach cname of local coef_names {
+			if strpos("`cname'", ".event") > 0 {
+				local evnum = substr("`cname'", 1, strpos("`cname'", ".event") - 1)
+				
+				capture confirm number `evnum'
+				if _rc == 0 & real("`evnum'") > `max_event' {
+					local max_event = real("`evnum'")
+				}
+			}
+		}
+		local xlabel "xlabel("
+		forvalues x = 1/`max_event' {
+			local rel = `x' - `offset'
+			local xlabel `xlabel' `x' "`rel'"
+		}
+		local xlabel "`xlabel', labsize(medium))"
+
+		#delimit ;
+		coefplot (TWFE, omitted baselevel msize(medlarge) mcolor(dkgreen)), vertical
+			levels(95)
+			ciopts(recast(rcap) lwidth(.5) color(dkgreen)) 
+			yline(0, lp(dash)) // yline(`att', lcolor(grey) lwidth(medium) lp(dash)) ylabel(-.7(0.2).7)
+			xline(7.5)
+			xtitle("Years relative to treatment", size(medium))
+			ytitle("Effect of MeToo on `y'", size(medium))
+			`xlabel' 
+			text(0.3 2 "{&beta}{sup:CE}: `att'", size(medium) color(black))
+		;
+		#delimit cr
+ 		graph export "$figures/eventstudy_`y'_big.png", replace 
+		estimates clear
+	}	
+
+	
+	
 
 
 
@@ -1385,7 +1661,6 @@ graph bar (percent), ///
     over(overlap_all, relabel(1 "No overlap" 2 "Overlap")) ///
     bar(1, color(gs10)) ///
     bar(2, color(navy%70)) ///
-    title("Overlap cases filed by calendar month") ///
     ytitle("Percent of cases") ///
     legend(order(1 "No overlap" 2 "Overlap"))
 
@@ -1538,6 +1813,13 @@ twoway ///
 restore 
 
 
+
+
+/*******************************************************************************
+* Plot win rate of overlap cases #MeToo
+*******************************************************************************/
+
+use "$clean_data/clean_cases.dta", replace
 
 
 
@@ -1875,8 +2157,244 @@ ttest win if sh == 1, by(test)
 restore 
 
 
-// Now drop all states that don't show up a year before 
+// Now drop all states that don't show up a year before
 
+
+
+
+/*******************************************************************************
+Overlap Heterogeneity by Time Spent in Post Period
+Varying overlap definition by filing date cutoff
+*******************************************************************************/
+
+use "$clean_data/clean_cases.dta", replace
+
+tempfile results
+save `results'
+
+clear
+set obs 0
+gen cutoff_ym = .
+gen cutoff_label = ""
+gen att = .
+gen se_att = .
+gen ci_lower = .
+gen ci_upper = .
+save `results', replace
+
+* Loop over different cutoff months (May 2017 through Sept 2017)
+* Each cutoff defines overlap as cases filed before that date
+use "$clean_data/clean_cases.dta", replace
+local metoo_date = date("$metoo", "DMY")
+local metoo_ym = mofd(`metoo_date')
+
+forvalues months = 5(-1)0 {
+
+	use "$clean_data/clean_cases.dta", replace
+	local current_cutoff_ym = `metoo_ym' - `months'
+	local cutoff_date = dofm(`current_cutoff_ym')
+	local cutoff_month = month(`cutoff_date')
+	local cutoff_year = year(`cutoff_date')
+
+	* Run regression
+	reghdfe win treat if common_file_date < `cutoff_date', ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state)
+
+	local att_coef = _b[treat]
+	local se_coef = _se[treat]
+	local ci_lower_temp = `att_coef' - 1.96 * `se_coef'
+	local ci_upper_temp = `att_coef' + 1.96 * `se_coef'
+
+	* Append to results
+	tempfile temp_result
+	clear
+	set obs 1
+	gen cutoff_ym = `current_cutoff_ym'
+	gen cutoff_label = "`cutoff_month'/`cutoff_year'"
+	gen att = `att_coef'
+	gen se_att = `se_coef'
+	gen ci_lower = `ci_lower_temp'
+	gen ci_upper = `ci_upper_temp'
+	append using `results'
+	save `results', replace
+}
+
+use `results', clear
+sort cutoff_ym
+drop if mi(att)
+gen x_plot = _n
+
+#delimit ;
+twoway (line att x_plot, lwidth(thick) lcolor(dkgreen) lpattern(solid))
+	   (rcap ci_lower ci_upper x_plot, lcolor(dkgreen) lwidth(medium)),
+	   xtitle("Filing time cutoff", size(medium))
+	   ytitle("Treatment effect", size(medium))
+	   legend(off)
+	   yline(0, lpattern(solid) lcolor(gray))
+	   yline(.087, lpattern(dash))
+	   text(.095 1.4 "{&beta}{sup:O} = 0.087", size(medsmall) color(gs5))
+	   xlabel(1 "May 2017" 2 "June 2017" 3 "July 2017" 4 "Aug 2017" 5 "Sept 2017" 6 "Oct 2017", labsize(medsmall) angle(45))
+	   ylabel(, labsize(medsmall))
+	   ;
+#delimit cr
+
+graph export "$figures/overlap_heterogeneity_by_date.png", replace
+
+
+/*******************************************************************************
+Overlap Heterogeneity by Time Spent in Post Period — Men only
+*******************************************************************************/
+
+use "$clean_data/clean_cases.dta", replace
+
+tempfile results_m
+save `results_m'
+
+clear
+set obs 0
+gen cutoff_ym = .
+gen cutoff_label = ""
+gen att = .
+gen se_att = .
+gen ci_lower = .
+gen ci_upper = .
+save `results_m', replace
+
+use "$clean_data/clean_cases.dta", replace
+local metoo_date = date("$metoo", "DMY")
+local metoo_ym = mofd(`metoo_date')
+
+forvalues months = 5(-1)0 {
+
+	use "$clean_data/clean_cases.dta", replace
+	local current_cutoff_ym = `metoo_ym' - `months'
+	local cutoff_date = dofm(`current_cutoff_ym')
+	local cutoff_month = month(`cutoff_date')
+	local cutoff_year = year(`cutoff_date')
+
+	reghdfe win treat if common_file_date < `cutoff_date' & victim_f == 0, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state)
+
+	local att_coef = _b[treat]
+	local se_coef = _se[treat]
+	local ci_lower_temp = `att_coef' - 1.96 * `se_coef'
+	local ci_upper_temp = `att_coef' + 1.96 * `se_coef'
+
+	tempfile temp_result
+	clear
+	set obs 1
+	gen cutoff_ym = `current_cutoff_ym'
+	gen cutoff_label = "`cutoff_month'/`cutoff_year'"
+	gen att = `att_coef'
+	gen se_att = `se_coef'
+	gen ci_lower = `ci_lower_temp'
+	gen ci_upper = `ci_upper_temp'
+	append using `results_m'
+	save `results_m', replace
+}
+
+use `results_m', clear
+sort cutoff_ym
+drop if mi(att)
+gen x_plot = _n
+
+#delimit ;
+twoway (line att x_plot, lwidth(thick) lcolor(ebblue) lpattern(solid))
+	   (rcap ci_lower ci_upper x_plot, lcolor(ebblue) lwidth(medium)),
+	   xtitle("Filing time cutoff", size(medium))
+	   ytitle("Treatment effect", size(medium))
+	   legend(off)
+	   yline(0, lpattern(solid) lcolor(gray))
+	   yline(.153, lpattern(dash) lcolor(gs8))
+	   text(.163 1.4 "{&beta}{sup:O}{sub:M} = 0.153", size(medsmall) color(gs5))
+	   xlabel(1 "May 2017" 2 "June 2017" 3 "July 2017" 4 "Aug 2017" 5 "Sept 2017" 6 "Oct 2017", labsize(medsmall) angle(45))
+	   ylabel(, labsize(medsmall))
+	   ;
+#delimit cr
+
+graph export "$figures/overlap_heterogeneity_by_date_men.png", replace
+
+
+/*******************************************************************************
+Overlap Heterogeneity by Time Spent in Post Period — Women only
+*******************************************************************************/
+
+use "$clean_data/clean_cases.dta", replace
+
+tempfile results_f
+save `results_f'
+
+clear
+set obs 0
+gen cutoff_ym = .
+gen cutoff_label = ""
+gen att = .
+gen se_att = .
+gen ci_lower = .
+gen ci_upper = .
+save `results_f', replace
+
+use "$clean_data/clean_cases.dta", replace
+local metoo_date = date("$metoo", "DMY")
+local metoo_ym = mofd(`metoo_date')
+
+forvalues months = 5(-1)0 {
+
+	use "$clean_data/clean_cases.dta", replace
+	local current_cutoff_ym = `metoo_ym' - `months'
+	local cutoff_date = dofm(`current_cutoff_ym')
+	local cutoff_month = month(`cutoff_date')
+	local cutoff_year = year(`cutoff_date')
+
+	reghdfe win treat if common_file_date < `cutoff_date' & victim_f == 1, ///
+		absorb(basis_state ym_res_state) ///
+		vce(cluster basis_state)
+
+	local att_coef = _b[treat]
+	local se_coef = _se[treat]
+	local ci_lower_temp = `att_coef' - 1.96 * `se_coef'
+	local ci_upper_temp = `att_coef' + 1.96 * `se_coef'
+
+	tempfile temp_result
+	clear
+	set obs 1
+	gen cutoff_ym = `current_cutoff_ym'
+	gen cutoff_label = "`cutoff_month'/`cutoff_year'"
+	gen att = `att_coef'
+	gen se_att = `se_coef'
+	gen ci_lower = `ci_lower_temp'
+	gen ci_upper = `ci_upper_temp'
+	append using `results_f'
+	save `results_f', replace
+}
+
+use `results_f', clear
+sort cutoff_ym
+drop if mi(att)
+gen x_plot = _n
+
+#delimit ;
+twoway (line att x_plot, lwidth(thick) lcolor(orange_red) lpattern(solid))
+	   (rcap ci_lower ci_upper x_plot, lcolor(orange_red) lwidth(medium)),
+	   xtitle("Filing time cutoff", size(medium))
+	   ytitle("Treatment effect", size(medium))
+	   legend(off)
+	   yline(0, lpattern(solid) lcolor(gray))
+	   yline(.086, lpattern(dash) lcolor(gs8))
+	   text(.096 1.4 "{&beta}{sup:O}{sub:W} = 0.086", size(medsmall) color(gs5))
+	   xlabel(1 "May 2017" 2 "June 2017" 3 "July 2017" 4 "Aug 2017" 5 "Sept 2017" 6 "Oct 2017", labsize(medsmall) angle(45))
+	   ylabel(, labsize(medsmall))
+	   ;
+#delimit cr
+
+graph export "$figures/overlap_heterogeneity_by_date_women.png", replace
+
+
+/*******************************************************************************
+MAKE
+*******************************************************************************/
 
 
 

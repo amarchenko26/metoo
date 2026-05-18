@@ -110,6 +110,8 @@ replace court = 1 if regexm(outcome, "Annulment")
 g dismissed = 0
 replace dismissed = 1 if regexm(outcome, "Dismissing") & win != 0
 
+// clean respondent org 
+gen resp_org = regexs(1) if regexm(case_name, "^.+ v\.? (.+)$")
 
 /*******************************************************************************
 Export data
