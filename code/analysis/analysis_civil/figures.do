@@ -9,7 +9,7 @@ loc tabulations		= 0
 loc sum_stats		= 0
 loc event 	   		= 0
 loc heterogeneity   = 0
-loc selection       = 1
+loc selection       = 0
 loc timeseries 		= 0
 loc fake_win		= 0
 loc states			= 0
@@ -110,7 +110,7 @@ if `sum_stats' == 1 {
 	count if state_main    // 10
 
 
-	// Page 8, commonality of employment discrimination complaints compared to public accommodation
+	// Page 8, prevalence of employment discrimination complaints relative to public accommodation
 
 	use "$clean_data/clean_cases_all_juris.dta", clear
 
@@ -124,6 +124,8 @@ if `sum_stats' == 1 {
 
 
 	// Page 8, number of complaints & states in second sample 
+	
+	** includes CT **
 
 	use "$clean_data/clean_cases_w_ct.dta", clear
 
@@ -138,7 +140,9 @@ if `sum_stats' == 1 {
 	restore
 
 
-	// Page 8 & Appendix C (page 19), number of complaints & states in third sample
+	// Page 8 & Appendix C (page 19), number of complaints & states in third sample 
+	
+	** includes all discrimination types **
 
 	use "$clean_data/clean_cases_all_juris.dta", clear
 
@@ -153,7 +157,7 @@ if `sum_stats' == 1 {
 	restore
 
 
-	// Page 8 (footnote 14), percent of cases with other types of discrimination
+	// Page 8 (footnote 14), percent of cases with discrimination bases outside main categories
 
 	local basis_other = 68487   	// found in merge_all.do 
 	local all_cases = 3272644		// after drops 
@@ -211,7 +215,7 @@ if `sum_stats' == 1 {
 	display `three_months' / `overlap_total'   // .095
 
 
-	// Page 26, effect larger for men than women
+	// Page 26, effect on adjudicator belief larger for male complainants than female
 
 	local overlap_women = 0.086
 	local overlap_men = 0.153
@@ -253,8 +257,8 @@ if `sum_stats' == 1 {
 	count if juris == "Employment"   // 241,118
 	local employ = r(N)
 
-	count
-	local cases = r(N)   // 328,386
+	count				 // 328,386
+	local cases = r(N)  
 
 	display `employ' / `cases'  // .734
 
@@ -709,8 +713,8 @@ if `selection' == 1 {
 	* Generate variables for shading the area between 0.745 and 0.949
 	gen shade_min = . 
 	gen shade_max = .
-	replace shade_min = 0 if inrange(omega, .8, $omega_2)
-	replace shade_max = .4 if inrange(omega, .8, $omega_2)
+	replace shade_min = 0 if inrange(omega, .8, 0.920)
+	replace shade_max = .4 if inrange(omega, .8, 0.920)
 
 	#delimit ;
 	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
@@ -725,7 +729,7 @@ if `selection' == 1 {
 			text(.175 .2 "ATT for IR", color("dkgreen") place(r) size(medsmall))
 			text(.25 .645 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
 			text(.35 .755 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
-			text(.35 .882 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
+			text(.35 .873 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
