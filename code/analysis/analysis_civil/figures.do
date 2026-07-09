@@ -10,7 +10,7 @@ loc sum_stats		= 0
 loc event 	   		= 0
 loc heterogeneity   = 0
 loc selection       = 0
-loc timeseries 		= 0
+loc timeseries 		= 1
 loc fake_win		= 0
 loc states			= 0
 loc duration   		= 0
@@ -875,6 +875,52 @@ if `timeseries' == 1 {
 	;
 	#delimit cr
  	graph export "$figures/timeseries_filed_nsh.png", replace
+	restore
+	
+	
+	// One version w/o smoothing 
+	preserve
+	drop if inlist(state, "CA", "WI", "FL")
+	collapse (sum) sum_by_ym = y, by(ym_filed sh)
+
+	* First figure: SH == 1
+	local covid_height = 80
+	local m2_height = 20
+	#delimit ;
+	twoway 
+		scatter sum_by_ym ym_filed if sh == 1, mcolor("orange_red") msize(small)
+		|| pcarrowi `covid_height' 729 `covid_height' 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi `m2_height' 686 `m2_height' 692, mlabsize(small) mcolor(black) lcolor(black)
+		xline(693, lpattern(solid))
+		xline(722, lpattern(solid))
+		legend(off)
+		xtitle("Date filed", size(medium))
+		ytitle("Number of complaints", size(medium))
+		title("Sexual harassment complaints")
+		text(`covid_height' 730 "Covid-19", color("gs3") place(r) size(medlarge))
+		text(`m2_height' 685 "#MeToo", color("gs3") place(l) size(medlarge))
+	;
+	#delimit cr
+	graph export "$figures/timeseries_filed_sh_nosmooth.png", replace
+
+	* Second figure: SH == 0
+	local height = 700
+	#delimit ;
+	twoway 
+		scatter sum_by_ym ym_filed if sh == 0, mcolor("gs3") msize(small)
+		|| pcarrowi `height' 729 `height' 723, mlabsize(small) mcolor(black) lcolor(black)
+		|| pcarrowi `height' 686 `height' 692, mlabsize(small) mcolor(black) lcolor(black)
+		xline(693, lpattern(solid))
+		xline(722, lpattern(solid))
+		legend(off)
+		xtitle("Date filed", size(medium))
+		ytitle("Number of complaints", size(medium))
+		title("Other complaints")
+		text(`height' 730 "Covid-19", color("gs3") place(r) size(medlarge))
+		text(`height' 685 "#MeToo", color("gs3") place(l) size(medlarge))
+	;
+	#delimit cr
+ 	graph export "$figures/timeseries_filed_nsh_nosmooth.png", replace
 	restore
 }
 
