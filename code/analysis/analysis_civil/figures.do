@@ -9,8 +9,8 @@ loc tabulations		= 0
 loc sum_stats		= 0
 loc event 	   		= 0
 loc heterogeneity   = 0
-loc selection       = 0
-loc timeseries 		= 1
+loc selection       = 1
+loc timeseries 		= 0
 loc fake_win		= 0
 loc states			= 0
 loc duration   		= 0
@@ -754,6 +754,83 @@ if `selection' == 1 {
 		;
 	#delimit cr
   	graph export "$figures/omega.png", replace  
+	
+	
+	
+	// MAKE A SIMPLER OMEGA GRAPH for PRESENTATION ONLY
+	#delimit ;
+	twoway 	(line bc omega, lp(dash) lcolor("dkgreen") lwidth(thick))
+			(line overlap omega, lp(solid) lwidth(thick) lcolor("dkgreen")),
+			ytitle(" ", size(medlarge)) 
+			xtitle("{&omega}", size(medlarge))
+			legend(off) 
+			text(.026 .46 "ATT for AR", color("dkgreen") place(r) size(medsmall))
+			text(.175 .2 "ATT for AR + S", color("dkgreen") place(r) size(medsmall))
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
+				  .1 ".1" 
+				  .3 ".3"
+				  .5 ".5"
+				  .7 ".7"
+				  .9 ".9"
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
+			xsize(8)
+		;
+
+	addplot: pcarrowi .048 0.51 .078 0.51 (12) " ",
+		lwidth(medthick) lcolor(dkgreen) mcolor(dkgreen) 
+		;
+	addplot: pcarrowi .15 0.25 .12 0.25 (6) " ",
+		lwidth(medthick) lcolor(dkgreen) mcolor(dkgreen) 
+		;
+	#delimit cr
+  	graph export "$figures/omega_AR_and_IR.png", replace  
+	
+	
+		#delimit ;
+	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
+			(line bc omega, lp(dash) lcolor("dkgreen") lwidth(thick))
+			(line overlap omega, lp(solid) lwidth(thick) lcolor("dkgreen"))
+    		(scatteri 0 $omega_1 .4 $omega_1, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash))
+    		(scatteri 0 $omega_2 .4 $omega_2, c(L) msymbol(none) lcolor(gs5) lwidth(medium) lpattern(dash)),
+			ytitle(" ", size(medlarge)) 
+			xtitle("{&omega}", size(medlarge))
+			legend(off) 
+			text(.026 .46 "ATT for AR", color("dkgreen") place(r) size(medsmall))
+			text(.175 .2 "ATT for AR + S", color("dkgreen") place(r) size(medsmall))
+			text(.25 .645 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
+			text(.35 .755 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
+			text(.35 .873 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
+				  .1 ".1" 
+				  .3 ".3"
+				  .5 ".5"
+				  .7 ".7"
+				  .9 ".9"
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
+			xsize(8)
+		;
+
+	addplot: pcarrowi .25 0.75 .25 0.78 (3) " ",
+		lwidth(thin) lcolor(gs5) mcolor(gs5) 
+		;
+	addplot: pcarrowi .048 0.51 .078 0.51 (12) " ",
+		lwidth(medthick) lcolor(dkgreen) mcolor(dkgreen) 
+		;
+	addplot: pcarrowi .15 0.25 .12 0.25 (6) " ",
+		lwidth(medthick) lcolor(dkgreen) mcolor(dkgreen) 
+		;
+	#delimit cr
+  	graph export "$figures/omega_fortalk.png", replace  
+	
+	
+	
+	
 	restore
 
 	
@@ -819,6 +896,71 @@ Selection: ATT^{AR} and ATT^{IR} by gender
 		;
 	#delimit cr
   	graph export "$figures/omega_combined.png", replace  
+	
+	
+	// MAKE A SIMPLER OMEGA GRAPH for PRESENTATION ONLY
+	#delimit ;
+	twoway  (line bc_men omega, lp(dash) lcolor(ebblue) lwidth(thick)) 
+			(line overlap_men omega, lp(solid) lp(solid) lwidth(thick) lcolor(ebblue)) 
+			(line bc_women omega, lp(dash) lcolor(orange_red) lwidth(thick)) 
+			(line overlap_women omega, lp(solid) lwidth(thick) lcolor(orange_red)),
+			ytitle(" ", size(medlarge)) 
+			xtitle("{&omega}", size(medlarge)) 
+			legend(off) 
+			ylabel(-.6(0.2)1) 
+			text(.22 .91 "ATT for men AR", color("ebblue") place(r) size(medsmall)) 
+			text(.008 .91 "ATT for women AR", color("orange_red") place(r) size(medsmall)) 
+			text(-.23 .7 "ATT for men + S", color("ebblue") place(r) size(medsmall)) 
+			text(.5 .7 "ATT for women + S", color("orange_red") place(r) size(medsmall)) 
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
+				  .1 ".1"
+				   .2 ".2"
+				   .3 ".3"
+				   .4 ".4"
+				   .5 ".5"
+				   .6 ".6"
+				   .7 ".7"
+				   .8 ".8"
+				   .9 ".9"
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
+			xsize(8)
+		;
+	#delimit cr
+  	graph export "$figures/omega_combined_fortalk.png", replace  
+	
+	// OMEGA FOR WOMEN ONLY 
+	#delimit ;
+	twoway  (line bc_women omega, lp(dash) lcolor(orange_red) lwidth(thick)) 
+			(line overlap_women omega, lp(solid) lwidth(thick) lcolor(orange_red)),
+			ytitle(" ", size(medlarge)) 
+			xtitle("{&omega}", size(medlarge)) 
+			legend(off) 
+			ylabel(-.6(0.2)1) 
+			text(.008 .91 "ATT for women AR", color("orange_red") place(r) size(medsmall)) 
+			text(.5 .7 "ATT for women + S", color("orange_red") place(r) size(medsmall)) 
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
+				  .1 ".1"
+				   .2 ".2"
+				   .3 ".3"
+				   .4 ".4"
+				   .5 ".5"
+				   .6 ".6"
+				   .7 ".7"
+				   .8 ".8"
+				   .9 ".9"
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
+			xsize(8)
+		;
+	#delimit cr
+  	graph export "$figures/omega_women_only.png", replace  
+	
+	
 	restore
 
 }
