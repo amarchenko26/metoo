@@ -725,8 +725,8 @@ if `selection' == 1 {
 			ytitle("Treatment effect", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.026 .46 "ATT for AR", color("dkgreen") place(r) size(medsmall))
-			text(.175 .2 "ATT for IR", color("dkgreen") place(r) size(medsmall))
+			text(.026 .46 "ATT{sup:AR}", color("dkgreen") place(r) size(medium))
+			text(.175 .2 "ATT{sup:IR}", color("dkgreen") place(r) size(medium))
 			text(.25 .645 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
 			text(.35 .755 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
 			text(.35 .873 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
@@ -764,8 +764,8 @@ if `selection' == 1 {
 			ytitle(" ", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.026 .46 "ATT for AR", color("dkgreen") place(r) size(medsmall))
-			text(.175 .2 "ATT for AR + S", color("dkgreen") place(r) size(medsmall))
+			text(.026 .46 "ATT{sup:AR}", color("dkgreen") place(r) size(medlarge))
+			text(.175 .2 "ATT{sup:AR} + S", color("dkgreen") place(r) size(medlarge))
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1" 
@@ -789,6 +789,33 @@ if `selection' == 1 {
   	graph export "$figures/omega_AR_and_IR.png", replace  
 	
 	
+	#delimit ;
+	twoway 	(line bc omega, lp(dash) lcolor("white") lwidth(thick))
+			(line overlap omega, lp(solid) lwidth(thick) lcolor("dkgreen")),
+			ytitle(" ", size(medlarge)) 
+			xtitle("{&omega}", size(medlarge))
+			legend(off) 
+			text(.026 .46 "ATT{sup:AR}", color("dkgreen") place(r) size(medlarge))
+			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
+				   0 "0"
+				  .1 ".1" 
+				  .3 ".3"
+				  .5 ".5"
+				  .7 ".7"
+				  .9 ".9"
+				  1 "1"
+				  1.03 `" " " "Only" "Always" "Reporters""'
+				  1.06 " ", labsize(medsmall) noticks)
+			xsize(8)
+		;
+
+	addplot: pcarrowi .048 0.51 .078 0.51 (12) " ",
+		lwidth(medthick) lcolor(dkgreen) mcolor(dkgreen) 
+		;
+	#delimit cr
+  	graph export "$figures/omega_AR_only.png", replace  
+	
+	
 		#delimit ;
 	twoway 	(rarea shade_min shade_max omega, color(gs14) fintensity(60))
 			(line bc omega, lp(dash) lcolor("dkgreen") lwidth(thick))
@@ -798,8 +825,8 @@ if `selection' == 1 {
 			ytitle(" ", size(medlarge)) 
 			xtitle("{&omega}", size(medlarge))
 			legend(off) 
-			text(.026 .46 "ATT for AR", color("dkgreen") place(r) size(medsmall))
-			text(.175 .2 "ATT for AR + S", color("dkgreen") place(r) size(medsmall))
+			text(.026 .46 "ATT{sup:AR}", color("dkgreen") place(r) size(medlarge))
+			text(.175 .2 "ATT{sup:AR} + S", color("dkgreen") place(r) size(medlarge))
 			text(.25 .645 "Shaded area" "is range of" "calibrated {&omega}", color("gs5") place(r) size(small))
 			text(.35 .755 "{&omega}{sub:1}", color("gs3") place(r) size(medlarge))
 			text(.35 .873 "{&omega}{sub:2}", color("gs3") place(r) size(medlarge))
@@ -874,10 +901,10 @@ Selection: ATT^{AR} and ATT^{IR} by gender
 			xtitle("{&omega}", size(medlarge)) 
 			legend(off) 
 			ylabel(-.6(0.2)1) 
-			text(.22 .91 "ATT for men AR", color("ebblue") place(r) size(medsmall)) 
-			text(.008 .91 "ATT for women AR", color("orange_red") place(r) size(medsmall)) 
-			text(-.23 .7 "ATT for men IR", color("ebblue") place(r) size(medsmall)) 
-			text(.5 .7 "ATT for women IR", color("orange_red") place(r) size(medsmall)) 
+			text(.22 .87 "ATT{sup:AR} men", color("ebblue") place(r) size(medium)) 
+			text(.008 .87 "ATT{sup:AR} women", color("orange_red") place(r) size(medium)) 
+			text(-.23 .7 "ATT{sup:IR} men", color("ebblue") place(r) size(medium)) 
+			text(.5 .7 "ATT{sup:IR} women", color("orange_red") place(r) size(medium)) 
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1"
@@ -908,10 +935,10 @@ Selection: ATT^{AR} and ATT^{IR} by gender
 			xtitle("{&omega}", size(medlarge)) 
 			legend(off) 
 			ylabel(-.6(0.2)1) 
-			text(.22 .91 "ATT for men AR", color("ebblue") place(r) size(medsmall)) 
-			text(.008 .91 "ATT for women AR", color("orange_red") place(r) size(medsmall)) 
-			text(-.23 .7 "ATT for men + S", color("ebblue") place(r) size(medsmall)) 
-			text(.5 .7 "ATT for women + S", color("orange_red") place(r) size(medsmall)) 
+			text(.22 .9 "ATT{sup:AR} men", color("ebblue") place(r) size(medlarge)) 
+			text(.008 .9 "ATT{sup:AR} women", color("orange_red") place(r) size(medlarge)) 
+			text(-.23 .65 "(ATT{sup:AR} + S) men", color("ebblue") place(r) size(medlarge)) 
+			text(.5 .65 "(ATT{sup:AR} + S) women", color("orange_red") place(r) size(medlarge)) 
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1"
@@ -939,8 +966,8 @@ Selection: ATT^{AR} and ATT^{IR} by gender
 			xtitle("{&omega}", size(medlarge)) 
 			legend(off) 
 			ylabel(-.6(0.2)1) 
-			text(.008 .91 "ATT for women AR", color("orange_red") place(r) size(medsmall)) 
-			text(.5 .7 "ATT for women + S", color("orange_red") place(r) size(medsmall)) 
+			text(.008 .87 "ATT{sup:AR} women", color("orange_red") place(r) size(medlarge)) 
+			text(.5 .65 "(ATT{sup:AR} + S) women", color("orange_red") place(r) size(medlarge)) 
 			xlabel(-.03 `" " " "Only" "Induced" "Reporters" "' 
 				   0 "0"
 				  .1 ".1"
